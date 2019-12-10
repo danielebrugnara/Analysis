@@ -1,0 +1,9 @@
+../../../NPOutput/Daniele_run_0056.root
+../../../NPOutput/Daniele_run_0058.root
+../../../NPOutput/Daniele_run_0058_1.root
+../../../NPOutput/Daniele_run_0060.root
+../../../NPOutput/Daniele_run_0062.root
+../../../NPOutput/Daniele_run_0063.root
+../../../NPOutput/Daniele_run_0068.root
+../../../NPOutput/Daniele_run_0073.root
+../../../NPOutput/Daniele_run_0074.root
