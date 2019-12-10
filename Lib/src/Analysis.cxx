@@ -2,7 +2,9 @@
 
 //ClassImp(Analysis);
 
-Analysis::Analysis(){
+Analysis::Analysis(int n_threads):
+                    n_threads(n_threads)
+{
     std::string file_with_runs = "./Configs/Runs.txt";
     std::ifstream file(file_with_runs);
     if (!file.is_open()) throw std::runtime_error(std::string("Unable to read :")+std::string(file_with_runs));
@@ -11,30 +13,52 @@ Analysis::Analysis(){
         std::ifstream file_check(line);
         if (line.at(0)=='#') continue;
         if(file_check.fail()) throw std::runtime_error(std::string("File not present :")+ line);
-        file_names.push_back(line);
+        file_names.push(line);
     }
 }
 
 Analysis::~Analysis(){
-    delete data;
 }
 
-bool Analysis::LoadFiles(){
-    data = new TChain("PhysicsTree");
-    int n_files=0;
-    for (const auto &file_name: file_names){
-        n_files = data->Add(file_name.c_str());
-    }
-    if (n_files!=file_names.size()) throw std::runtime_error(std::string("Not all files were loaded!"));
-    else return true;
-}
 
 bool Analysis::RunAnalysis(int n_events=-1, int start_event=0){
-    bool success_loading = LoadFiles();
-    if (!success_loading) return false;
-    int analyzed_entries = 0;
-    if (n_events!=-1) analyzed_entries = data->Process(&selector, "", n_events, start_event);
-    else analyzed_entries = data->Process(&selector, "");
-    std::cout << "A total of " << analyzed_entries <<" was processed\n";
+    for (int ii=0; ii<n_threads; ++ii){
+        threads.push_back(std::thread(&Analysis::Job, this));
+    }
+
+    for (int ii=0; ii<n_threads; ++ii){
+        threads.at(ii).join();
+    }
+
     return true;
+}
+
+bool Analysis::Job(){
+    try{
+        while(1){
+            std::string current_run = GetRun();
+            RunSelector(current_run);
+        }
+    }catch(std::runtime_error & e){
+        std::cout << e.what();
+    }
+    return false;
+}
+
+bool Analysis::RunSelector(std::string run){
+    TFile *file = new TFile(run.c_str());
+    if (!file) throw std::runtime_error("Run : "+run+" Not opened\n"); 
+    TTree *tree = (TTree *)file->Get("PhysicsTree");
+    tree->Process(&selector, ("analyzed_"+run.substr(run.find_last_of("/"))).c_str());
+    return true;
+}
+
+std::string Analysis::GetRun(){
+    std::string run;
+    mtx.lock();
+    if (file_names.empty()) throw std::runtime_error("Finished Runs\n");
+    run = file_names.top();
+    file_names.pop();
+    mtx.unlock();
+    return run;
 }

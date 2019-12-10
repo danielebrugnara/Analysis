@@ -5,8 +5,9 @@ int main(int argc, char *argv[]){
     //Analysis *my_analysis = nullptr;
     Analysis *my_analysis = nullptr;
 
+    int n_threads = 4;
     try{
-        my_analysis = new Analysis();
+        my_analysis = new Analysis(n_threads);
         //my_analysis = new Analysis();
 
     }catch (const std::runtime_error& error){

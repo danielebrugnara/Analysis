@@ -172,6 +172,9 @@ public :
    int count46Ar;
 
 
+   std::string file_name;
+
+
    //Reactions
 
 

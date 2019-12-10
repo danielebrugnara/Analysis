@@ -34,6 +34,7 @@ void Selector::Begin(TTree * /*tree*/)
    // The tree argument is deprecated (on PROOF 0 is passed).
 
    TString option = GetOption();
+   file_name = option;
 }
 
 void Selector::SlaveBegin(TTree * /*tree*/)
@@ -599,7 +600,7 @@ void Selector::SlaveTerminate()
    // The SlaveTerminate() function is called after all entries or objects
    // have been processed. When running with PROOF SlaveTerminate() is called
    // on each slave server.
-   TFile *top = new TFile("my_output.root", "recreate");
+   TFile *top = new TFile(file_name.c_str(), "recreate");
    TIter iter(fOutput);
    TObject *obj;
    TCanvas *canvas = new TCanvas("canvas", "canvas");

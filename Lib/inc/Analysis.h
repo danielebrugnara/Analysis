@@ -3,22 +3,32 @@
 #include <string>
 #include <vector>
 #include <thread>
+#include <stack>
+#include <mutex>
 
-#include <TChain.h>
-
-#include "Selector.h"
+//Root headers
+//#include <TChain.h>
+#include <TFile.h>
+#include <TTree.h>
+#include <Selector.h>
 
 
 class Analysis{
     public:        
-        Analysis();
+        Analysis(int);
         ~Analysis();
 
         bool RunAnalysis(int, int);
+        bool RunSelector(std::string);
     private:
-        bool LoadFiles();
+        //bool LoadFiles();
         Selector selector;
-        TChain * data;
-        std::vector<std::string> file_names;
+        int n_threads;
+        //TChain * data;
+        std::stack<std::string> file_names;
+        std::vector<std::thread> threads;
+        std::mutex mtx;
+        std::string GetRun();
+        bool Job();
         //ClassDef(Analysis, 1);
 };
