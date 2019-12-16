@@ -188,11 +188,11 @@ for (const auto & particle: particles){
 
  //  if(std::filesystem::exists(vamos_cuts))
 
-   std::ifstream ifile("./cuts/VAMOS.root");
+   std::ifstream ifile("./Cuts/VAMOS.root");
    if(ifile)
    {
       ifile.close();
-      VAMOScuts = new TFile("./cuts/VAMOS.root", "READ");
+      VAMOScuts = new TFile("./Cuts/VAMOS.root", "READ");
       if (!(VAMOScuts->IsOpen()))
       {
          std::cout << "VAMOS file not opened\n";
@@ -219,11 +219,11 @@ for (const auto & particle: particles){
    }
 
    ifile.close();
-   ifile.open("./cuts/MUGAST_tmp.root");
+   ifile.open("./Cuts/MUGAST_tmp.root");
    if (ifile)
    {
       ifile.close();
-      MUGASTcuts = new TFile("./cuts/MUGAST_tmp.root", "READ");
+      MUGASTcuts = new TFile("./Cuts/MUGAST_tmp.root", "READ");
       if (!(MUGASTcuts->IsOpen()))
       {
          std::cout << "MUGAST file not opened\n";
