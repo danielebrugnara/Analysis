@@ -1,3 +1,6 @@
+#ifndef __INTERPOLATION_H__
+#define __INTERPOLATION_H__
+
 #include <string>
 #include <vector>
 #include <fstream>
@@ -20,3 +23,5 @@ class Interpolation{
         TSpline3 *spline;
         //ClassDef(Interpolation, 1);
 };
+
+#endif

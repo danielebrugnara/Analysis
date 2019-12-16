@@ -1,3 +1,6 @@
+#ifndef __ANALYSIS_H__
+#define __ANALYSIS_H__
+
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -32,3 +35,5 @@ class Analysis{
         bool Job();
         //ClassDef(Analysis, 1);
 };
+
+#endif
