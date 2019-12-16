@@ -18,7 +18,7 @@ class Analysis{
         Analysis(int);
         ~Analysis();
 
-        bool RunAnalysis(int, int);
+        bool RunAnalysis();
         bool RunSelector(std::string);
     private:
         //bool LoadFiles();

@@ -5,10 +5,15 @@ int main(int argc, char *argv[]){
     //Analysis *my_analysis = nullptr;
     Analysis *my_analysis = nullptr;
 
-    int n_threads = 4;
+    int n_threads = 1;
+    if (argc==2) {
+        n_threads = stoi(argv[1]);
+        std::cout << "Number of threads : " << n_threads << std::endl;
+    }
     try{
         my_analysis = new Analysis(n_threads);
-        //my_analysis = new Analysis();
+        my_analysis->RunAnalysis();
+        root_app.Run();
 
     }catch (const std::runtime_error& error){
         std::cerr << error.what() <<std::endl;
@@ -18,8 +23,5 @@ int main(int argc, char *argv[]){
         return -1;
 
     }
-    my_analysis->RunAnalysis(-1, 0);
-
-    root_app.Run();
     return 0;
 }

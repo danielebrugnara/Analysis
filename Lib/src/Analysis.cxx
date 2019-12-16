@@ -21,7 +21,7 @@ Analysis::~Analysis(){
 }
 
 
-bool Analysis::RunAnalysis(int n_events=-1, int start_event=0){
+bool Analysis::RunAnalysis(){
     for (int ii=0; ii<n_threads; ++ii){
         threads.push_back(std::thread(&Analysis::Job, this));
     }
@@ -37,6 +37,7 @@ bool Analysis::Job(){
     try{
         while(1){
             std::string current_run = GetRun();
+            std::cout << "Run : " << current_run <<" assigned to thread\n";
             RunSelector(current_run);
         }
     }catch(std::runtime_error & e){
@@ -49,6 +50,7 @@ bool Analysis::RunSelector(std::string run){
     TFile *file = new TFile(run.c_str());
     if (!file) throw std::runtime_error("Run : "+run+" Not opened\n"); 
     TTree *tree = (TTree *)file->Get("PhysicsTree");
+    std::cout << "Starting selector for run : " << run << "\n";
     tree->Process(&selector, ("analyzed_"+run.substr(run.find_last_of("/"))).c_str());
     return true;
 }
