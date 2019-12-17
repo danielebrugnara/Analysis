@@ -159,6 +159,10 @@ public :
    virtual void    SlaveTerminate();
    virtual void    Terminate();
 
+   //My methods
+   inline void IdentifyFragment();
+   inline void FillMugastConfHistograms();
+
    //Constants
    const Long64_t TS_TO_S = 1E8;
    const Long64_t TS_TO_HR = 1E8*3600;
@@ -169,7 +173,13 @@ public :
    //Graphs
    //General
    bool debug = false;
-   int count46Ar;
+   //int count46Ar;
+   struct Counter{
+      long long General;
+      long long Ar46;
+      long long K47;
+      Counter(): General(0), Ar46(0), K47(0){};
+   } counter;
 
 
    std::string file_name;
@@ -182,42 +192,79 @@ public :
    Interpolation *thickness_angle;
    Interpolation *angle_angle;
 
-   //VAMOS
-   struct VamosConf{
+   //VAMOS/////////////////////////////////////////////////////////////////////////////////
+   struct VamosId
+   { //Identification struct
+      double En;
+      double D_En;
+      double D_En2;
+      double Path;
+      double T;
+      double V;
+      double Beta;
+      double Gamma;
+      double M_Q;
+      double M;
+      double Charge;
+      bool Identified;
+      std::string Nucleus;
+      TLorentzVector p4;
+      std::string GetNucleus()
+      {
+         if (Nucleus.compare(""))
+            return Nucleus.substr(Nucleus.find_last_of("_"));
+         else
+            return std::string("ANY");
+      }
+      std::string GetMass()
+      {
+         if (Nucleus.compare(""))
+            return Nucleus.substr(0, Nucleus.find_first_of("_"));
+         else
+            return std::string("ANY");
+      }
+      VamosId() : En(0),
+                  D_En(0),
+                  D_En2(0),
+                  Path(0),
+                  T(0),
+                  V(0),
+                  Beta(0),
+                  Gamma(0),
+                  M_Q(0),
+                  M(0),
+                  Charge(0),
+                  Identified(false),
+                  Nucleus(""),
+                  p4(){};
+   };
+
+   VamosId *IdentifiedNucleus;
+
+   struct VamosConf{//Configuration spectra
       TH2D* mdE_E;
       std::map<std::string,TH2D*> mQ_MQ;
       std::map<std::string, TH1D*> hAmass;
    };
 
-   struct IDNucleus{
-      std::string mass;
-      std::string name;
-      bool found;
-   };
-
-   IDNucleus IdentifiedNucleus;
-
-   struct VamosData
-   {
+   struct VamosData{//Data spectra
       std::map<std::string,std::map<std::string, int>> evNr;
       std::map<std::string,std::map<std::string, TH2D*>> mTW_Brho;
    };
 
 
-   //AGATA
+   //AGATA////////////////////////////////////////////////////////////////////////////////////
    struct AgataConf{
       TH3D *mmAGATA3D;
       TH1D *hAddTS_LTS;
    };
 
-//   std::vector<std::string> masses = {"41", "42", "43", "44", "45", "46", "47", "48", "49"};
    std::vector<std::string> masses = {"46", "47"};
    std::vector<std::string> nuclei = {"K", "Ar"};
 
    std::vector<std::string> AGATAconditions = {"NONE", "MUGASTtap", "MUGASTan"};
 
-   struct AgataData
-   {
+   struct AgataData{
       std::map<std::string, std::map<std::string,std::map<std::string,TH1D*>>> hDC; //[mass][nucleus][condition]
       std::map<std::string, std::map<std::string,TH2D*>> mDC;//[mass][nucleus]
       std::map<std::string, std::map<std::string,TH2D*>> mDC_ThetaMUGAST;//[mass][nucleus]
@@ -226,15 +273,15 @@ public :
    };
 
 
-   //Cats
-   struct CatsConf{
+   //Cats//////////////////////////////////////////////////////////////////////////////////////
+   struct CatsConf{//
       TH2D* mCATSpos;
    };
 
-   struct CatsData{
+   struct CatsData{//
    };
 
-   //Mugast
+   //Mugast////////////////////////////////////////////////////////////////////////////////////
    std::vector<std::string> silicons = {"MM1", "MM2", "MM3", "MM4", "MG1", "MG2", "MG3", "MG4", "MG5", "MG6", "MG7", "MG8", "MG9", "MG10", "MG11"};
    std::vector<std::string> siliconsMM = {"MM1", "MM2", "MM3", "MM4"};
    std::vector<std::string> siliconsMG = {"MG1", "MG2", "MG3", "MG4", "MG5", "MG6", "MG7", "MG8", "MG9", "MG10", "MG11"};
@@ -243,7 +290,7 @@ public :
    std::vector<std::string> particles={"p", "d", "ANY"};
    std::vector<std::string> gammas={"360 keV", "ANY"};
 
-   struct SiConf{
+   struct SiConf{//
       std::map<std::string, TH2D*> mE_TOF;   //[M*#] 
      // std::map<std::string, std::map<std::string,TH2D*>> mE_TOF_Corrected;   //[M*#][alpha] 
       std::map<std::string, TH2D*> mdE_E_Si; //[MM#] 
@@ -251,7 +298,7 @@ public :
       std::map<std::string, std::map<std::string,TH2D*>>  mStrip_T; //[M*#][X\Y]
    };
 
-   struct SiData{
+   struct SiData{//
       std::map<std::string, std::map<std::string, std::map<std::string,TH2D*>>> mE_TOF;//[M*#][Mass][Nucl]
       std::map<std::string, std::map<std::string, std::map<std::string,TH2D*>>> mdE_E_Si;//[M*#][Mass][Nucl]
       std::map<std::string, std::map<std::string, std::map<std::string,TH1D*>>> hEx;//[Mass][Nucl][Parcle]
@@ -326,15 +373,18 @@ public :
 
 
 
-   //Cuts
+   //Graphical cuts////////////////////////////////////////////////////////////////////////////////////
    std::map<std::string, std::map< std::string, TCutG*>> cut;
    std::vector<std::string> Qcuts = {"Q14", "Q15", "Q16", "Q17", "Q18"};
-   std::vector<std::string> QcutsAr = {"Q12Ar","Q13Ar","Q14Ar", "Q15Ar", "Q16Ar", "Q17Ar", "Q18Ar"};
-   std::vector<std::string> QcutsK = {"Q13K","Q14K", "Q15K", "Q16K", "Q17K", "Q18K", "Q19K"};
+   std::vector<std::string> Zcuts = {"dE_E_K", "dE_E_Ar"};
+   std::vector<std::string> Mgates= {"45", "46", "47"};
+
+   //std::vector<std::string> QcutsAr = {"Q12Ar","Q13Ar","Q14Ar", "Q15Ar", "Q16Ar", "Q17Ar", "Q18Ar"};
+   //std::vector<std::string> QcutsK = {"Q13K","Q14K", "Q15K", "Q16K", "Q17K", "Q18K", "Q19K"};
    TFile* VAMOScuts;
    TFile* MUGASTcuts;
 
-   long long counter;
+   //long long counter;
 
    std::map<std::string, double> mass; 
 

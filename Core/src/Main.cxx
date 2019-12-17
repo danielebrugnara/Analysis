@@ -2,7 +2,6 @@
 
 int main(int argc, char *argv[]){
     TApplication root_app("app",&argc,argv);
-    //Analysis *my_analysis = nullptr;
     Analysis *my_analysis = nullptr;
 
     int n_threads = 1;
@@ -13,7 +12,7 @@ int main(int argc, char *argv[]){
     try{
         my_analysis = new Analysis(n_threads);
         my_analysis->RunAnalysis();
-        root_app.Run();
+        //root_app.Run();
 
     }catch (const std::runtime_error& error){
         std::cerr << error.what() <<std::endl;
