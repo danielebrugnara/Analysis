@@ -1,0 +1,16 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/Core/inc/**",
+                "${workspaceFolder}/Lib/inc/**",
+                "${ROOTSYS}/include/**",
+                "${NPTOOL}/NPLib/include/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang"
+        }
+    ],
+    "version": 4
+}
