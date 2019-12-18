@@ -162,6 +162,7 @@ public :
    //My methods
    inline void IdentifyFragment();
    inline void FillMugastConfHistograms();
+   void CheckCutsPresence();
 
    //Constants
    const Long64_t TS_TO_S = 1E8;

@@ -9,6 +9,8 @@
 #include <stack>
 #include <mutex>
 
+#include <sys/wait.h>
+
 //Root headers
 //#include <TChain.h>
 #include <TFile.h>

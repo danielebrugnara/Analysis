@@ -23,7 +23,9 @@ Analysis::~Analysis(){
 
 bool Analysis::RunAnalysis(){
     for (int ii=0; ii<n_threads; ++ii){
+        //mtx.lock();//added because ROOT is not thread safe
         threads.push_back(std::thread(&Analysis::Job, this));
+        //mtx.unlock();//added because root is not thread safe
     }
 
     for (int ii=0; ii<n_threads; ++ii){
@@ -41,7 +43,22 @@ bool Analysis::Job(){
         while(1){
             std::string current_run = GetRun();
             std::cout << "Run : " << current_run <<" assigned to thread\n";
-            RunSelector(current_run);
+            pid_t pid;
+            int status;
+            if ((pid=fork()) == 0){ //Child process
+                RunSelector(current_run);
+                _exit(1);
+            }
+            while((pid=wait(&status))>0) {	/* waitpid(-1, &status, 0) */
+	    	    if(WIFEXITED(status)) {
+	    	    	printf("%d returns %d\n",
+	    	  	       pid, WEXITSTATUS(status));
+	    	} else if(WIFSIGNALED(status)) {
+	    		printf("%d terminated by %d\n",
+	    		       pid, WTERMSIG(status));
+	    	}
+	}
+            
         }
     }catch(std::runtime_error & e){
         std::cout << e.what();

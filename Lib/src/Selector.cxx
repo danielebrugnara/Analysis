@@ -222,6 +222,7 @@ void Selector::SlaveBegin(TTree * /*tree*/)
    {
       std::cout << "MUGAST cuts not found\n";
    }
+   CheckCutsPresence();
 
    mass["46_Ar"] = 45.968082712 * AMU_TO_MEV; //in MeV
    mass["47_Ar"] = 46.972934865 * AMU_TO_MEV; //in MeV
@@ -230,7 +231,9 @@ void Selector::SlaveBegin(TTree * /*tree*/)
    mass["2_H"] = 2.01410177812 * AMU_TO_MEV;
    mass["1_H"] = 1.00782503223 * AMU_TO_MEV;
 
+
    GetSettings(); //Decides which histograms to fill
+   
 }
 
 Bool_t Selector::Process(Long64_t entry)
@@ -262,8 +265,9 @@ Bool_t Selector::Process(Long64_t entry)
    //Configuration spectra are filled in the identification
    if (IC.GetSize() == 0 || MW_N.GetSize() != 1) //VAMOS is not OK, only look at the SI detectors
       goto mugast_label;
+   
    IdentifyFragment();
-
+   
    if (IdentifiedNucleus->Identified)
    {
       Fill(pData.VAMOS.mTW_Brho[IdentifiedNucleus->GetMass()][IdentifiedNucleus->GetNucleus()], *TW, *Brho);
@@ -295,7 +299,7 @@ Bool_t Selector::Process(Long64_t entry)
 
 //MUGAST//////////////////////////////////////////////////////////////////////////////////////////////////////
 mugast_label: //Label of goto previous to VAMOS
-
+   //std::cout << "I have arrivaed to MUGAST!!!!!!!!!!!!!!!!11\n";
    FillMugastConfHistograms();
 
    //SI data loops
@@ -468,15 +472,14 @@ inline void Selector::IdentifyFragment(){
    IdentifiedNucleus->Charge = IdentifiedNucleus->M / IdentifiedNucleus->M_Q;
 
    //dE-E plot, no conditions
-   Fill(pConf.VAMOS.mdE_E, IdentifiedNucleus->En, IdentifiedNucleus->D_En);
-
+   //Fill(pConf.VAMOS.mdE_E, IdentifiedNucleus->En, IdentifiedNucleus->D_En);
    for(const auto & Zcut: Zcuts){
       if (cut.at("VAMOS").at(Zcut)->IsInside(IdentifiedNucleus->En, IdentifiedNucleus->D_En)){
          std::string Nucleus_tmp = Zcut.substr(Zcut.find_last_of("_")+1);
-         Fill(pConf.VAMOS.mQ_MQ[Nucleus_tmp], IdentifiedNucleus->M_Q, IdentifiedNucleus->Charge);
+         //Fill(pConf.VAMOS.mQ_MQ[Nucleus_tmp], IdentifiedNucleus->M_Q, IdentifiedNucleus->Charge);
          for (const auto &Qcut : Qcuts){
             if (cut.at("VAMOS").at(Qcut)->IsInside(IdentifiedNucleus->M_Q, IdentifiedNucleus->Charge)){
-               Fill(pConf.VAMOS.hAmass[Nucleus_tmp], IdentifiedNucleus->M_Q * stoi(Qcut.substr(1, 2)));
+               //Fill(pConf.VAMOS.hAmass[Nucleus_tmp], IdentifiedNucleus->M_Q * stoi(Qcut.substr(1, 2)));
                for (const auto &Mgate : Mgates){
                   if (IdentifiedNucleus->M_Q * stoi(Qcut.substr(1, 2)) < stod(Mgate)+0.5 
                         && IdentifiedNucleus->M_Q * stoi(Qcut.substr(1, 2)) > stod(Mgate)-0.5){
@@ -563,6 +566,20 @@ bool Selector::GetSettings(){
    file.close();
    }
    return true;
+}
+
+void Selector::CheckCutsPresence(){
+   auto * tmp_ptr = &cut["VAMOS"];
+   for(const auto & Zcut: Zcuts){
+      if (tmp_ptr->find(Zcut) == tmp_ptr->end()){
+         throw std::runtime_error("Unable to find cut :"+Zcut+"\n");
+      }
+   }
+   for (const auto &Qcut : Qcuts){
+      if (tmp_ptr->find(Qcut) == tmp_ptr->end()){ 
+         throw std::runtime_error("Unable to find cut :"+Qcut+"\n");
+      }
+   }
 }
 
 inline bool Selector::Fill(TH1* histo, const Double_t &data1)
