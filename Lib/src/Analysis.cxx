@@ -23,15 +23,13 @@ Analysis::~Analysis(){
 
 bool Analysis::RunAnalysis(){
     for (int ii=0; ii<n_threads; ++ii){
-        //mtx.lock();//added because ROOT is not thread safe
         threads.push_back(std::thread(&Analysis::Job, this));
-        //mtx.unlock();//added because root is not thread safe
     }
     for (int ii=0; ii<n_threads; ++ii){
         threads.at(ii).join();
     }
 
-    std::cout << "Joined threads \n";
+    std::cout << "Joined threads, adding output files :\n";
 
     remove("./Out/sum.root");
     system("hadd -f ./Out/sum.root ./Out/*");
@@ -49,15 +47,13 @@ bool Analysis::Job(){
             int status;
             //Forking process to avoid ROOT threading problems
             if ((pid=fork()) == 0){ //Child process
-                //std::cout << "Child starting analysis \n";
                 RunSelector(current_run);
-                std::cout << "Child finished analysis  of : "<< current_run <<"\n";
+                //std::cout << "Finished analysis  of : "<< current_run <<"\n";
                 exit(1);
             }
             else{ //Parent process
-              //std::cout << "Parent waiting for child process : " << current_run <<"\n";
-                wait(&status);
-                std::cout << "Parent finished waiting for child process  : " << current_run <<"\n";
+                wait(&status);//Wait child process to complete instructions
+                //std::cout << "Parent finished waiting for child process  : " << current_run <<"\n";
             }
 	    }
     }catch(std::runtime_error & e){

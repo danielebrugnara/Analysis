@@ -22,5 +22,6 @@ int main(int argc, char *argv[]){
         return -1;
 
     }
+    std::cout << "Analysis completed!\n";
     return 0;
 }
