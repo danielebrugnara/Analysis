@@ -27,8 +27,8 @@ class Analysis{
         bool RunSelector(std::string);
     private:
         //bool LoadFiles();
-        Selector selector;
         int n_threads;
+        //std::map<std::string, Selector> selector;
         //TChain * data;
         std::stack<std::string> file_names;
         std::vector<std::thread> threads;

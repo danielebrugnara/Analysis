@@ -166,7 +166,7 @@ void Selector::SlaveBegin(TTree * /*tree*/)
       }
       else
       {
-         std::cout << "VAMOS file opened\n";
+         //std::cout << "VAMOS file opened\n";
          TIter contents(VAMOScuts->GetListOfKeys());
          TKey *key;
          TObject *obj;
@@ -177,7 +177,7 @@ void Selector::SlaveBegin(TTree * /*tree*/)
             {
                TCutG *tmp = (TCutG *)obj;
                cut["VAMOS"][tmp->GetName()] = tmp;
-               std::cout << "Found cut in VAMOS :" << tmp->GetName() << std::endl;
+               //std::cout << "Found cut in VAMOS :" << tmp->GetName() << std::endl;
             }
          }
       }
@@ -200,7 +200,7 @@ void Selector::SlaveBegin(TTree * /*tree*/)
       }
       else
       {
-         std::cout << "MUGAST file opened\n";
+         //std::cout << "MUGAST file opened\n";
          TIter contents(MUGASTcuts->GetListOfKeys());
          TKey *key;
          TObject *obj;
@@ -213,7 +213,7 @@ void Selector::SlaveBegin(TTree * /*tree*/)
             {
                TCutG *tmp = (TCutG *)obj;
                cut["MUGAST"][tmp->GetName()] = tmp;
-               std::cout << "Found cut in MUGAST :" << tmp->GetName() << std::endl;
+               //std::cout << "Found cut in MUGAST :" << tmp->GetName() << std::endl;
             }
          }
       }
@@ -263,9 +263,11 @@ Bool_t Selector::Process(Long64_t entry)
 
    //Vamos identification////////////////////////////////////////////////////////////////////////////////////
    //Configuration spectra are filled in the identification
-   if (IC.GetSize() == 0 || MW_N.GetSize() != 1) //VAMOS is not OK, only look at the SI detectors
+   if (!IdentifiedNucleus) delete IdentifiedNucleus;
+   IdentifiedNucleus = new VamosId();
+   if (IC.GetSize() == 0 || MW_N.GetSize() != 1){ //VAMOS is not OK, only look at the SI detectors
       goto mugast_label;
-   
+}
    IdentifyFragment();
    
    if (IdentifiedNucleus->Identified)
@@ -306,11 +308,11 @@ mugast_label: //Label of goto previous to VAMOS
    try
    {
       //E-TOF plots
-      for (int ii = 0; ii < (*Mugast).DSSD_E.size(); ii++)
+      if (IdentifiedNucleus->Identified)
       {
-         //TVector3 hitPos((*Mugast).PosX[ii], (*Mugast).PosY[ii], (*Mugast).PosZ[ii]);
-         if (IdentifiedNucleus->Identified)
+         for (int ii = 0; ii < (*Mugast).DSSD_E.size(); ii++)
          {
+            //TVector3 hitPos((*Mugast).PosX[ii], (*Mugast).PosY[ii], (*Mugast).PosZ[ii]);
             Fill(pData.SI.mE_TOF[Form("MG%i", (*Mugast).TelescopeNumber[ii])][IdentifiedNucleus->GetMass()][IdentifiedNucleus->GetNucleus()], (*Mugast).DSSD_E[ii], AlignT((*Mugast).TelescopeNumber[ii], (*Mugast).DSSD_Y[ii], (*Mugast).DSSD_T[ii]));
             Fill(pData.SI.mE_TOF["MG"][IdentifiedNucleus->GetMass()][IdentifiedNucleus->GetNucleus()], (*Mugast).DSSD_E[ii], AlignPunch((*Mugast).TelescopeNumber[ii], (*Mugast).DSSD_T[ii]));
          }
@@ -383,11 +385,11 @@ mugast_label: //Label of goto previous to VAMOS
          }
          MugastEvents++;
       }
-   //Cats///////////////////////////////////////////////////////////////////////////////////////////////////
-   for (int ii = 0; ii < (*CATS).PositionX.size(); ii++)
-   {
-      Fill(pConf.CATS.mCATSpos, (*CATS).PositionX[ii], (*CATS).PositionY[ii]);
-   }
+      //Cats///////////////////////////////////////////////////////////////////////////////////////////////////
+      for (int ii = 0; ii < (*CATS).PositionX.size(); ii++)
+      {
+         Fill(pConf.CATS.mCATSpos, (*CATS).PositionX[ii], (*CATS).PositionY[ii]);
+      }
    }
    catch (std::out_of_range &e)
    {
@@ -422,11 +424,11 @@ void Selector::SlaveTerminate()
    std::cout << "Output file : " << file_name << "\n";
    TIter iter(fOutput);
    TObject *obj;
-   TCanvas *canvas = new TCanvas("canvas", "canvas");
+//   TCanvas *canvas = new TCanvas("canvas", "canvas");
    while ((obj = iter()))
    {
       obj->Write();
-      canvas = new TCanvas("canvas","canvas");
+/*      canvas = new TCanvas("canvas","canvas");
       obj->Draw();
       std::cout << "Plot Canvas\n";
       if (debug){
@@ -436,10 +438,10 @@ void Selector::SlaveTerminate()
             gClient->HandleInput();
             gSystem->ProcessEvents();
          }
-      }
+      }*/
    }
    top->Close();
-   std::cout << "Total 46 Ar identified :"<< counter.Ar46 <<std::endl;
+   //std::cout << "Total 46 Ar identified :"<< counter.Ar46 <<std::endl;
 }
 
 void Selector::Terminate()
@@ -452,8 +454,6 @@ void Selector::Terminate()
 
 //Identification of the VAMOS fragments
 inline void Selector::IdentifyFragment(){
-   delete IdentifiedNucleus;
-   IdentifiedNucleus = new VamosId();
 
    IdentifiedNucleus->En = IC[0] + IC[1] + IC[2] + IC[3] + IC[4] + IC[5];
    IdentifiedNucleus->D_En = IC[0] + IC[1];
@@ -472,14 +472,14 @@ inline void Selector::IdentifyFragment(){
    IdentifiedNucleus->Charge = IdentifiedNucleus->M / IdentifiedNucleus->M_Q;
 
    //dE-E plot, no conditions
-   //Fill(pConf.VAMOS.mdE_E, IdentifiedNucleus->En, IdentifiedNucleus->D_En);
+   Fill(pConf.VAMOS.mdE_E, IdentifiedNucleus->En, IdentifiedNucleus->D_En);
    for(const auto & Zcut: Zcuts){
       if (cut.at("VAMOS").at(Zcut)->IsInside(IdentifiedNucleus->En, IdentifiedNucleus->D_En)){
          std::string Nucleus_tmp = Zcut.substr(Zcut.find_last_of("_")+1);
-         //Fill(pConf.VAMOS.mQ_MQ[Nucleus_tmp], IdentifiedNucleus->M_Q, IdentifiedNucleus->Charge);
+         Fill(pConf.VAMOS.mQ_MQ[Nucleus_tmp], IdentifiedNucleus->M_Q, IdentifiedNucleus->Charge);
          for (const auto &Qcut : Qcuts){
             if (cut.at("VAMOS").at(Qcut)->IsInside(IdentifiedNucleus->M_Q, IdentifiedNucleus->Charge)){
-               //Fill(pConf.VAMOS.hAmass[Nucleus_tmp], IdentifiedNucleus->M_Q * stoi(Qcut.substr(1, 2)));
+               Fill(pConf.VAMOS.hAmass[Nucleus_tmp], IdentifiedNucleus->M_Q * stoi(Qcut.substr(1, 2)));
                for (const auto &Mgate : Mgates){
                   if (IdentifiedNucleus->M_Q * stoi(Qcut.substr(1, 2)) < stod(Mgate)+0.5 
                         && IdentifiedNucleus->M_Q * stoi(Qcut.substr(1, 2)) > stod(Mgate)-0.5){
@@ -551,7 +551,7 @@ bool Selector::GetSettings(){
                TObject* to_delete = fOutput->FindObject(Graph.c_str());
                if (to_delete) {
                   fOutput->Remove(to_delete);
-                  std::cout<<"Deleted :"<< Graph <<std::endl;
+                  //std::cout<<"Deleted :"<< Graph <<std::endl;
                   }
             }
       }
@@ -584,7 +584,7 @@ void Selector::CheckCutsPresence(){
 
 inline bool Selector::Fill(TH1* histo, const Double_t &data1)
 {
-   if (!fOutput->FindObject(histo)){
+   if (histo==nullptr || !fOutput->FindObject(histo)){
       return false;
    }
    else
@@ -597,7 +597,7 @@ inline bool Selector::Fill(TH1* histo, const Double_t &data1)
 
 inline bool Selector::Fill(TH2* histo, const Double_t & data1, const Double_t & data2)
 {
-   if (!fOutput->FindObject(histo)){
+   if (histo==nullptr || !fOutput->FindObject(histo)){
       return false;
 }else
    {
@@ -608,7 +608,7 @@ inline bool Selector::Fill(TH2* histo, const Double_t & data1, const Double_t & 
 
 inline bool Selector::Fill(TH3* histo, const Double_t & data1, const Double_t & data2, const Double_t & data3)
 {
-   if (!fOutput->FindObject(histo)){
+   if (histo==nullptr || !fOutput->FindObject(histo)){
       return false;
 }else
    {

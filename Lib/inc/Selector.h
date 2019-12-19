@@ -173,7 +173,7 @@ public :
 
    //Graphs
    //General
-   bool debug = false;
+   //bool debug = false;
    //int count46Ar;
    struct Counter{
       long long General;
