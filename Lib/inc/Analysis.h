@@ -3,36 +3,36 @@
 
 #include <fstream>
 #include <iostream>
-#include <string>
-#include <vector>
-#include <thread>
-#include <stack>
 #include <mutex>
+#include <stack>
+#include <string>
+#include <thread>
+#include <vector>
 
 #include <sys/wait.h>
 
 //Root headers
 //#include <TChain.h>
+#include <Selector.h>
 #include <TFile.h>
 #include <TTree.h>
-#include <Selector.h>
 
+class Analysis {
+   public:
+    Analysis(int);
+    ~Analysis();
 
-class Analysis{
-    public:        
-        Analysis(int);
-        ~Analysis();
+    bool RunAnalysis();
+    bool RunSelector(std::string);
 
-        bool RunAnalysis();
-        bool RunSelector(std::string);
-    private:
-        int n_threads;
-        std::stack<std::string> file_names;
-        std::vector<std::thread> threads;
-        std::mutex mtx;
-        std::string GetRun();
-        bool Job();
-        //ClassDef(Analysis, 1);
+   private:
+    int n_threads;
+    std::stack<std::string> file_names;
+    std::vector<std::thread> threads;
+    std::mutex mtx;
+    std::string GetRun();
+    bool Job();
+    //ClassDef(Analysis, 1);
 };
 
 #endif
