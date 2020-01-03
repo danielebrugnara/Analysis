@@ -4,7 +4,7 @@ int main(int argc, char* argv[]) {
     TApplication root_app("app", &argc, argv);
     Analysis* my_analysis = nullptr;
 
-    int n_threads = 1;
+    int n_threads {1};
     if (argc == 2) {
         n_threads = stoi(argv[1]);
         std::cout << "Number of threads : " << n_threads << std::endl;

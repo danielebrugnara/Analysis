@@ -26,12 +26,15 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     angle_angle = new Interpolation("angle.txt");
 
     //VAMOS
-    pConf.VAMOS.mdE_E = new TH2D("pConf-VAMOS-mdE_E", "dE E in VAMOS", 400, 0, 400, 400, 0, 400);
+    pConf.VAMOS.mdE_E = new TH2D("pConf-VAMOS-mdE_E", "dE E in VAMOS", 4000, 10, 350, 4000, 10, 140);
     fOutput->Add(pConf.VAMOS.mdE_E);
 
-    pConf.VAMOS.mQ_MQ["Ar"] = new TH2D("pConf-VAMOS-mQ_MQ-Ar", "M/Q vs Q with Ar selection", 1000, 2, 4, 1000, 10, 24);
+    pConf.VAMOS.mdE2_E = new TH2D("pConf-VAMOS-mdE2_E", "dE2 E in VAMOS", 2000, 10, 350, 2000, 10, 140);
+    fOutput->Add(pConf.VAMOS.mdE2_E);
+
+    pConf.VAMOS.mQ_MQ["Ar"] = new TH2D("pConf-VAMOS-mQ_MQ-Ar", "M/Q vs Q with Ar selection", 1000, 2, 4, 1000, 5, 24);
     fOutput->Add(pConf.VAMOS.mQ_MQ["Ar"]);
-    pConf.VAMOS.mQ_MQ["K"] = new TH2D("pConf-VAMOS-mQ_MQ-K", "M/Q vs Q with K selection", 1000, 2, 4, 1000, 10, 24);
+    pConf.VAMOS.mQ_MQ["K"] = new TH2D("pConf-VAMOS-mQ_MQ-K", "M/Q vs Q with K selection", 1000, 2, 4, 1000, 5, 24);
     fOutput->Add(pConf.VAMOS.mQ_MQ["K"]);
 
     pConf.VAMOS.hAmass["Ar"] = new TH1D("pConf-VAMOS-hAmass-Ar", "Mass histogram of Ar", 1000, 20, 50);
@@ -197,6 +200,9 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     mass["2_H"] = 2.01410177812 * AMU_TO_MEV;
     mass["1_H"] = 1.00782503223 * AMU_TO_MEV;
 
+    general_histo_ptr = new TH2D("test", "test", 1000, -400, 400, 1000, 0, 100);
+    fOutput->Add(general_histo_ptr);
+
     GetSettings();  //Decides which histograms to fill
 }
 
@@ -260,7 +266,6 @@ Bool_t Selector::Process(Long64_t entry) {
 
 //MUGAST//////////////////////////////////////////////////////////////////////////////////////////////////////
 mugast_label:  //Label of goto previous to VAMOS
-    //std::cout << "I have arrivaed to MUGAST!!!!!!!!!!!!!!!!11\n";
     FillMugastConfHistograms();
 
     //SI data loops
@@ -389,9 +394,10 @@ void Selector::Terminate() {
 
 //Identification of the VAMOS fragments
 inline void Selector::IdentifyFragment() {
-    IdentifiedNucleus->En = IC[0] + IC[1] + IC[2] + IC[3] + IC[4] + IC[5];
-    IdentifiedNucleus->D_En = IC[0] + IC[1];
-    IdentifiedNucleus->D_En2 = IC[0];
+    static const double threashold {0.1};
+    IdentifiedNucleus->En = (IC[0]>threashold)*( IC[0] + (IC[1]>threashold)*(IC[1] +(IC[2]>threashold)*( IC[2] +(IC[3]>threashold)*( IC[3] +(IC[4]>threashold)*( IC[4] +(IC[5]>threashold)*( IC[5]))))));
+    IdentifiedNucleus->D_En = (IC[0]>threashold)*( IC[0] + (IC[1]>threashold)*( IC[1]));
+    IdentifiedNucleus->D_En2 = IC[0] *(IC[1]> threashold);
 
     IdentifiedNucleus->T = 540.5 * (*AGAVA_VAMOSTS < 104753375647998) + 537.9 * (*AGAVA_VAMOSTS >= 104753375647998) - 2. * (*T_FPMW_CATS2_C) + 2.7 * (MW_N[0] == 16) + 2.7 * (MW_N[0] == 15) + 2.9 * (MW_N[0] == 14) + 2.9 * (MW_N[0] == 13) + 2.4 * (MW_N[0] == 12) + 1.3 * (MW_N[0] == 11) + 1.5 * (MW_N[0] == 10) + 1.6 * (MW_N[0] == 9) - 0.6 * (MW_N[0] == 8) + 2.5 * (MW_N[0] == 7) + 2. * (MW_N[0] == 6) + 1.6 * (MW_N[0] == 5) + 1.1 * (MW_N[0] == 4) - 0.6 * (MW_N[0] == 3) - 1.2 * (MW_N[0] == 2) - 4.0 * (MW_N[0] == 1);
     IdentifiedNucleus->Path = *Path + 5;
@@ -400,15 +406,21 @@ inline void Selector::IdentifyFragment() {
     IdentifiedNucleus->V = IdentifiedNucleus->Path / IdentifiedNucleus->T;
     IdentifiedNucleus->Beta = IdentifiedNucleus->V / 29.9792;
     IdentifiedNucleus->Gamma = 1. / sqrt(1.0 - IdentifiedNucleus->Beta * IdentifiedNucleus->Beta);
-    IdentifiedNucleus->M = (IdentifiedNucleus->M) / 931.5016 / (IdentifiedNucleus->Gamma - 1.);
+    IdentifiedNucleus->M = (IdentifiedNucleus->En) / 931.5016 / (IdentifiedNucleus->Gamma - 1.);
     //mM2 = 18./20.8*(mE2)/931.5016/(mGamma2-1.);
     IdentifiedNucleus->M_Q = *Brho / 3.105 / IdentifiedNucleus->Beta / IdentifiedNucleus->Gamma;
     IdentifiedNucleus->Charge = IdentifiedNucleus->M / IdentifiedNucleus->M_Q;
 
     //dE-E plot, no conditions
     Fill(pConf.VAMOS.mdE_E, IdentifiedNucleus->En, IdentifiedNucleus->D_En);
+    Fill(pConf.VAMOS.mdE2_E, IdentifiedNucleus->En, IdentifiedNucleus->D_En2);
+    if (IdentifiedNucleus->En > 70 &&IdentifiedNucleus->En < 95 &&IdentifiedNucleus->D_En2 > 30 &&IdentifiedNucleus->D_En2 < 45  )
+    {
+       general_histo_ptr->Fill(*Xf, IdentifiedNucleus->En);
+    }
     for (const auto &Zcut : Zcuts) {
-        if (cut.at("VAMOS").at(Zcut)->IsInside(IdentifiedNucleus->En, IdentifiedNucleus->D_En)) {
+        //if (cut.at("VAMOS").at(Zcut)->IsInside(IdentifiedNucleus->En, IdentifiedNucleus->D_En)) {
+        if (cut.at("VAMOS").at(Zcut)->IsInside(IdentifiedNucleus->En, IdentifiedNucleus->D_En2)) {
             std::string Nucleus_tmp = Zcut.substr(Zcut.find_last_of("_") + 1);
             Fill(pConf.VAMOS.mQ_MQ[Nucleus_tmp], IdentifiedNucleus->M_Q, IdentifiedNucleus->Charge);
             for (const auto &Qcut : Qcuts) {

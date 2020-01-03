@@ -1,11 +1,5 @@
-//////////////////////////////////////////////////////////
-// This class has been automatically generated on
-// Tue Jul 23 16:53:27 2019 by ROOT version 6.16/00
-// from TChain PhysicsTree/
-//////////////////////////////////////////////////////////
-
-#ifndef Selector_h
-#define Selector_h
+#ifndef __SELECTOR_H__
+#define __SELECTOR_H__
 
 #include <TChain.h>
 #include <TFile.h>
@@ -16,6 +10,7 @@
 #include <TTreeReaderValue.h>
 
 #include <TMath.h>
+
 // Headers needed by this particular selector
 #include "TCATSPhysics.h"
 #include "TMugastPhysics.h"
@@ -190,21 +185,21 @@ class Selector : public TSelector {
     Interpolation *angle_angle;
 
     //VAMOS/////////////////////////////////////////////////////////////////////////////////
-    struct VamosId {  //Identification struct
-        double En;
-        double D_En;
-        double D_En2;
-        double Path;
-        double T;
-        double V;
-        double Beta;
-        double Gamma;
-        double M_Q;
-        double M;
-        double Charge;
-        bool Identified;
-        std::string Nucleus;
-        TLorentzVector p4;
+    struct VamosId {          //Identification struct
+        double En;            //Energy IC
+        double D_En;          //DE 1+2
+        double D_En2;         //DE 1
+        double Path;          //Reconstructed path
+        double T;             //Time
+        double V;             //Velocity
+        double Beta;          //Beta
+        double Gamma;         //Gamma
+        double M_Q;           //Mass over charge
+        double M;             //Mass
+        double Charge;        //Charge state
+        bool Identified;      //Positive identification
+        std::string Nucleus;  //Name in format 47_K
+        TLorentzVector p4;    //4 momentum of recoil
         std::string GetNucleus() {
             if (Nucleus.compare(""))
                 return Nucleus.substr(Nucleus.find_last_of("_"));
@@ -233,10 +228,13 @@ class Selector : public TSelector {
                     p4(){};
     };
 
-    VamosId *IdentifiedNucleus;
+    VamosId *IdentifiedNucleus;  //Pointer deleted and created every event
+
+    TH1 * general_histo_ptr;
 
     struct VamosConf {  //Configuration spectra
         TH2D *mdE_E;
+        TH2D *mdE2_E;
         std::map<std::string, TH2D *> mQ_MQ;
         std::map<std::string, TH1D *> hAmass;
     };
@@ -247,7 +245,7 @@ class Selector : public TSelector {
     };
 
     //AGATA////////////////////////////////////////////////////////////////////////////////////
-    struct AgataConf {
+    struct AgataConf {  //
         TH3D *mmAGATA3D;
         TH1D *hAddTS_LTS;
     };
@@ -280,7 +278,7 @@ class Selector : public TSelector {
     std::vector<std::string> strips;
     std::vector<std::string> alpha_correction = {"70", "80", "90", "100", "110", "120", "130", "140", "150", "160", "170"};
     std::vector<std::string> particles = {"p", "d", "ANY"};
-    std::vector<std::string> gammas = {"360 keV", "ANY"};
+    std::vector<std::string> gammas = {"360keV", "ANY"};
 
     struct SiConf {                                                     //
         std::map<std::string, TH2D *> mE_TOF;                           //[M*#]
@@ -377,14 +375,14 @@ class Selector : public TSelector {
     }
 
     //Conf
-    struct Conf {
+    struct Conf {  //All the conf plots
         VamosConf VAMOS;
         CatsConf CATS;
         AgataConf AGATA;
         SiConf SI;
     };
 
-    struct Data {
+    struct Data {  //All the data plots
         VamosData VAMOS;
         CatsData CATS;
         AgataData AGATA;
@@ -396,8 +394,10 @@ class Selector : public TSelector {
 
     //Graphical cuts////////////////////////////////////////////////////////////////////////////////////
     std::map<std::string, std::map<std::string, TCutG *>> cut;
-    std::vector<std::string> Qcuts = {"Q14", "Q15", "Q16", "Q17", "Q18"};
-    std::vector<std::string> Zcuts = {"dE_E_K", "dE_E_Ar"};
+    //std::vector<std::string> Qcuts = {"Q14", "Q15", "Q16", "Q17", "Q18"};
+    std::vector<std::string> Qcuts = {};
+    //std::vector<std::string> Zcuts = {"dE_E_K", "dE_E_Ar"};
+    std::vector<std::string> Zcuts = {"dE2_E_K", "dE2_E_Ar"};
     std::vector<std::string> Mgates = {"45", "46", "47"};
 
     //std::vector<std::string> QcutsAr = {"Q12Ar","Q13Ar","Q14Ar", "Q15Ar", "Q16Ar", "Q17Ar", "Q18Ar"};

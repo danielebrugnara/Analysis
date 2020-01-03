@@ -36,7 +36,6 @@ bool Analysis::RunAnalysis() {
 
 bool Analysis::Job() {
     try {
-        Selector *selector = nullptr;
         while (1) {
             std::string current_run = GetRun();
             std::cout << "Run : " << current_run << " assigned to thread\n";
@@ -59,13 +58,13 @@ bool Analysis::Job() {
 }
 
 bool Analysis::RunSelector(std::string run) {
-    //Selector sel;
     TFile *file = new TFile(run.c_str());
     if (!file) throw std::runtime_error("Run : " + run + " Not opened\n");
     TTree *tree = (TTree *)file->Get("PhysicsTree");
     std::cout << "Starting selector for run : " << run << "\n";
-    std::cout << "Declared selecrtor \n";
-    tree->Process(new Selector(), ("analyzed_" + run.substr(run.find_last_of("/") + 1)).c_str());
+    Selector *selector = new Selector();
+    tree->Process(selector, ("analyzed_" + run.substr(run.find_last_of("/") + 1)).c_str());
+    delete selector;
     return true;
 }
 
