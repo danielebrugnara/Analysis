@@ -31,7 +31,6 @@ add_subdirectory(Lib)
 #Main executable source
 add_subdirectory(Core)
 
-
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/Configs DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/Out DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 

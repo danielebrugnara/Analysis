@@ -155,6 +155,7 @@ class Selector : public TSelector {
 
     //My methods
     inline void IdentifyFragment();
+    inline double ComputeFPTimeCorrection(const double &);
     inline void FillMugastConfHistograms();
     void CheckCutsPresence();
 
@@ -168,13 +169,14 @@ class Selector : public TSelector {
     //Graphs
     //General
     //bool debug = false;
-    //int count46Ar;
     struct Counter {
         long long General;
         long long Ar46;
         long long K47;
         Counter() : General(0), Ar46(0), K47(0){};
     } counter;
+
+    TH1 * general_histo_ptr;
 
     std::string file_name;
 
@@ -228,9 +230,10 @@ class Selector : public TSelector {
                     p4(){};
     };
 
+    Interpolation *FP_time_interpolation;
+
     VamosId *IdentifiedNucleus;  //Pointer deleted and created every event
 
-    TH1 * general_histo_ptr;
 
     struct VamosConf {  //Configuration spectra
         TH2D *mdE_E;
@@ -397,13 +400,14 @@ class Selector : public TSelector {
     //std::vector<std::string> Qcuts = {"Q14", "Q15", "Q16", "Q17", "Q18"};
     std::vector<std::string> Qcuts = {};
     //std::vector<std::string> Zcuts = {"dE_E_K", "dE_E_Ar"};
-    std::vector<std::string> Zcuts = {"dE2_E_K", "dE2_E_Ar"};
+    std::vector<std::string> Zcuts = {"dE2_E_K", "dE2_E_Ar","dE2_E_NOISE"};
+    //std::vector<std::string> Zcuts = {};
     std::vector<std::string> Mgates = {"45", "46", "47"};
 
     //std::vector<std::string> QcutsAr = {"Q12Ar","Q13Ar","Q14Ar", "Q15Ar", "Q16Ar", "Q17Ar", "Q18Ar"};
     //std::vector<std::string> QcutsK = {"Q13K","Q14K", "Q15K", "Q16K", "Q17K", "Q18K", "Q19K"};
-    TFile *VAMOScuts;
-    TFile *MUGASTcuts;
+    //TFile *VAMOScuts;
+    //TFile *MUGASTcuts;
 
     //long long counter;
 
