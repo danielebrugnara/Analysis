@@ -1,26 +1,26 @@
 #ifndef __INTERPOLATION_H__
 #define __INTERPOLATION_H__
 
-#include <TSpline.h>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
 
+#include <TSpline.h>
+#include <TFile.h>
+#include <TKey.h>
+
 class Interpolation {
    public:
-    Interpolation(std::string);
-    double Evaluate(double);
-    TSpline3 *GetSpline();
-    double GetXPoint(int);
-    double GetYPoint(int);
+    Interpolation(std::string);//Reads from mathematica txt file
+    Interpolation(TFile *);//Opens existing Spline in ROOT file
+    inline double Evaluate(double);
+    TSpline *GetSpline();
     ~Interpolation();
 
    private:
     bool ReadFile(std::string);
-    std::vector<double> fValues_x;
-    std::vector<double> fValues_y;
-    TSpline3 *spline;
+    TSpline *spline;
     //ClassDef(Interpolation, 1);
 };
 

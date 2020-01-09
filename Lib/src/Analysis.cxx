@@ -19,6 +19,8 @@ Analysis::~Analysis() {
 }
 
 bool Analysis::RunAnalysis() {
+    system("rm -rf ./Out");
+    system("mkdir ./Out");
     for (int ii = 0; ii < n_threads; ++ii) {
         threads.push_back(std::thread(&Analysis::Job, this));
     }
@@ -28,7 +30,6 @@ bool Analysis::RunAnalysis() {
 
     std::cout << "Joined threads, adding output files :\n";
 
-    remove("./Out/sum.root");
     system("hadd -f ./Out/sum.root ./Out/*");
 
     return true;

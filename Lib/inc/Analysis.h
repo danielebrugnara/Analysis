@@ -12,7 +12,6 @@
 #include <sys/wait.h>
 
 //Root headers
-//#include <TChain.h>
 #include <Selector.h>
 #include <TFile.h>
 #include <TTree.h>
@@ -28,6 +27,7 @@ class Analysis {
    private:
     int n_threads;
     std::stack<std::string> file_names;
+    std::stack<std::string> processed_files;
     std::vector<std::thread> threads;
     std::mutex mtx;
     std::string GetRun();

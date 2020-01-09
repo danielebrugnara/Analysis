@@ -22,9 +22,13 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
 
     //Configurations
     //Target
-    thickness_angle = new Interpolation("thickess.txt");
-    angle_angle = new Interpolation("angle.txt");
+    thickness_angle = new Interpolation("./Configs/Interpolations/GasThickness.txt");
+    angle_angle     = new Interpolation("./Configs/Interpolations/EntranceAngleHavar.txt");
 
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    ///Histogram pointer initialization//////////////////////////////////////////////////////////////
+
+    //Config histograms//////////////////////////////////////////////////////////////////////////////
     //VAMOS
     pConf.VAMOS.mdE_E = new TH2D("pConf-VAMOS-mdE_E", "dE E in VAMOS", 4000, 10, 350, 4000, 10, 140);
     fOutput->Add(pConf.VAMOS.mdE_E);
@@ -32,9 +36,9 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     pConf.VAMOS.mdE2_E = new TH2D("pConf-VAMOS-mdE2_E", "dE2 E in VAMOS", 2000, 10, 350, 2000, 10, 140);
     fOutput->Add(pConf.VAMOS.mdE2_E);
 
-    pConf.VAMOS.mQ_MQ["Ar"] = new TH2D("pConf-VAMOS-mQ_MQ-Ar", "M/Q vs Q with Ar selection", 1000, 2, 4, 1000, 5, 24);
+    pConf.VAMOS.mQ_MQ["Ar"] = new TH2D("pConf-VAMOS-mQ_MQ-Ar", "M/Q vs Q with Ar selection", 1000, 2, 4, 1000, 3, 24);
     fOutput->Add(pConf.VAMOS.mQ_MQ["Ar"]);
-    pConf.VAMOS.mQ_MQ["K"] = new TH2D("pConf-VAMOS-mQ_MQ-K", "M/Q vs Q with K selection", 1000, 2, 4, 1000, 5, 24);
+    pConf.VAMOS.mQ_MQ["K"] = new TH2D("pConf-VAMOS-mQ_MQ-K", "M/Q vs Q with K selection", 1000, 2, 4, 1000, 3, 24);
     fOutput->Add(pConf.VAMOS.mQ_MQ["K"]);
 
     pConf.VAMOS.hAmass["Ar"] = new TH1D("pConf-VAMOS-hAmass-Ar", "Mass histogram of Ar", 1000, 20, 50);
@@ -74,7 +78,7 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
         fOutput->Add(pConf.SI.mStrip_T[SI]["Y"]);
     }
 
-    //Data
+    //Data histograms//////////////////////////////////////////////////////////////////////////////
     for (const auto &nucleus : nuclei) {
         for (const auto &mass : masses) {
             pData.VAMOS.mTW_Brho[mass][nucleus] = new TH2D(Form("pData-VAMOS-mTW_Brho-%s-%s", mass.c_str(), nucleus.c_str()), Form("Time vs Brho with %s %s in VAMOS", mass.c_str(), nucleus.c_str()), 5000, 242, 328, 1000, 0.5, 1.5);
@@ -137,17 +141,21 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
         fOutput->Add(pData.SI.mELab_ThetaLab["ANY"]["ANY"][particle]["ANY"]);
     }
 
-    //Loading graphical cuts
-    std::string VAMOS_cuts_file = "./Configs/Cuts/VAMOS.root";
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    ///Loading things from TFiles/////////////////////////////////////////////////////////////
+    std::ifstream *input_file = nullptr;  
 
-    std::ifstream ifile(VAMOS_cuts_file);
-    if (ifile) {
-        ifile.close();
-        VAMOScuts = new TFile(VAMOS_cuts_file.c_str(), "READ");
+    //GCuts///////////////////////////////////////////////////////////////////////////////////
+    std::string VAMOS_cuts_file = "./Configs/Cuts/VAMOS.root";
+    std::string MUGAST_cuts_file = "./Configs/Cuts/MUGAST.root";
+
+    input_file = new std::ifstream(VAMOS_cuts_file);
+    if (input_file) {
+        input_file->close();
+        TFile *VAMOScuts = new TFile(VAMOS_cuts_file.c_str(), "READ");
         if (!(VAMOScuts->IsOpen())) {
             std::cout << "VAMOS file not opened\n";
         } else {
-            //std::cout << "VAMOS file opened\n";
             TIter contents(VAMOScuts->GetListOfKeys());
             TKey *key;
             TObject *obj;
@@ -164,16 +172,13 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
         std::cout << "VAMUS cuts not found\n";
     }
 
-    std::string MUGAST_cuts_file = "./Configs/Cuts/MUGAST.root";
-    //ifile.close();
-    ifile.open(MUGAST_cuts_file);
-    if (ifile) {
-        ifile.close();
-        MUGASTcuts = new TFile(MUGAST_cuts_file.c_str(), "READ");
+    input_file = new std::ifstream(MUGAST_cuts_file);
+    if (input_file) {
+        input_file->close();
+        TFile *MUGASTcuts = new TFile(MUGAST_cuts_file.c_str(), "READ");
         if (!(MUGASTcuts->IsOpen())) {
             std::cout << "MUGAST file not opened\n";
         } else {
-            //std::cout << "MUGAST file opened\n";
             TIter contents(MUGASTcuts->GetListOfKeys());
             TKey *key;
             TObject *obj;
@@ -193,16 +198,39 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     }
     CheckCutsPresence();
 
+    //Interpolations///////////////////////////////////////////////////////////////////////////////
+
+    //FP-time
+    std::string FP_interpolation_file = "./Configs/Interpolations/InterpolationTimeFP.root";
+    input_file = new std::ifstream(FP_interpolation_file);
+    if (input_file) {
+        input_file->close();
+        TFile *tmp = new TFile(FP_interpolation_file.c_str(), "READ");
+        if (!(tmp->IsOpen())) throw std::runtime_error("Interpolation Time FP ROOT file not opened\n"); 
+        FP_time_interpolation = new Interpolation(tmp);
+    } else {
+        std::cout << "FP interpolation file not found\n";
+    }
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    ///Other configs/////////////////////////////////////////////////////////////////////////////////
     mass["46_Ar"] = 45.968082712 * AMU_TO_MEV;  //in MeV
     mass["47_Ar"] = 46.972934865 * AMU_TO_MEV;  //in MeV
     mass["47_K"] = 46.961661614 * AMU_TO_MEV;   //in MeV
-    mass["46_K"] = 45.961981586 * AMU_TO_MEV;
-    mass["2_H"] = 2.01410177812 * AMU_TO_MEV;
-    mass["1_H"] = 1.00782503223 * AMU_TO_MEV;
+    mass["46_K"] = 45.961981586 * AMU_TO_MEV;   //In MeV
+    mass["2_H"] = 2.01410177812 * AMU_TO_MEV;   //In MeV
+    mass["1_H"] = 1.00782503223 * AMU_TO_MEV;   //In MeV
 
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    ///Temporary histogram///////////////////////////////////////////////////////////////////////////
     general_histo_ptr = new TH2D("test", "test", 1000, -400, 400, 1000, 0, 100);
     fOutput->Add(general_histo_ptr);
 
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    ///Deciding which graphs to plot/////////////////////////////////////////////////////////////////
     GetSettings();  //Decides which histograms to fill
 }
 
@@ -235,7 +263,8 @@ Bool_t Selector::Process(Long64_t entry) {
     if (!IdentifiedNucleus)
         delete IdentifiedNucleus;
     IdentifiedNucleus = new VamosId();
-    if (IC.GetSize() == 0 || MW_N.GetSize() != 1) {  //VAMOS is not OK, only look at the SI detectors
+    if (IC.GetSize() == 0 || !(MW_N.GetSize() >  0)) {  //VAMOS is not OK, only look at the SI detectors
+    //if (IC.GetSize() == 0 ) {  //VAMOS is not OK, only look at the SI detectors
         goto mugast_label;
     }
     IdentifyFragment();
@@ -246,15 +275,15 @@ Bool_t Selector::Process(Long64_t entry) {
 
     //AGATA///////////////////////////////////////////////////////////////////////////////////////////////////
     if (AGATA_GOOD) {
-        for (int ii = 0; ii < AddE.GetSize(); ii++) {
+        for (long unsigned int ii = 0; ii < AddE.GetSize(); ii++) {
             if (AddE[ii] > 10) {
                 Fill(pData.AGATA.hDC[IdentifiedNucleus->GetMass()][IdentifiedNucleus->GetNucleus()]["NONE"], 1E3 * CorrectDoppler(IdentifiedNucleus->p4, AddE[ii] / 1E3, AddX[ii], AddY[ii], AddZ[ii]));
-                for (int kk = 0; kk < (*Mugast).PosX.size(); kk++) {
+                for (long unsigned int kk = 0; kk < (*Mugast).PosX.size(); kk++) {
                     TVector3 vec((*Mugast).PosX[kk], (*Mugast).PosY[kk], (*Mugast).PosZ[kk]);
                     Fill(pData.AGATA.mDC_ThetaMUGAST[IdentifiedNucleus->GetMass()][IdentifiedNucleus->GetNucleus()], 1E3 * CorrectDoppler(IdentifiedNucleus->p4, AddE[ii] / 1E3, AddX[ii], AddY[ii], AddZ[ii]), vec.Theta() * TMath::RadToDeg());
                 }
                 //Gamma Gamma matrices
-                for (int jj = 0; jj < AddE.GetSize(); jj++) {
+                for (long unsigned int jj = 0; jj < AddE.GetSize(); jj++) {
                     if (AddE[jj] > 10 && ii != jj) {
                         Fill(pData.AGATA.mDC[IdentifiedNucleus->GetMass()][IdentifiedNucleus->GetNucleus()], 1E3 * CorrectDoppler(IdentifiedNucleus->p4, AddE[ii] / 1E3, AddX[ii], AddY[ii], AddZ[ii]), 1E3 * CorrectDoppler(IdentifiedNucleus->p4, AddE[jj] / 1E3, AddX[jj], AddY[jj], AddZ[jj]));
                         Fill(pData.AGATA.mDC[IdentifiedNucleus->GetMass()][IdentifiedNucleus->GetNucleus()], 1E3 * CorrectDoppler(IdentifiedNucleus->p4, AddE[jj] / 1E3, AddX[jj], AddY[jj], AddZ[jj]), 1E3 * CorrectDoppler(IdentifiedNucleus->p4, AddE[ii] / 1E3, AddX[ii], AddY[ii], AddZ[ii]));
@@ -367,23 +396,10 @@ void Selector::SlaveTerminate() {
     std::cout << "Output file : " << file_name << "\n";
     TIter iter(fOutput);
     TObject *obj;
-    //   TCanvas *canvas = new TCanvas("canvas", "canvas");
     while ((obj = iter())) {
         obj->Write();
-        /*      canvas = new TCanvas("canvas","canvas");
-      obj->Draw();
-      std::cout << "Plot Canvas\n";
-      if (debug){
-         while (gROOT->FindObject("canvas") != NULL)
-         {
-            gSystem->Sleep(200);
-            gClient->HandleInput();
-            gSystem->ProcessEvents();
-         }
-      }*/
     }
     top->Close();
-    //std::cout << "Total 46 Ar identified :"<< counter.Ar46 <<std::endl;
 }
 
 void Selector::Terminate() {
@@ -444,8 +460,12 @@ inline void Selector::IdentifyFragment() {
     }
 }
 
+inline double Selector::ComputeFPTimeCorrection(const double & FP_X){
+    return 1.;
+}
+
 inline void Selector::FillMugastConfHistograms() {
-    for (int ii = 0; ii < (*Mugast).DSSD_E.size(); ii++) {
+    for (long unsigned int ii = 0; ii < (*Mugast).DSSD_E.size(); ii++) {
         //(XE)
         Fill(pConf.SI.mStrip_E[Form("MG%i", (*Mugast).TelescopeNumber[ii])]["X"], (*Mugast).DSSD_X[ii], (*Mugast).DSSD_E[ii]);
         //(YE)
@@ -453,7 +473,7 @@ inline void Selector::FillMugastConfHistograms() {
         //(E TOF)
         Fill(pConf.SI.mE_TOF[Form("MG%i", (*Mugast).TelescopeNumber[ii])], (*Mugast).DSSD_E[ii], AlignT((*Mugast).TelescopeNumber[ii], (*Mugast).DSSD_Y[ii], (*Mugast).DSSD_T[ii]));
     }
-    for (int ii = 0; ii < (*Mugast).DSSD_T.size(); ii++) {
+    for (long unsigned int ii = 0; ii < (*Mugast).DSSD_T.size(); ii++) {
         //(TE)
         Fill(pConf.SI.mStrip_T[Form("MG%i", (*Mugast).TelescopeNumber[ii])]["X"], (*Mugast).DSSD_X[ii], (*Mugast).DSSD_T[ii]);
         //(TE)
