@@ -42,7 +42,6 @@ class Selector : public TSelector {
    public:
     TTreeReader fReader;  //!the tree reader
     TTree *fChain = 0;    //!pointer to the analyzed TTree or TChain
-    VamosIdentification test_tmp;
 
     // Readers to access the data (delete the ones you do not need).
     TTreeReaderValue<TCATSPhysics> CATS = {fReader, "CATS"};
@@ -155,8 +154,10 @@ class Selector : public TSelector {
     virtual void SlaveTerminate();
     virtual void Terminate();
 
+
     //My methods
-    inline void IdentifyFragment();
+    inline void LoadVamosData();
+    inline void PlotVamosGraphs();
     inline double ComputeFPTimeCorrection(const double &);
     inline void FillMugastConfHistograms();
     void CheckCutsPresence();
@@ -171,6 +172,7 @@ class Selector : public TSelector {
     //Graphs
     //General
     //bool debug = false;
+
     struct Counter {
         long long General;
         long long Ar46;
@@ -189,7 +191,8 @@ class Selector : public TSelector {
     Interpolation *angle_angle;
 
     //VAMOS/////////////////////////////////////////////////////////////////////////////////
-    struct VamosId {          //Identification struct
+    VamosIdentification VamosFragment;
+    /*struct VamosId {          //Identification struct
         double En;            //Energy IC
         double D_En;          //DE 1+2
         double D_En2;         //DE 1
@@ -230,11 +233,11 @@ class Selector : public TSelector {
                     Identified(false),
                     Nucleus(""),
                     p4(){};
-    };
+    };*/
 
-    Interpolation *FP_time_interpolation;
+    //Interpolation *FP_time_interpolation;
 
-    VamosId *IdentifiedNucleus;  //Pointer deleted and created every event
+    //VamosId *IdentifiedNucleus;  //Pointer deleted and created every event
 
 
     struct VamosConf {  //Configuration spectra
