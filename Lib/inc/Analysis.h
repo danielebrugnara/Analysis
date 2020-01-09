@@ -25,7 +25,6 @@ class Analysis {
     bool RunSelector(std::string);
 
    private:
-    bool ReadRunsFromFile();
     int n_threads;
     std::stack<std::string> file_names;
     std::stack<std::string> processed_files;

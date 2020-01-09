@@ -3,10 +3,6 @@
 //ClassImp(Analysis);
 
 Analysis::Analysis(int n_threads) : n_threads(n_threads) {
-    ReadRunsFromFile();
-}
-
-bool Analysis::ReadRunsFromFile(){
     std::string file_with_runs = "./Configs/Runs.txt";
     std::ifstream file(file_with_runs);
     if (!file.is_open()) throw std::runtime_error(std::string("Unable to read :") + std::string(file_with_runs));
@@ -17,7 +13,6 @@ bool Analysis::ReadRunsFromFile(){
         if (file_check.fail()) throw std::runtime_error(std::string("File not present :") + line);
         file_names.push(line);
     }
-
 }
 
 Analysis::~Analysis() {
