@@ -2,6 +2,16 @@
 
 #include "Selector.h"
 
+Selector::Selector(TTree *){}
+
+Selector::~Selector(){
+    TIter iter(fOutput);
+    TObject *obj;
+    while ((obj = iter())) {
+        delete obj;
+    }
+}
+
 void Selector::Begin(TTree * /*tree*/) {
     // The Begin() function is called at the start of the query.
     // When running with PROOF Begin() is only called on the client.
@@ -301,7 +311,7 @@ mugast_label:  //Label of goto previous to VAMOS
     try {
         //E-TOF plots
         if (IdentifiedNucleus->Identified) {
-            for (int ii = 0; ii < (*Mugast).DSSD_E.size(); ii++) {
+            for (long unsigned int ii = 0; ii < (*Mugast).DSSD_E.size(); ii++) {
                 //TVector3 hitPos((*Mugast).PosX[ii], (*Mugast).PosY[ii], (*Mugast).PosZ[ii]);
                 Fill(pData.SI.mE_TOF[Form("MG%i", (*Mugast).TelescopeNumber[ii])][IdentifiedNucleus->GetMass()][IdentifiedNucleus->GetNucleus()], (*Mugast).DSSD_E[ii], AlignT((*Mugast).TelescopeNumber[ii], (*Mugast).DSSD_Y[ii], (*Mugast).DSSD_T[ii]));
                 Fill(pData.SI.mE_TOF["MG"][IdentifiedNucleus->GetMass()][IdentifiedNucleus->GetNucleus()], (*Mugast).DSSD_E[ii], AlignPunch((*Mugast).TelescopeNumber[ii], (*Mugast).DSSD_T[ii]));
@@ -310,7 +320,7 @@ mugast_label:  //Label of goto previous to VAMOS
 
         //Loop on physics data
         int MugastEvents = 0;
-        for (int ii = 0; ii < DetID.GetSize(); ii++) {
+        for (long unsigned int ii = 0; ii < DetID.GetSize(); ii++) {
             Fill(pData.SI.mELab_ThetaLab["ANY"]["ANY"]["ANY"]["ANY"], ThetaLab[MugastEvents], ELab[MugastEvents]);
             if (DetID[ii] >= 100)  //These events are in Must2
                 continue;
@@ -325,7 +335,7 @@ mugast_label:  //Label of goto previous to VAMOS
 
             if (AGATA_GOOD) {
                 //Loop over gammas
-                for (int ii = 0; ii < AddE.GetSize(); ii++) {
+                for (long unsigned int ii = 0; ii < AddE.GetSize(); ii++) {
                     if (AddE[ii] > 10) {
                         Fill(pData.AGATA.mEx_DC[IdentifiedNucleus->GetMass()][IdentifiedNucleus->GetNucleus()]["ANY"], Ex[MugastEvents], CorrectDoppler(IdentifiedNucleus->p4, AddE[ii] / 1E3, AddX[ii], AddY[ii], AddZ[ii]));
                     }
@@ -341,7 +351,7 @@ mugast_label:  //Label of goto previous to VAMOS
                 if (cut.at("MUGAST").at(Form("E_TOF_MG%d_%s", (*Mugast).TelescopeNumber[MugastEvents], particle.c_str()))->IsInside((*Mugast).DSSD_E[MugastEvents], AlignT((*Mugast).TelescopeNumber[MugastEvents], (*Mugast).DSSD_Y[MugastEvents], (*Mugast).DSSD_T[MugastEvents]))) {
                     if (AGATA_GOOD) {
                         //Loop over gammas
-                        for (int ii = 0; ii < AddE.GetSize(); ii++) {
+                        for (long unsigned int ii = 0; ii < AddE.GetSize(); ii++) {
                             if (AddE[ii] > 10) {
                                 Fill(pData.AGATA.mEx_DC[IdentifiedNucleus->GetMass()][IdentifiedNucleus->GetNucleus()][particle], Ex[MugastEvents], CorrectDoppler(IdentifiedNucleus->p4, AddE[ii] / 1E3, AddX[ii], AddY[ii], AddZ[ii]));
                             }
@@ -365,7 +375,7 @@ mugast_label:  //Label of goto previous to VAMOS
             MugastEvents++;
         }
         //Cats///////////////////////////////////////////////////////////////////////////////////////////////////
-        for (int ii = 0; ii < (*CATS).PositionX.size(); ii++) {
+        for (long unsigned int ii = 0; ii < (*CATS).PositionX.size(); ii++) {
             Fill(pConf.CATS.mCATSpos, (*CATS).PositionX[ii], (*CATS).PositionY[ii]);
         }
     } catch (std::out_of_range &e) {
@@ -373,7 +383,7 @@ mugast_label:  //Label of goto previous to VAMOS
     }
 
     //MUST2
-    for (int ii = 0; ii < (*MUST2).Si_E.size(); ii++) {
+    for (long unsigned int ii = 0; ii < (*MUST2).Si_E.size(); ii++) {
         Fill(pConf.SI.mE_TOF[Form("MM%i", (*MUST2).TelescopeNumber[ii])], (*MUST2).Si_E[ii], (*MUST2).Si_T[ii]);
         if (IdentifiedNucleus->Identified) {
             Fill(pData.SI.mE_TOF[Form("MM%i", (*MUST2).TelescopeNumber[ii])][IdentifiedNucleus->GetMass()][IdentifiedNucleus->GetNucleus()], (*MUST2).Si_E[ii], (*MUST2).Si_T[ii]);
