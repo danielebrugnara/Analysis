@@ -24,7 +24,7 @@ Analysis::~Analysis() {
 }
 
 bool Analysis::RunAnalysis() {
-    system("rm -r ./Out");
+    system("rm -rf ./Out");
     system("mkdir ./Out");
     for (int ii = 0; ii < n_threads; ++ii) {
         threads.push_back(std::thread(&Analysis::Job, this));

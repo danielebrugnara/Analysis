@@ -12,7 +12,6 @@
 #include <sys/wait.h>
 
 //Root headers
-//#include <TChain.h>
 #include <Selector.h>
 #include <TFile.h>
 #include <TTree.h>

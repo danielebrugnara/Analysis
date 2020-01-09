@@ -17,6 +17,7 @@
 #include "TMust2Physics.h"
 
 #include "Interpolation.h"
+#include "VamosIdentification.h"
 
 #include <TMath.h>
 #include <map>
@@ -41,6 +42,7 @@ class Selector : public TSelector {
    public:
     TTreeReader fReader;  //!the tree reader
     TTree *fChain = 0;    //!pointer to the analyzed TTree or TChain
+    VamosIdentification test_tmp;
 
     // Readers to access the data (delete the ones you do not need).
     TTreeReaderValue<TCATSPhysics> CATS = {fReader, "CATS"};

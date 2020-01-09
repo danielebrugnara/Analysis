@@ -275,15 +275,15 @@ Bool_t Selector::Process(Long64_t entry) {
 
     //AGATA///////////////////////////////////////////////////////////////////////////////////////////////////
     if (AGATA_GOOD) {
-        for (int ii = 0; ii < AddE.GetSize(); ii++) {
+        for (long unsigned int ii = 0; ii < AddE.GetSize(); ii++) {
             if (AddE[ii] > 10) {
                 Fill(pData.AGATA.hDC[IdentifiedNucleus->GetMass()][IdentifiedNucleus->GetNucleus()]["NONE"], 1E3 * CorrectDoppler(IdentifiedNucleus->p4, AddE[ii] / 1E3, AddX[ii], AddY[ii], AddZ[ii]));
-                for (int kk = 0; kk < (*Mugast).PosX.size(); kk++) {
+                for (long unsigned int kk = 0; kk < (*Mugast).PosX.size(); kk++) {
                     TVector3 vec((*Mugast).PosX[kk], (*Mugast).PosY[kk], (*Mugast).PosZ[kk]);
                     Fill(pData.AGATA.mDC_ThetaMUGAST[IdentifiedNucleus->GetMass()][IdentifiedNucleus->GetNucleus()], 1E3 * CorrectDoppler(IdentifiedNucleus->p4, AddE[ii] / 1E3, AddX[ii], AddY[ii], AddZ[ii]), vec.Theta() * TMath::RadToDeg());
                 }
                 //Gamma Gamma matrices
-                for (int jj = 0; jj < AddE.GetSize(); jj++) {
+                for (long unsigned int jj = 0; jj < AddE.GetSize(); jj++) {
                     if (AddE[jj] > 10 && ii != jj) {
                         Fill(pData.AGATA.mDC[IdentifiedNucleus->GetMass()][IdentifiedNucleus->GetNucleus()], 1E3 * CorrectDoppler(IdentifiedNucleus->p4, AddE[ii] / 1E3, AddX[ii], AddY[ii], AddZ[ii]), 1E3 * CorrectDoppler(IdentifiedNucleus->p4, AddE[jj] / 1E3, AddX[jj], AddY[jj], AddZ[jj]));
                         Fill(pData.AGATA.mDC[IdentifiedNucleus->GetMass()][IdentifiedNucleus->GetNucleus()], 1E3 * CorrectDoppler(IdentifiedNucleus->p4, AddE[jj] / 1E3, AddX[jj], AddY[jj], AddZ[jj]), 1E3 * CorrectDoppler(IdentifiedNucleus->p4, AddE[ii] / 1E3, AddX[ii], AddY[ii], AddZ[ii]));
@@ -465,7 +465,7 @@ inline double Selector::ComputeFPTimeCorrection(const double & FP_X){
 }
 
 inline void Selector::FillMugastConfHistograms() {
-    for (int ii = 0; ii < (*Mugast).DSSD_E.size(); ii++) {
+    for (long unsigned int ii = 0; ii < (*Mugast).DSSD_E.size(); ii++) {
         //(XE)
         Fill(pConf.SI.mStrip_E[Form("MG%i", (*Mugast).TelescopeNumber[ii])]["X"], (*Mugast).DSSD_X[ii], (*Mugast).DSSD_E[ii]);
         //(YE)
@@ -473,7 +473,7 @@ inline void Selector::FillMugastConfHistograms() {
         //(E TOF)
         Fill(pConf.SI.mE_TOF[Form("MG%i", (*Mugast).TelescopeNumber[ii])], (*Mugast).DSSD_E[ii], AlignT((*Mugast).TelescopeNumber[ii], (*Mugast).DSSD_Y[ii], (*Mugast).DSSD_T[ii]));
     }
-    for (int ii = 0; ii < (*Mugast).DSSD_T.size(); ii++) {
+    for (long unsigned int ii = 0; ii < (*Mugast).DSSD_T.size(); ii++) {
         //(TE)
         Fill(pConf.SI.mStrip_T[Form("MG%i", (*Mugast).TelescopeNumber[ii])]["X"], (*Mugast).DSSD_X[ii], (*Mugast).DSSD_T[ii]);
         //(TE)

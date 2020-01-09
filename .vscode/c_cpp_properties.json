@@ -9,7 +9,8 @@
                 "${NPTOOL}/NPLib/include/**"
             ],
             "defines": [],
-            "compilerPath": "/usr/bin/clang"
+            "compilerPath": "/usr/bin/clang",
+            "configurationProvider": "vector-of-bool.cmake-tools"
         }
     ],
     "version": 4

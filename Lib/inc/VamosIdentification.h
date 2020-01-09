@@ -6,6 +6,8 @@
 
 class VamosIdentification: public Identification{
     public:
+        VamosIdentification();
+        ~VamosIdentification();
 
     private:
 };
