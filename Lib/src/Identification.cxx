@@ -1,10 +1,14 @@
 #include "Identification.h"
 
-Identification::Identification() {}
+Identification::Identification() {
+}
 
 Identification::~Identification() {}
 
 void Identification::LoadCuts(std::string path) {
+    std::ifstream input_file(path);
+    if (!input_file) throw std::runtime_error("File "+path+" not present\n");
+    input_file.close();
     TFile *cuts_file = new TFile(path.c_str(), "READ");
     if (!(cuts_file->IsOpen())) throw std::runtime_error("VAMOS file not opened\n");
 

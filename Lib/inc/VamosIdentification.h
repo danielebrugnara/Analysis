@@ -5,6 +5,8 @@
 #include "Identification.h"
 #include "Interpolation.h"
 #include <TLorentzVector.h>
+#include <TTreeReaderArray.h>
+#include <TTreeReaderValue.h>
 
 #include <array>
 #include <sstream>
@@ -15,30 +17,39 @@ class VamosIdentification : public Identification {
     ~VamosIdentification();
 
     struct Data {
-        const double *IC;
-        //const double *MW_N;
-        const double Path;
-        const double Brho;
-        const double Xf;
-        const unsigned long AGAVA_VAMOSTS;
-        const double T_FPMW_CATS2_C;
-        Data(   const float * IC, 
-                const double Path,
-                const double Brho,
-                const double Xf,
-                const unsigned long AGAVA_VAMOSTS,
-                const double T_FPMW_CATS2_C):
+        TTreeReaderArray<float>              *IC;
+        TTreeReaderValue<float>              *Path;
+        TTreeReaderValue<float>              *Brho;
+        TTreeReaderValue<float>              *Xf;
+        TTreeReaderValue<float>              *ThetaL;
+        TTreeReaderValue<float>              *PhiL;
+        TTreeReaderValue<long unsigned int>  *AGAVA_VAMOSTS;
+        TTreeReaderValue<float>              *T_FPMW_CATS2_C;
+        Data(TTreeReaderArray<float>              *IC, 
+             TTreeReaderValue<float>              *Path,
+             TTreeReaderValue<float>              *Brho,
+             TTreeReaderValue<float>              *Xf,
+             TTreeReaderValue<float>              *ThetaL,
+             TTreeReaderValue<float>              *PhiL,
+             TTreeReaderValue<long unsigned int>  *AGAVA_VAMOSTS,
+             TTreeReaderValue<float>              *T_FPMW_CATS2_C):
                 IC(IC), 
                 Path(Path),
                 Brho(Brho),
                 Xf(Xf),
+                ThetaL(ThetaL),
+                PhiL(PhiL),
                 AGAVA_VAMOSTS(AGAVA_VAMOSTS),
                 T_FPMW_CATS2_C(T_FPMW_CATS2_C){};
     };
-    Data const* data; 
+    std::array<int, 3> cuts_Z;
+    std::array<int, 5> cuts_M;
+    std::array<int, 9> cuts_Q;   
 
+    std::unordered_map<int, std::unordered_map<int, double>> mass;
 
    private:
+    const Double_t AMU_TO_MEV = 931.4936148;
     void ReadFPTimeShifts();
     inline double GetShift();
     inline double GetFPTime();
@@ -56,8 +67,10 @@ class VamosIdentification : public Identification {
         double M;             //Mass
         double Charge;        //Charge state
         bool Identified;      //Positive identification
-        std::string Nucleus;  //Name in format 47_K
         TLorentzVector p4;    //4 momentum of recoil
+        int id_M;
+        int id_Z;
+        int id_Q;
         Fragment(): En(0),
                     D_En(0),
                     D_En2(0),
@@ -70,9 +83,12 @@ class VamosIdentification : public Identification {
                     M(0),
                     Charge(0),
                     Identified(false),
-                    Nucleus(""),
-                    p4(){};
+                    p4(),
+                    id_M(0),
+                    id_Z(0),
+                    id_Q(0){};
     };
+    Data const* data; 
     Fragment *fragment;
 
     Interpolation *FP_time_interpolation;
@@ -80,8 +96,8 @@ class VamosIdentification : public Identification {
     const double IC_threashold {0.1};
 
     public:
-    inline void SetData(const Data &);
-    inline void Identify();
+    inline void SetData(Data const *);
+    inline bool Identify();
 
     //Various computed fragment properties
     inline double Get_En()      {return fragment->En;};    
@@ -95,6 +111,12 @@ class VamosIdentification : public Identification {
     inline double Get_M_Q()     {return fragment->M_Q;};   
     inline double Get_M()       {return fragment->M;};     
     inline double Get_Charge()  {return fragment->Charge;};
+    inline double Identified()  {return fragment->Identified;};
+    inline TLorentzVector* Get_p4()  {return &(fragment->p4);};
+    inline double Get_id_Z()       {return fragment->id_Z;};     
+
+
+    
 
 };
 

@@ -40,21 +40,21 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
 
     //Config histograms//////////////////////////////////////////////////////////////////////////////
     //VAMOS
-    pConf.VAMOS.mdE_E = new TH2D("pConf-VAMOS-mdE_E", "dE E in VAMOS", 4000, 10, 350, 4000, 10, 140);
+    pConf.VAMOS.mdE_E = new TH2D("pConf_VAMOS_mdE_E", "dE E in VAMOS", 4000, 10, 350, 4000, 10, 140);
     fOutput->Add(pConf.VAMOS.mdE_E);
 
-    pConf.VAMOS.mdE2_E = new TH2D("pConf-VAMOS-mdE2_E", "dE2 E in VAMOS", 2000, 10, 350, 2000, 10, 140);
+    pConf.VAMOS.mdE2_E = new TH2D("pConf_VAMOS_mdE2_E", "dE2 E in VAMOS", 2000, 10, 350, 2000, 10, 140);
     fOutput->Add(pConf.VAMOS.mdE2_E);
 
-    pConf.VAMOS.mQ_MQ["Ar"] = new TH2D("pConf-VAMOS-mQ_MQ-Ar", "M/Q vs Q with Ar selection", 1000, 2, 4, 1000, 3, 24);
-    fOutput->Add(pConf.VAMOS.mQ_MQ["Ar"]);
-    pConf.VAMOS.mQ_MQ["K"] = new TH2D("pConf-VAMOS-mQ_MQ-K", "M/Q vs Q with K selection", 1000, 2, 4, 1000, 3, 24);
-    fOutput->Add(pConf.VAMOS.mQ_MQ["K"]);
+    for (const auto & Z_it: VamosFragment.cuts_Z){
+        pConf.VAMOS.mQ_MQ[Z_it] = new TH2D(Form("pConf_VAMOS_mQ_MQ_M%i", Z_it), Form("M/Q vs Q with Z%i selection", Z_it), 1000, 2, 4, 1000, 3, 24);
+        fOutput->Add(pConf.VAMOS.mQ_MQ[Z_it]);
+    }
 
-    pConf.VAMOS.hAmass["Ar"] = new TH1D("pConf-VAMOS-hAmass-Ar", "Mass histogram of Ar", 1000, 20, 50);
-    fOutput->Add(pConf.VAMOS.hAmass["Ar"]);
-    pConf.VAMOS.hAmass["K"] = new TH1D("pConf-VAMOS-hAmass-K", "Mass histogram of K", 1000, 20, 50);
-    fOutput->Add(pConf.VAMOS.hAmass["K"]);
+//    pConf.VAMOS.hAmass["Ar"] = new TH1D("pConf-VAMOS-hAmass-Ar", "Mass histogram of Ar", 1000, 20, 50);
+//    fOutput->Add(pConf.VAMOS.hAmass["Ar"]);
+//    pConf.VAMOS.hAmass["K"] = new TH1D("pConf-VAMOS-hAmass-K", "Mass histogram of K", 1000, 20, 50);
+//    fOutput->Add(pConf.VAMOS.hAmass["K"]);
 
     //AGATA
     pConf.AGATA.mmAGATA3D = new TH3D("pConf-AGATA-mmAGATA3D", "Hit patter on AGATA", 50, -300, 300, 50, -300, 300, 50, -300, 300);
@@ -89,10 +89,10 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     }
 
     //Data histograms//////////////////////////////////////////////////////////////////////////////
-    for (const auto &nucleus : nuclei) {
-        for (const auto &mass : masses) {
-            pData.VAMOS.mTW_Brho[mass][nucleus] = new TH2D(Form("pData-VAMOS-mTW_Brho-%s-%s", mass.c_str(), nucleus.c_str()), Form("Time vs Brho with %s %s in VAMOS", mass.c_str(), nucleus.c_str()), 5000, 242, 328, 1000, 0.5, 1.5);
-            fOutput->Add(pData.VAMOS.mTW_Brho[mass][nucleus]);
+    for (const auto &it_M : VamosIdentification.cuts_M) {
+        for (const auto &it_Z : VamosIdentification.cuts_Z) {
+            pData.VAMOS.mTW_Brho[it_M][it_Z] = new TH2D(Form("pData-VAMOS-mTW_Brho-%i-%i", it_M, it_Z), Form("Time vs Brho with %i %i in VAMOS", it_M, it_Z), 5000, 242, 328, 1000, 0.5, 1.5);
+            fOutput->Add(pData.VAMOS.mTW_Brho[it_M][it_Z]);
         }
     }
     //VAMOS
@@ -159,32 +159,9 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     std::string VAMOS_cuts_file = "./Configs/Cuts/VAMOS.root";
     std::string MUGAST_cuts_file = "./Configs/Cuts/MUGAST.root";
 
-    input_file = new std::ifstream(VAMOS_cuts_file);
-    if (input_file) {
-        input_file->close();
-        VamosFragment.LoadCuts(VAMOS_cuts_file);
-        /*
-        TFile *VAMOScuts = new TFile(VAMOS_cuts_file.c_str(), "READ");
-        if (!(VAMOScuts->IsOpen())) {
-            std::cout << "VAMOS file not opened\n";
-        } else {
-            TIter contents(VAMOScuts->GetListOfKeys());
-            TKey *key;
-            TObject *obj;
-            while ((key = (TKey *)contents())) {
-                obj = VAMOScuts->Get(key->GetName());
-                if (obj->InheritsFrom("TCutG")) {
-                    TCutG *tmp = (TCutG *)obj;
-                    cut["VAMOS"][tmp->GetName()] = tmp;
-                    //std::cout << "Found cut in VAMOS :" << tmp->GetName() << std::endl;
-                }
-            }
-        }
-        */
-    } else {
-        std::cout << "VAMUS cuts not found\n";
-    }
+    VamosFragment.LoadCuts(VAMOS_cuts_file);
 
+    //TODO: update with new identification class
     input_file = new std::ifstream(MUGAST_cuts_file);
     if (input_file) {
         input_file->close();
@@ -214,24 +191,24 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     //Interpolations///////////////////////////////////////////////////////////////////////////////
 
     //FP-time
-    std::string FP_interpolation_file = "./Configs/Interpolations/InterpolationTimeFP.root";
-    input_file = new std::ifstream(FP_interpolation_file);
-    if (input_file) {
-        input_file->close();
-        TFile *tmp = new TFile(FP_interpolation_file.c_str(), "READ");
-        if (!(tmp->IsOpen())) throw std::runtime_error("Interpolation Time FP ROOT file not opened\n"); 
-        FP_time_interpolation = new Interpolation(tmp);
-    } else {
-        std::cout << "FP interpolation file not found\n";
-    }
+//    std::string FP_interpolation_file = "./Configs/Interpolations/InterpolationTimeFP.root";
+//    input_file = new std::ifstream(FP_interpolation_file);
+//    if (input_file) {
+//        input_file->close();
+//        TFile *tmp = new TFile(FP_interpolation_file.c_str(), "READ");
+//        if (!(tmp->IsOpen())) throw std::runtime_error("Interpolation Time FP ROOT file not opened\n"); 
+//        FP_time_interpolation = new Interpolation(tmp);
+//    } else {
+//        std::cout << "FP interpolation file not found\n";
+//    }
 
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
     ///Other configs/////////////////////////////////////////////////////////////////////////////////
-    mass["46_Ar"] = 45.968082712 * AMU_TO_MEV;  //in MeV
-    mass["47_Ar"] = 46.972934865 * AMU_TO_MEV;  //in MeV
-    mass["47_K"] = 46.961661614 * AMU_TO_MEV;   //in MeV
-    mass["46_K"] = 45.961981586 * AMU_TO_MEV;   //In MeV
+//    mass["46_Ar"] = 45.968082712 * AMU_TO_MEV;  //in MeV
+//    mass["47_Ar"] = 46.972934865 * AMU_TO_MEV;  //in MeV
+//    mass["47_K"] = 46.961661614 * AMU_TO_MEV;   //in MeV
+//    mass["46_K"] = 45.961981586 * AMU_TO_MEV;   //In MeV
     mass["2_H"] = 2.01410177812 * AMU_TO_MEV;   //In MeV
     mass["1_H"] = 1.00782503223 * AMU_TO_MEV;   //In MeV
 
@@ -266,25 +243,24 @@ Bool_t Selector::Process(Long64_t entry) {
 
     fReader.SetLocalEntry(entry);
 
-    ++counter.General;
-
     //Agata vs Ancillary coincidence gate
     Bool_t AGATA_GOOD = *AddTS - *LTS > 175 && *AddTS - *LTS < 184;
 
     //Vamos identification////////////////////////////////////////////////////////////////////////////////////
     //Configuration spectra are filled in the identification
-    if (!IdentifiedNucleus)
-        delete IdentifiedNucleus;
-    IdentifiedNucleus = new VamosId();
-    if (IC.GetSize() == 0 || !(MW_N.GetSize() >  0)) {  //VAMOS is not OK, only look at the SI detectors
-    //if (IC.GetSize() == 0 ) {  //VAMOS is not OK, only look at the SI detectors
-        goto mugast_label;
-    }
-    IdentifyFragment();
+//    if (!IdentifiedNucleus)
+//        delete IdentifiedNucleus;
+//    IdentifiedNucleus = new VamosId();
+//    if (IC.GetSize() == 0 || !(MW_N.GetSize() >  0)) {  //VAMOS is not OK, only look at the SI detectors
+//    //if (IC.GetSize() == 0 ) {  //VAMOS is not OK, only look at the SI detectors
+//        goto mugast_label;
+//    }
+//    IdentifyFragment();
 
-    if (IdentifiedNucleus->Identified) {
-        Fill(pData.VAMOS.mTW_Brho[IdentifiedNucleus->GetMass()][IdentifiedNucleus->GetNucleus()], *TW, *Brho);
-    }
+    LoadVamosData();
+    if (VamosFragment.Identify()) goto mugast_label;
+
+    Fill(pData.VAMOS.mTW_Brho[IdentifiedNucleus->GetMass()][IdentifiedNucleus->GetNucleus()], *TW, *Brho);
 
     //AGATA///////////////////////////////////////////////////////////////////////////////////////////////////
     if (AGATA_GOOD) {
@@ -425,42 +401,19 @@ void Selector::Terminate() {
 //inline void Selector::IdentifyFragment() {
 
 inline void Selector::LoadVamosData(){
-    delete VamosFragment.data;
-    VamosFragment.data = new VamosIdentification::Data(IC, *Path, *Brho, *Xf, *AGAVA_VAMOSTS, *T_FPMW_CATS2_C);
+    VamosFragment.SetData( new VamosIdentification::Data(IC[0], *Path, *Brho, *Xf, 
+                                                            *ThetaL, *PhiL, *AGAVA_VAMOSTS, 
+                                                            *T_FPMW_CATS2_C));
 }
 
 inline void Selector::PlotVamosGraphs() {
     //dE-E plot, no conditions
     Fill(pConf.VAMOS.mdE_E, VamosFragment.Get_En(), VamosFragment.Get_D_En());
     Fill(pConf.VAMOS.mdE2_E, VamosFragment.Get_En(), VamosFragment.Get_D_En2());
-    if (VamosFragment.Get_En() > 70 &&VamosFragment.Get_En() < 95 &&VamosFragment.Get_D_En2() > 30 &&VamosFragment.Get_D_En2() < 45  )
-    {
-       general_histo_ptr->Fill(*Xf, VamosFragment.Get_En);
-    }
-    for (const auto &Zcut : Zcuts) {
-        //if (cut.at("VAMOS").at(Zcut)->IsInside(VamosFragment.Get_En, VamosFragment.Get_D_En)) {
-        if (cut.at("VAMOS").at(Zcut)->IsInside(VamosFragment.Get_En(), VamosFragment.Get_D_En2())) {
-            std::string Nucleus_tmp = Zcut.substr(Zcut.find_last_of("_") + 1);
-            Fill(pConf.VAMOS.mQ_MQ[Nucleus_tmp], VamosFragment.Get_M_Q(), VamosFragment.Get_Charge());
-            for (const auto &Qcut : Qcuts) {
-                if (cut.at("VAMOS").at(Qcut)->IsInside(VamosFragment.Get_M_Q(), VamosFragment.Get_Charge())) {
-                    Fill(pConf.VAMOS.hAmass[Nucleus_tmp], VamosFragment.Get_M_Q * stoi(Qcut.substr(1, 2)));
-                    for (const auto &Mgate : Mgates) {
-                        if (VamosFragment.Get_M_Q * stoi(Qcut.substr(1, 2)) < stod(Mgate) + 0.5 && VamosFragment.Get_M_Q * stoi(Qcut.substr(1, 2)) > stod(Mgate) - 0.5) {
-                            if (VamosFragment.Get_Nucleus().compare("") == 0) throw std::runtime_error("Fragment already identified, overlapping gates??");
-                            VamosFragment.Get_Nucleus() = Mgate + "_" + Nucleus_tmp;  //Format is 46_Ar or 47_K
-                            VamosFragment.Get_p4().SetT(mass[VamosFragment.Get_Nucleus()]);
-                            TVector3 b4(0, 0, VamosFragment.Get_Beta());
-                            b4.SetMagThetaPhi(VamosFragment.Get_Beta(), *ThetaL, *PhiL);
-                            VamosFragment.Get_p4().Boost(b4);
-                            if (VamosFragment.Get_Nucleus() == "46_Ar") ++counter.Ar46;
-                            if (VamosFragment.Get_Nucleus() == "47_K") ++counter.K47;
-                        }
-                    }
-                }
-            }
-        }
-    }
+    if (! VamosFragment.Identified()) return;
+
+    Fill(pConf.VAMOS.mQ_MQ[VamosFragment.Get_id_Z()], VamosFragment.Get_M_Q(), VamosFragment.Get_Charge());
+    //Fill(pConf.VAMOS.hAmass[Nucleus_tmp], VamosFragment.Get_M_Q * stoi(Qcut.substr(1, 2)));
 }
 
 inline double Selector::ComputeFPTimeCorrection(const double & FP_X){

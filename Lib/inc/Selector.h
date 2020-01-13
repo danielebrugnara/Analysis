@@ -171,14 +171,6 @@ class Selector : public TSelector {
 
     //Graphs
     //General
-    //bool debug = false;
-
-    struct Counter {
-        long long General;
-        long long Ar46;
-        long long K47;
-        Counter() : General(0), Ar46(0), K47(0){};
-    } counter;
 
     TH1 * general_histo_ptr;
 
@@ -191,49 +183,7 @@ class Selector : public TSelector {
     Interpolation *angle_angle;
 
     //VAMOS/////////////////////////////////////////////////////////////////////////////////
-    VamosIdentification VamosFragment;
-    /*struct VamosId {          //Identification struct
-        double En;            //Energy IC
-        double D_En;          //DE 1+2
-        double D_En2;         //DE 1
-        double Path;          //Reconstructed path
-        double T;             //Time
-        double V;             //Velocity
-        double Beta;          //Beta
-        double Gamma;         //Gamma
-        double M_Q;           //Mass over charge
-        double M;             //Mass
-        double Charge;        //Charge state
-        bool Identified;      //Positive identification
-        std::string Nucleus;  //Name in format 47_K
-        TLorentzVector p4;    //4 momentum of recoil
-        std::string GetNucleus() {
-            if (Nucleus.compare(""))
-                return Nucleus.substr(Nucleus.find_last_of("_"));
-            else
-                return std::string("ANY");
-        }
-        std::string GetMass() {
-            if (Nucleus.compare(""))
-                return Nucleus.substr(0, Nucleus.find_first_of("_"));
-            else
-                return std::string("ANY");
-        }
-        VamosId() : En(0),
-                    D_En(0),
-                    D_En2(0),
-                    Path(0),
-                    T(0),
-                    V(0),
-                    Beta(0),
-                    Gamma(0),
-                    M_Q(0),
-                    M(0),
-                    Charge(0),
-                    Identified(false),
-                    Nucleus(""),
-                    p4(){};
-    };*/
+    VamosIdentification VamosFragment();
 
     //Interpolation *FP_time_interpolation;
 
@@ -243,13 +193,13 @@ class Selector : public TSelector {
     struct VamosConf {  //Configuration spectra
         TH2D *mdE_E;
         TH2D *mdE2_E;
-        std::map<std::string, TH2D *> mQ_MQ;
-        std::map<std::string, TH1D *> hAmass;
+        std::unordered_map<int, TH2D *> mQ_MQ; //map index over Z
+        //std::unordered_map<int, std::unordered_map<TH1D *>> hAmass;
     };
 
     struct VamosData {  //Data spectra
-        std::map<std::string, std::map<std::string, int>> evNr;
-        std::map<std::string, std::map<std::string, TH2D *>> mTW_Brho;
+        std::unordered_map<std::string, std::unordered_map<std::string, int>> evNr;
+        std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>> mTW_Brho;
     };
 
     //AGATA////////////////////////////////////////////////////////////////////////////////////
@@ -258,8 +208,10 @@ class Selector : public TSelector {
         TH1D *hAddTS_LTS;
     };
 
-    std::vector<std::string> masses = {"46", "47"};
-    std::vector<std::string> nuclei = {"K", "Ar"};
+    //std::vector<std::string> masses = {"46", "47"};
+    //std::vector<std::string> nuclei = {"K", "Ar"};
+
+
 
     std::vector<std::string> AGATAconditions = {"NONE", "MUGASTtap", "MUGASTan"};
 
@@ -304,52 +256,6 @@ class Selector : public TSelector {
         std::map<std::string, std::map<std::string, std::map<std::string, TH2D *>>> mECM_ThetaCM;
         std::map<std::string, std::map<std::string, std::map<std::string, std::map<std::string, TH2D *>>>> mELab_ThetaLab;
     };
-
-    inline double AlignT(int detector, int strip, double time) {
-        if (detector != 11)
-            return time;
-        else {
-            double reference = 356.391;
-            switch (strip) {
-                case 0:
-                    return time;
-                case 1:
-                    return time;
-                case 2:
-                    return time;
-                case 3:
-                    return time;
-                case 4:
-                    return time;
-                case 5:
-                    return time;
-                case 6:
-                    return time;
-                case 7:
-                    return time;
-                case 8:
-                    return time;
-                case 9:
-                    return time;
-                case 10:
-                    return time;
-                case 11:
-                    return time;
-                case 12:
-                    return time;
-                case 13:
-                    return time;
-                case 14:
-                    return time;
-                case 15:
-                    return time;
-                case 16:
-                    return time;
-                default:
-                    return 0;
-            }
-        }
-    }
 
     inline double AlignPunch(int detector, double time) {
         double reference = 358.9;
@@ -402,15 +308,7 @@ class Selector : public TSelector {
 
     //Graphical cuts////////////////////////////////////////////////////////////////////////////////////
     std::map<std::string, std::map<std::string, TCutG *>> cut;
-    //std::vector<std::string> Qcuts = {"Q14", "Q15", "Q16", "Q17", "Q18"};
-    std::vector<std::string> Qcuts = {};
-    //std::vector<std::string> Zcuts = {"dE_E_K", "dE_E_Ar"};
-    std::vector<std::string> Zcuts = {"dE2_E_K", "dE2_E_Ar","dE2_E_NOISE"};
-    //std::vector<std::string> Zcuts = {};
-    std::vector<std::string> Mgates = {"45", "46", "47"};
 
-    //std::vector<std::string> QcutsAr = {"Q12Ar","Q13Ar","Q14Ar", "Q15Ar", "Q16Ar", "Q17Ar", "Q18Ar"};
-    //std::vector<std::string> QcutsK = {"Q13K","Q14K", "Q15K", "Q16K", "Q17K", "Q18K", "Q19K"};
     //TFile *VAMOScuts;
     //TFile *MUGASTcuts;
 

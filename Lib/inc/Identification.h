@@ -1,7 +1,8 @@
 #ifndef __IDENTIFICATION_H__
 #define __IDENTIFICATION_H__
 
-#include <map>
+#include <unordered_map>
+#include <fstream>
 
 #include <TCutG.h>
 #include <TFile.h>
@@ -14,7 +15,10 @@ class Identification {
 
     void LoadCuts(std::string);
    private:
-    std::map<std::string, TCutG*> cuts;
+
+   protected:
+    std::unordered_map<std::string, TCutG*> cuts;
+    std::unordered_map<std::string, std::unordered_map<std::string, TCutG*>> cut_type;
 };
 
 #endif
