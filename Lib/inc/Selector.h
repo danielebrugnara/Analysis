@@ -158,9 +158,7 @@ class Selector : public TSelector {
     //My methods
     inline void LoadVamosData();
     inline void PlotVamosGraphs();
-    inline double ComputeFPTimeCorrection(const double &);
     inline void FillMugastConfHistograms();
-    void CheckCutsPresence();
 
     //Constants
     const Long64_t TS_TO_S = 1E8;
@@ -183,7 +181,7 @@ class Selector : public TSelector {
     Interpolation *angle_angle;
 
     //VAMOS/////////////////////////////////////////////////////////////////////////////////
-    VamosIdentification VamosFragment();
+    VamosIdentification vamos_fragment;
 
     //Interpolation *FP_time_interpolation;
 
@@ -193,13 +191,13 @@ class Selector : public TSelector {
     struct VamosConf {  //Configuration spectra
         TH2D *mdE_E;
         TH2D *mdE2_E;
-        std::unordered_map<int, TH2D *> mQ_MQ; //map index over Z
+        std::unordered_map<int, TH2D *> mQ_MQ; //map index over [Z]
         //std::unordered_map<int, std::unordered_map<TH1D *>> hAmass;
     };
 
     struct VamosData {  //Data spectra
-        std::unordered_map<std::string, std::unordered_map<std::string, int>> evNr;
-        std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>> mTW_Brho;
+        //std::unordered_map<int, std::unordered_map<int, int>> evNr; //[M][Z]
+        std::unordered_map<int, std::unordered_map<int, TH2D *>> mTW_Brho; //[M][Z]
     };
 
     //AGATA////////////////////////////////////////////////////////////////////////////////////
@@ -208,19 +206,14 @@ class Selector : public TSelector {
         TH1D *hAddTS_LTS;
     };
 
-    //std::vector<std::string> masses = {"46", "47"};
-    //std::vector<std::string> nuclei = {"K", "Ar"};
-
-
-
     std::vector<std::string> AGATAconditions = {"NONE", "MUGASTtap", "MUGASTan"};
 
     struct AgataData {
-        std::map<std::string, std::map<std::string, std::map<std::string, TH1D *>>> hDC;             //[mass][nucleus][condition]
-        std::map<std::string, std::map<std::string, TH2D *>> mDC;                                    //[mass][nucleus]
-        std::map<std::string, std::map<std::string, TH2D *>> mDC_ThetaMUGAST;                        //[mass][nucleus]
-        std::map<std::string, std::map<std::string, std::map<std::string, TH2D *>>> mEx_DC;          //[mass][nucleus][particle]
-        std::map<std::string, std::map<std::string, std::map<std::string, TH2D *>>> mELab_ThetaLab;  //[mass][nucleus][particle]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH1D *>>> hDC;             //[mass][nucleus][condition]
+        std::unordered_map<int, std::unordered_map<int, TH2D *>> mDC;                                    //[mass][nucleus]
+        std::unordered_map<int, std::unordered_map<int, TH2D *>> mDC_ThetaMUGAST;                        //[mass][nucleus]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mEx_DC;          //[mass][nucleus][particle]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mELab_ThetaLab;  //[mass][nucleus][particle]
     };
 
     //Cats//////////////////////////////////////////////////////////////////////////////////////
@@ -241,20 +234,20 @@ class Selector : public TSelector {
     std::vector<std::string> gammas = {"360keV", "ANY"};
 
     struct SiConf {                                                     //
-        std::map<std::string, TH2D *> mE_TOF;                           //[M*#]
-                                                                        // std::map<std::string, std::map<std::string,TH2D*>> mE_TOF_Corrected;   //[M*#][alpha]
-        std::map<std::string, TH2D *> mdE_E_Si;                         //[MM#]
-        std::map<std::string, std::map<std::string, TH2D *>> mStrip_E;  //[M*#][X\Y]
-        std::map<std::string, std::map<std::string, TH2D *>> mStrip_T;  //[M*#][X\Y]
+        std::unordered_map<std::string, TH2D *> mE_TOF;                           //[M*#]
+                                                                        // std::unordered_map<std::string, std::unordered_map<std::string,TH2D*>> mE_TOF_Corrected;   //[M*#][alpha]
+        std::unordered_map<std::string, TH2D *> mdE_E_Si;                         //[MM#]
+        std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>> mStrip_E;  //[M*#][X\Y]
+        std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>> mStrip_T;  //[M*#][X\Y]
     };
 
     struct SiData {                                                                            //
-        std::map<std::string, std::map<std::string, std::map<std::string, TH2D *>>> mE_TOF;    //[M*#][Mass][Nucl]
-        std::map<std::string, std::map<std::string, std::map<std::string, TH2D *>>> mdE_E_Si;  //[M*#][Mass][Nucl]
-        std::map<std::string, std::map<std::string, std::map<std::string, TH1D *>>> hEx;       //[Mass][Nucl][Parcle]
-        std::map<std::string, std::map<std::string, std::map<std::string, TH2D *>>> mEx_TW;    //[Mass][Nucl][Parcle]
-        std::map<std::string, std::map<std::string, std::map<std::string, TH2D *>>> mECM_ThetaCM;
-        std::map<std::string, std::map<std::string, std::map<std::string, std::map<std::string, TH2D *>>>> mELab_ThetaLab;
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mE_TOF;    //[Mass][Nucl][M*#]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mdE_E_Si;  //[Mass][Nucl][M*#]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH1D *>>> hEx;       //[Mass][Nucl][Parcle]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mEx_TW;    //[Mass][Nucl][Parcle]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mECM_ThetaCM;
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>>>> mELab_ThetaLab;
     };
 
     inline double AlignPunch(int detector, double time) {
