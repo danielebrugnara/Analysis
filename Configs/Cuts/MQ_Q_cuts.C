@@ -32216,10 +32216,10 @@ void run()
    Canvas_1->SetFrameBorderMode(0);
    Canvas_1->SetFrameBorderMode(0);
    
-   TCutG *cutg1_1 = new TCutG("dE2_E_Z47",52);
+   TCutG *cutg1_1 = new TCutG("dE2_E_Z19",52);
    cutg1_1->SetVarX("dE2 E in VAMOS");
    cutg1_1->SetVarY("");
-   cutg1_1->SetTitle("dE2_E_Z47");
+   cutg1_1->SetTitle("dE2_E_Z19");
    cutg1_1->SetFillColor(2);
    cutg1_1->SetFillStyle(3001);
    cutg1_1->SetLineColor(2);
@@ -32285,13 +32285,13 @@ void run()
    pt_2->SetFillColor(0);
    pt_2->SetFillStyle(0);
    pt_2->SetTextFont(42);
-   TText *pt_LaTex_2 = pt_2->AddText("dE2_E_Z47");
+   TText *pt_LaTex_2 = pt_2->AddText("dE2_E_Z19");
    pt_2->Draw();
    
-   TCutG *cutg1_2 = new TCutG("dE2_E_Z46",52);
+   TCutG *cutg1_2 = new TCutG("dE2_E_Z18",52);
    cutg1_2->SetVarX("dE2 E in VAMOS");
    cutg1_2->SetVarY("");
-   cutg1_2->SetTitle("dE2_E_Z46");
+   cutg1_2->SetTitle("dE2_E_Z18");
    cutg1_2->SetFillColor(2);
    cutg1_2->SetFillStyle(3001);
 

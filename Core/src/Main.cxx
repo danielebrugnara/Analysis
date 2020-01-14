@@ -1,6 +1,7 @@
 #include "Main.h"
 
 int main(int argc, char* argv[]) {
+    std::cout << "Starting Analysis\n";
     TApplication root_app("app", &argc, argv);
     Analysis* my_analysis = nullptr;
 

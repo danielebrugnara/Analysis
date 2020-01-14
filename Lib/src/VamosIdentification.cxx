@@ -25,6 +25,15 @@ VamosIdentification::VamosIdentification() : cuts_Z({18, 19, -1}),
     //tuning
 
     //Delta E vs Energy cuts
+
+    for (const auto & c: cuts){
+        std::cout << c.first <<std::endl;
+    }
+
+#ifdef VERBOSE_DEBUG
+    std::cout << "Starting to look for VAMOS files\n";
+#endif
+
     try {
         (*tmp)["dE2_E_Z19"] = cuts.at("dE2_E_Z19");
         (*tmp)["dE2_E_Z18"] = cuts.at("dE2_E_Z18");

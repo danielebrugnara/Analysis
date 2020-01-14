@@ -16,6 +16,9 @@ void Selector::Begin(TTree * /*tree*/) {
     // The Begin() function is called at the start of the query.
     // When running with PROOF Begin() is only called on the client.
     // The tree argument is deprecated (on PROOF 0 is passed).
+#ifdef VERBOSE_DEBUG
+    std::cout << "------------>Selector::Begin()\n";
+#endif
 
     TString option = GetOption();
 }
@@ -24,6 +27,9 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     // The SlaveBegin() function is called after the Begin() function.
     // When running with PROOF SlaveBegin() is called on each slave server.
     // The tree argument is deprecated (on PROOF 0 is passed).
+//#ifdef VERBOSE_DEBUG
+    std::cout << "------------>Selector::SlaveBegin()\n";
+//#endif
 
     TString option = GetOption();
     file_name = "./Out/" + option;

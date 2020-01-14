@@ -1,6 +1,7 @@
 Build/
 build/
 Data/
+Out/
 *.swp
 .vscode/
 *_old.root

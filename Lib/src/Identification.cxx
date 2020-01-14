@@ -15,9 +15,15 @@ void Identification::LoadCuts(std::string path) {
     TIter contents(cuts_file->GetListOfKeys());
     TKey *key;
     TObject *obj;
+#ifdef VERBOSE_DEBUG
+    std::cout << "Starting to look for cuts in VAMOS file:\n";
+#endif
     while ((key = (TKey *)contents())) {
         obj = cuts_file->Get(key->GetName());
         if (obj->InheritsFrom("TCutG")) {
+#ifdef VERBOSE_DEBUG
+            std::cout << key->GetName() << "\n";
+#endif
             TCutG *tmp = (TCutG *)obj;
             cuts[tmp->GetName()] = tmp;
         }
