@@ -15,4 +15,4 @@ cmake ..
 
 make install
 
-./bin/analysis
+./bin/analysis [n_threads]
