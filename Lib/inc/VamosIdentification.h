@@ -15,6 +15,7 @@ class VamosIdentification : public Identification {
    public:
     VamosIdentification();
     ~VamosIdentification();
+    bool Initialize();
 
     struct Data {
         TTreeReaderArray<float> *IC;
@@ -48,7 +49,7 @@ class VamosIdentification : public Identification {
     std::unordered_map<int, std::unordered_map<int, double>> mass;
 
    private:
-    const Double_t AMU_TO_MEV {931.4936148};
+    const Double_t AMU_TO_MEV{931.4936148};
     void ReadFPTimeShifts();
     std::vector<std::pair<double, double>> TimeShifts;  //Xf-max, shift
     struct Fragment {
@@ -115,28 +116,35 @@ class VamosIdentification : public Identification {
     //Inline Functions implementation (required to be in header file)
    public:
     inline void SetData(Data const *data) {
-        delete this->data;
-        delete this->fragment;
+#ifdef VERBOSE_DEBUG
+        std::cout << "------------>VamosIdentification::SetData()\n";
+#endif
+        //TODO: will this cause memory leaks?
+        //if (this->data)     delete this->data;
+        //if (this->fragment!=nullptr) delete (this->fragment);
+#ifdef VERBOSE_DEBUG
+        std::cout << "------------>finished : pointers deleted\n";
+#endif
         fragment = new Fragment();
         this->data = data;
     }
     inline bool Identify() {
-        fragment->En = ((*data->IC)[0] > IC_threashold) * ((*data->IC)[0] + ((*data->IC)[1] > IC_threashold) * ((*data->IC)[1] + ((*data->IC)[2] > IC_threashold) * ((*data->IC)[2] + ((*data->IC)[3] > IC_threashold) * ((*data->IC)[3] + ((*data->IC)[4] > IC_threashold) * ((*data->IC)[4] + ((*data->IC)[5] > IC_threashold) * ((*data->IC)[5]))))));
-        fragment->D_En = ((*data->IC)[0] > IC_threashold) * ((*data->IC)[0] + ((*data->IC)[1] > IC_threashold) * ((*data->IC)[1]));
-        fragment->D_En2 = (*data->IC)[0] * ((*data->IC)[1] > IC_threashold);
+        fragment->En        = ((*data->IC)[0] > IC_threashold) * ((*data->IC)[0] + ((*data->IC)[1] > IC_threashold) * ((*data->IC)[1] + ((*data->IC)[2] > IC_threashold) * ((*data->IC)[2] + ((*data->IC)[3] > IC_threashold) * ((*data->IC)[3] + ((*data->IC)[4] > IC_threashold) * ((*data->IC)[4] + ((*data->IC)[5] > IC_threashold) * ((*data->IC)[5]))))));
+        fragment->D_En      = ((*data->IC)[0] > IC_threashold) * ((*data->IC)[0] + ((*data->IC)[1] > IC_threashold) * ((*data->IC)[1]));
+        fragment->D_En2     = (*data->IC)[0] * ((*data->IC)[1] > IC_threashold);
 
         //fragment->T = 540.5 * (data->AGAVA_VAMOSTS < 104753375647998) + 537.9 * (data->AGAVA_VAMOSTS >= 104753375647998) - 2. * (data->T_FPMW_CATS2_C) + 2.7 * (MW_N[0] == 16) + 2.7 * (MW_N[0] == 15) + 2.9 * (MW_N[0] == 14) + 2.9 * (MW_N[0] == 13) + 2.4 * (MW_N[0] == 12) + 1.3 * (MW_N[0] == 11) + 1.5 * (MW_N[0] == 10) + 1.6 * (MW_N[0] == 9) - 0.6 * (MW_N[0] == 8) + 2.5 * (MW_N[0] == 7) + 2. * (MW_N[0] == 6) + 1.6 * (MW_N[0] == 5) + 1.1 * (MW_N[0] == 4) - 0.6 * (MW_N[0] == 3) - 1.2 * (MW_N[0] == 2) - 4.0 * (MW_N[0] == 1);
-        fragment->T = GetFPTime();
-        fragment->Path = **data->Path + 5;
+        fragment->T         = GetFPTime();
+        fragment->Path      = **data->Path + 5;
 
         //Computing the basic identifiaction
-        fragment->V = fragment->Path / fragment->T;
-        fragment->Beta = fragment->V / 29.9792;
-        fragment->Gamma = 1. / sqrt(1.0 - fragment->Beta * fragment->Beta);
-        fragment->M = (fragment->En) / 931.5016 / (fragment->Gamma - 1.);
+        fragment->V         = fragment->Path / fragment->T;
+        fragment->Beta      = fragment->V / 29.9792;
+        fragment->Gamma     = 1. / sqrt(1.0 - fragment->Beta * fragment->Beta);
+        fragment->M         = (fragment->En) / 931.5016 / (fragment->Gamma - 1.);
         //mM2 = 18./20.8*(mE2)/931.5016/(mGamma2-1.);
-        fragment->M_Q = **data->Brho / 3.105 / fragment->Beta / fragment->Gamma;
-        fragment->Charge = fragment->M / fragment->M_Q;
+        fragment->M_Q       = **data->Brho / 3.105 / fragment->Beta / fragment->Gamma;
+        fragment->Charge    = fragment->M / fragment->M_Q;
 
         //dE - E identification
         for (const auto &z_search : cut_type.at("dE2_E")) {

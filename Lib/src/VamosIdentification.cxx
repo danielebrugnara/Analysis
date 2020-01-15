@@ -2,13 +2,15 @@
 
 VamosIdentification::VamosIdentification() : cuts_Z({18, 19, -1}),
                                              cuts_M({45, 46, 47, -1, -2}),
-                                             cuts_Q({13, 14, 15, 16, 17, 18, 19, -1, -2}) {
+                                             cuts_Q({13, 14, 15, 16, 17, 18, 19, -1, -2}) {}
+
+bool VamosIdentification::Initialize() {
     ReadFPTimeShifts();
 
     //Masses in MeV [M][Z] as ints
     for (const auto &it_M : cuts_M) {
         for (const auto &it_Z : cuts_Z) {
-            mass[it_M][it_Z] = it_M *AMU_TO_MEV;
+            mass[it_M][it_Z] = it_M * AMU_TO_MEV;
         }
     }
 
@@ -26,8 +28,8 @@ VamosIdentification::VamosIdentification() : cuts_Z({18, 19, -1}),
 
     //Delta E vs Energy cuts
 
-    for (const auto & c: cuts){
-        std::cout << c.first <<std::endl;
+    for (const auto &c : cuts) {
+        std::cout << c.first << std::endl;
     }
 
 #ifdef VERBOSE_DEBUG
@@ -43,7 +45,7 @@ VamosIdentification::VamosIdentification() : cuts_Z({18, 19, -1}),
         throw std::runtime_error("Unable to find one of the dE2_E cuts\n");
     }
 
-    cut_type["DE2_E"] = *tmp;
+    cut_type["dE2_E"] = *tmp;
 
     //Mass over Q cuts
     tmp = new std::unordered_map<std::string, TCutG *>();
@@ -75,6 +77,11 @@ VamosIdentification::VamosIdentification() : cuts_Z({18, 19, -1}),
     }
 
     cut_type["MQ_Q"] = *tmp;
+#ifdef VERBOSE_DEBUG
+    std::cout << "Found all needed cuts\n";
+#endif
+
+    return true;
 }
 
 VamosIdentification::~VamosIdentification() {}

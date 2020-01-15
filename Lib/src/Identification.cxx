@@ -16,7 +16,7 @@ void Identification::LoadCuts(std::string path) {
     TKey *key;
     TObject *obj;
 #ifdef VERBOSE_DEBUG
-    std::cout << "Starting to look for cuts in VAMOS file:\n";
+    std::cout << "Starting to look for cuts:\n";
 #endif
     while ((key = (TKey *)contents())) {
         obj = cuts_file->Get(key->GetName());

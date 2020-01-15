@@ -27,9 +27,9 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     // The SlaveBegin() function is called after the Begin() function.
     // When running with PROOF SlaveBegin() is called on each slave server.
     // The tree argument is deprecated (on PROOF 0 is passed).
-//#ifdef VERBOSE_DEBUG
+#ifdef VERBOSE_DEBUG
     std::cout << "------------>Selector::SlaveBegin()\n";
-//#endif
+#endif
 
     TString option = GetOption();
     file_name = "./Out/" + option;
@@ -123,6 +123,11 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
         }
     }
 
+
+#ifdef VERBOSE_DEBUG
+    std::cout << "------------>finished: agata initialization\n";
+#endif
+
     //CATS
 
     //MUGAST
@@ -157,6 +162,10 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
         fOutput->Add(pData.SI.mELab_ThetaLab[0][0][particle]["ANY"]);
     }
 
+#ifdef VERBOSE_DEBUG
+    std::cout << "------------>finished: SI initialization\n";
+#endif
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     ///Loading things from TFiles/////////////////////////////////////////////////////////////
     std::ifstream *input_file = nullptr;
@@ -165,7 +174,13 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     std::string VAMOS_cuts_file = "./Configs/Cuts/VAMOS.root";
     std::string MUGAST_cuts_file = "./Configs/Cuts/MUGAST.root";
 
+    //TODO: use constructor to initialize this!!!
     vamos_fragment.LoadCuts(VAMOS_cuts_file);
+    vamos_fragment.Initialize();
+
+#ifdef VERBOSE_DEBUG
+    std::cout << "------------>finished: vamos_fragment initialization\n";
+#endif
 
     //TODO: update with new identification class
     input_file = new std::ifstream(MUGAST_cuts_file);
@@ -207,6 +222,9 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     //////////////////////////////////////////////////////////////////////////////////////////////////
     ///Deciding which graphs to plot/////////////////////////////////////////////////////////////////
     GetSettings();  //Decides which histograms to fill
+#ifdef VERBOSE_DEBUG
+    std::cout << "------------>finished: Selector::SlaveBegin()\n";
+#endif
 }
 
 Bool_t Selector::Process(Long64_t entry) {
@@ -228,6 +246,10 @@ Bool_t Selector::Process(Long64_t entry) {
 
     fReader.SetLocalEntry(entry);
 
+#ifdef VERBOSE_DEBUG
+    std::cout << "------------>Selector::Process()\n";
+#endif
+
     //Agata vs Ancillary coincidence gate
     Bool_t AGATA_GOOD = *AddTS - *LTS > 175 && *AddTS - *LTS < 184;
 
@@ -235,9 +257,20 @@ Bool_t Selector::Process(Long64_t entry) {
     //Configuration spectra are filled in the identification
 
     LoadVamosData();
+#ifdef VERBOSE_DEBUG
+    std::cout << "------------>Finished: Loading Vamos data\n";
+#endif
     vamos_fragment.Identify();
+#ifdef VERBOSE_DEBUG
+    std::cout << "------------>Finished: Identification\n";
+#endif
     PlotVamosGraphs();
     if (!vamos_fragment.Identified()) goto mugast_label;
+
+#ifdef VERBOSE_DEBUG
+    std::cout << "------------>Finished: Vamos identification, positive exit\n";
+#endif
+
 
     //AGATA///////////////////////////////////////////////////////////////////////////////////////////////////
     if (AGATA_GOOD) {
@@ -261,6 +294,11 @@ Bool_t Selector::Process(Long64_t entry) {
 
 //MUGAST//////////////////////////////////////////////////////////////////////////////////////////////////////
 mugast_label:  //Label of goto previous to VAMOS
+
+#ifdef VERBOSE_DEBUG
+    std::cout << "------------>Finished: Vamos identification, negative exit\n";
+#endif
+
     FillMugastConfHistograms();
 
     //SI data loops
@@ -364,6 +402,9 @@ void Selector::SlaveTerminate() {
     // The SlaveTerminate() function is called after all entries or objects
     // have been processed. When running with PROOF SlaveTerminate() is called
     // on each slave server.
+#ifdef VERBOSE_DEBUG
+    std::cout << "------------>Selector::SlaveTerminate()\n";
+#endif
     TFile *top = new TFile(file_name.c_str(), "recreate");
     std::cout << "Output file : " << file_name << "\n";
     TIter iter(fOutput);
@@ -378,6 +419,9 @@ void Selector::Terminate() {
     // The Terminate() function is the last function to be called during
     // a query. It always runs on the client, it can be used to present
     // the results graphically or save the results to file.
+#ifdef VERBOSE_DEBUG
+    std::cout << "------------>Selector::Terminate()\n";
+#endif
 }
 
 //Identification of the VAMOS fragments
