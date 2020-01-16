@@ -97,22 +97,22 @@ class VamosIdentification : public Identification {
 
    public:
     //Various computed fragment properties
-    inline double Get_En() { return fragment->En; };
-    inline double Get_D_En() { return fragment->D_En; };
-    inline double Get_D_En2() { return fragment->D_En2; };
-    inline double Get_Path() { return fragment->Path; };
-    inline double Get_T() { return fragment->T; };
-    inline double Get_V() { return fragment->V; };
-    inline double Get_Beta() { return fragment->Beta; };
-    inline double Get_Gamma() { return fragment->Gamma; };
-    inline double Get_M_Q() { return fragment->M_Q; };
-    inline double Get_M() { return fragment->M; };
-    inline double Get_Charge() { return fragment->Charge; };
-    inline double Identified() { return fragment->Identified; };
+    inline double Get_En()          { return fragment->En; };
+    inline double Get_D_En()        { return fragment->D_En; };
+    inline double Get_D_En2()       { return fragment->D_En2; };
+    inline double Get_Path()        { return fragment->Path; };
+    inline double Get_T()           { return fragment->T; };
+    inline double Get_V()           { return fragment->V; };
+    inline double Get_Beta()        { return fragment->Beta; };
+    inline double Get_Gamma()       { return fragment->Gamma; };
+    inline double Get_M_Q()         { return fragment->M_Q; };
+    inline double Get_M()           { return fragment->M; };
+    inline double Get_Charge()      { return fragment->Charge; };
+    inline double Identified()      { return fragment->Identified; };
     inline TLorentzVector *Get_p4() { return &(fragment->p4); };
-    inline double Get_id_Z() { return fragment->id_Z; };
-    inline double Get_id_M() { return fragment->id_M; };
-    inline double Get_id_Q() { return fragment->id_Q; };
+    inline double Get_id_Z()        { return fragment->id_Z; };
+    inline double Get_id_M()        { return fragment->id_M; };
+    inline double Get_id_Q()        { return fragment->id_Q; };
 
     //////////////////////////////////////////////////////////////////
     //Inline Functions implementation (required to be in header file)
@@ -137,21 +137,19 @@ class VamosIdentification : public Identification {
                        ((*data->IC)[3] > IC_threashold) * ((*data->IC)[3] + 
                        ((*data->IC)[4] > IC_threashold) * ((*data->IC)[4] + 
                        ((*data->IC)[5] > IC_threashold) * ((*data->IC)[5]))))));
-        fragment->D_En = ((*data->IC)[0] > IC_threashold) * ((*data->IC)[0] + ((*data->IC)[1] > IC_threashold) * ((*data->IC)[1]));
-        fragment->D_En2 = (*data->IC)[0] * ((*data->IC)[1] > IC_threashold);
+        fragment->D_En      = ((*data->IC)[0] > IC_threashold) * ((*data->IC)[0] + ((*data->IC)[1] > IC_threashold) * ((*data->IC)[1]));
+        fragment->D_En2     = (*data->IC)[0] * ((*data->IC)[1] > IC_threashold);
 
-        //fragment->T = 540.5 * (data->AGAVA_VAMOSTS < 104753375647998) + 537.9 * (data->AGAVA_VAMOSTS >= 104753375647998) - 2. * (data->T_FPMW_CATS2_C) + 2.7 * (MW_N[0] == 16) + 2.7 * (MW_N[0] == 15) + 2.9 * (MW_N[0] == 14) + 2.9 * (MW_N[0] == 13) + 2.4 * (MW_N[0] == 12) + 1.3 * (MW_N[0] == 11) + 1.5 * (MW_N[0] == 10) + 1.6 * (MW_N[0] == 9) - 0.6 * (MW_N[0] == 8) + 2.5 * (MW_N[0] == 7) + 2. * (MW_N[0] == 6) + 1.6 * (MW_N[0] == 5) + 1.1 * (MW_N[0] == 4) - 0.6 * (MW_N[0] == 3) - 1.2 * (MW_N[0] == 2) - 4.0 * (MW_N[0] == 1);
-        fragment->T = GetFPTime();
-        fragment->Path = **data->Path + 5;
-
+        fragment->T         = GetFPTime();
+        fragment->Path      = **data->Path + 5;
         //Computing the basic identifiaction
-        fragment->V = fragment->Path / fragment->T;
-        fragment->Beta = fragment->V / 29.9792;
-        fragment->Gamma = 1. / sqrt(1.0 - fragment->Beta * fragment->Beta);
-        fragment->M = (fragment->En) / 931.5016 / (fragment->Gamma - 1.);
+        fragment->V         = fragment->Path / fragment->T;
+        fragment->Beta      = fragment->V / 29.9792;
+        fragment->Gamma     = 1. / sqrt(1.0 - fragment->Beta * fragment->Beta);
+        fragment->M         = (fragment->En) / 931.5016 / (fragment->Gamma - 1.);
         //mM2 = 18./20.8*(mE2)/931.5016/(mGamma2-1.);
-        fragment->M_Q = **data->Brho / 3.105 / fragment->Beta / fragment->Gamma;
-        fragment->Charge = fragment->M / fragment->M_Q;
+        fragment->M_Q       = **data->Brho / 3.105 / fragment->Beta / fragment->Gamma;
+        fragment->Charge    = fragment->M / fragment->M_Q;
 
         //dE - E identification
         for (const auto &z_search : cut_type.at("dE2_E")) {
@@ -185,7 +183,6 @@ class VamosIdentification : public Identification {
         TVector3 v4(0, 0, fragment->Beta);
         v4.SetMagThetaPhi(fragment->Beta, **data->ThetaL, **data->PhiL);
         fragment->p4.Boost(v4);
-
         return fragment->Identified = true;
     }
 
@@ -202,13 +199,11 @@ class VamosIdentification : public Identification {
                     break;
                 }
         }
-        //return 0;
         return shift + FP_time_interpolation->Evaluate(**data->Xf);
     }
 
     inline double GetFPTime() {
         return 540.5 * (**data->AGAVA_VAMOSTS < 104753375647998) + 537.9 * (**data->AGAVA_VAMOSTS >= 104753375647998) - 2. * **data->T_FPMW_CATS2_C + GetShift();
-        //return 0;
     }
 };
 

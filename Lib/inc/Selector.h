@@ -161,11 +161,11 @@ class Selector : public TSelector {
     inline void FillMugastConfHistograms();
 
     //Constants
-    const Long64_t TS_TO_S = 1E8;
-    const Long64_t TS_TO_HR = 1E8 * 3600;
-    const Double_t AMU_TO_MEV = 931.4936148;
-    const Double_t c_speed = 299792458;  //m/s
-    const Double_t MEV_TO_J = 1.60217733e-13;
+    const Long64_t TS_TO_S      = 1E8;
+    const Long64_t TS_TO_HR     = 1E8 * 3600;
+    const Double_t AMU_TO_MEV   = 931.4936148;
+    const Double_t c_speed      = 299792458;  //m/s
+    const Double_t MEV_TO_J     = 1.60217733e-13;
 
     //Graphs
     //General
@@ -211,8 +211,8 @@ class Selector : public TSelector {
 
     struct AgataData {
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH1D *>>> hDC;             //[mass][nucleus][condition]
-        std::unordered_map<int, std::unordered_map<int, TH2D *>> mDC;                                    //[mass][nucleus]
-        std::unordered_map<int, std::unordered_map<int, TH2D *>> mDC_ThetaMUGAST;                        //[mass][nucleus]
+        std::unordered_map<int, std::unordered_map<int, TH2D *>>                                  mDC;             //[mass][nucleus]
+        std::unordered_map<int, std::unordered_map<int, TH2D *>>                                  mDC_ThetaMUGAST; //[mass][nucleus]
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mEx_DC;          //[mass][nucleus][particle]
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mELab_ThetaLab;  //[mass][nucleus][particle]
     };
@@ -226,29 +226,28 @@ class Selector : public TSelector {
     };
 
     //Mugast////////////////////////////////////////////////////////////////////////////////////
-    std::vector<std::string> silicons = {"MM1", "MM2", "MM3", "MM4", "MG1", "MG2", "MG3", "MG4", "MG5", "MG6", "MG7", "MG8", "MG9", "MG10", "MG11"};
-    std::vector<std::string> siliconsMM = {"MM1", "MM2", "MM3", "MM4"};
-    std::vector<std::string> siliconsMG = {"MG1", "MG2", "MG3", "MG4", "MG5", "MG6", "MG7", "MG8", "MG9", "MG10", "MG11"};
+    std::vector<std::string> silicons           = {"MM1", "MM2", "MM3", "MM4", "MG1", "MG2", "MG3", "MG4", "MG5", "MG6", "MG7", "MG8", "MG9", "MG10", "MG11"};
+    std::vector<std::string> siliconsMM         = {"MM1", "MM2", "MM3", "MM4"};
+    std::vector<std::string> siliconsMG         = {"MG1", "MG2", "MG3", "MG4", "MG5", "MG6", "MG7", "MG8", "MG9", "MG10", "MG11"};
+    std::vector<std::string> alpha_correction   = {"70", "80", "90", "100", "110", "120", "130", "140", "150", "160", "170"};
+    std::vector<std::string> particles          = {"p", "d", "ANY"};
+    std::vector<std::string> gammas             = {"360keV", "ANY"};
     std::vector<std::string> strips;
-    std::vector<std::string> alpha_correction = {"70", "80", "90", "100", "110", "120", "130", "140", "150", "160", "170"};
-    std::vector<std::string> particles = {"p", "d", "ANY"};
-    std::vector<std::string> gammas = {"360keV", "ANY"};
 
-    struct SiConf {                                                     //
-        std::unordered_map<std::string, TH2D *> mE_TOF;                           //[M*#]
-                                                                        // std::unordered_map<std::string, std::unordered_map<std::string,TH2D*>> mE_TOF_Corrected;   //[M*#][alpha]
-        std::unordered_map<std::string, TH2D *> mdE_E_Si;                         //[MM#]
-        std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>> mStrip_E;  //[M*#][X\Y]
-        std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>> mStrip_T;  //[M*#][X\Y]
+    struct SiConf { 
+        std::unordered_map<std::string, TH2D *>                                     mE_TOF;     //[M*#]
+        std::unordered_map<std::string, TH2D *>                                     mdE_E_Si;   //[MM#]
+        std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>>    mStrip_E;  //[M*#][X\Y]
+        std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>>    mStrip_T;  //[M*#][X\Y]
     };
 
     struct SiData {                                                                            //
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mE_TOF;    //[Mass][Nucl][M*#]
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mdE_E_Si;  //[Mass][Nucl][M*#]
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH1D *>>> hEx;       //[Mass][Nucl][Parcle]
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mEx_TW;    //[Mass][Nucl][Parcle]
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mECM_ThetaCM;
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>>>> mELab_ThetaLab;
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>>                                   mE_TOF;    //[Mass][Nucl][M*#]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>>                                   mdE_E_Si;  //[Mass][Nucl][M*#]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH1D *>>>                                   hEx;       //[Mass][Nucl][Parcle]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>>                                   mEx_TW;    //[Mass][Nucl][Parcle]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>>                                   mECM_ThetaCM;
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>>>>  mELab_ThetaLab;
     };
 
     inline double AlignPunch(int detector, double time) {
@@ -303,7 +302,6 @@ class Selector : public TSelector {
     //Graphical cuts////////////////////////////////////////////////////////////////////////////////////
     std::map<std::string, std::map<std::string, TCutG *>> cut;
 
-    //TFile *VAMOScuts;
     //TFile *MUGASTcuts;
 
     //long long counter;
