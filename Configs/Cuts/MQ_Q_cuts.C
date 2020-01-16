@@ -32444,7 +32444,7 @@ void run()
     ff->cd();
 
     cutg1->Write();
-    cutg2->Write();
+    //cutg2->Write();
     cutg3->Write();
     cutg4->Write();
     cutg5->Write();
@@ -32468,6 +32468,7 @@ void run()
     cutg1_1->Write();
     cutg1_2->Write();
     cutg1_3->Write();
+ pConfmIVAMOSmImQ_MQmIK__1->Write(); 
 
     ff->Write();
     ff->Close();

@@ -43,8 +43,10 @@ class VamosIdentification : public Identification {
                                                         T_FPMW_CATS2_C(T_FPMW_CATS2_C){};
     };
     std::array<int, 3> cuts_Z;
-    std::array<int, 5> cuts_M;
-    std::array<int, 9> cuts_Q;
+    //std::array<int, 5> cuts_M;
+    //std::array<int, 9> cuts_Q;
+    std::array<int, 4> cuts_M;
+    std::array<int, 8> cuts_Q;
 
     std::unordered_map<int, std::unordered_map<int, double>> mass;
 
@@ -120,8 +122,8 @@ class VamosIdentification : public Identification {
         std::cout << "------------>VamosIdentification::SetData()\n";
 #endif
         //TODO: will this cause memory leaks?
-        //if (this->data)     delete this->data;
-        //if (this->fragment!=nullptr) delete (this->fragment);
+        if (this->data!=nullptr)     delete this->data;
+        if (this->fragment!=nullptr) delete this->fragment;
 #ifdef VERBOSE_DEBUG
         std::cout << "------------>finished : pointers deleted\n";
 #endif
@@ -166,7 +168,9 @@ class VamosIdentification : public Identification {
                     fragment->id_M = stoi(mq_search.first.substr(mq_search.first.find_last_of("M") + 1, 2));
                     fragment->id_Q = stoi(mq_search.first.substr(mq_search.first.find_last_of("_") + 2));
                 } else
-                    throw std::runtime_error("Overlapping M_Q gates");
+                    throw std::runtime_error("Overlapping M_Q gates :  "+mq_search.first+
+                                                "  and  M"+std::to_string(fragment->id_M)+
+                                                "  Q"+std::to_string(fragment->id_Q)+"\n");
             }
         }
         if (fragment->id_M == 0 || fragment->id_Q == 0) return false;
@@ -189,12 +193,13 @@ class VamosIdentification : public Identification {
             else
                 break;
         }
+        //return 0;
         return shift;
     }
 
     inline double GetFPTime() {
-        //    return 540.5*(data->AGAVA_VAMOSTS<104753375647998)+537.9*(data->AGAVA_VAMOSTS>=104753375647998) -2.*data->T_FPMW_CATS2_C + GetShift();
-        return 0;
+        return 540.5*(**data->AGAVA_VAMOSTS<104753375647998)+537.9*(**data->AGAVA_VAMOSTS>=104753375647998) -2.* **data->T_FPMW_CATS2_C + GetShift();
+        //return 0;
     }
 };
 

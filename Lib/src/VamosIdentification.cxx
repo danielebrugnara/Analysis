@@ -1,8 +1,12 @@
 #include "VamosIdentification.h"
 
 VamosIdentification::VamosIdentification() : cuts_Z({18, 19, -1}),
-                                             cuts_M({45, 46, 47, -1, -2}),
-                                             cuts_Q({13, 14, 15, 16, 17, 18, 19, -1, -2}) {}
+                                             //cuts_M({45, 46, 47, -1, -2}),
+                                             //cuts_Q({13, 14, 15, 16, 17, 18, 19, -1, -2}), 
+                                             cuts_M({45, 46, 47, -2}),
+                                             cuts_Q({13, 14, 15, 16, 17, 18, 19, -2}), 
+                                             data(nullptr),
+                                             fragment(nullptr){}
 
 bool VamosIdentification::Initialize() {
     ReadFPTimeShifts();
@@ -69,7 +73,7 @@ bool VamosIdentification::Initialize() {
         (*tmp)["MQ_Q_M45_Q12"] = cuts.at("MQ_Q_M45_Q12");
         (*tmp)["MQ_Q_M45_Q18"] = cuts.at("MQ_Q_M45_Q18");
         (*tmp)["MQ_Q_M47_Q19"] = cuts.at("MQ_Q_M47_Q19");
-        (*tmp)["MQ_Q_M-1_Q-1"] = cuts.at("MQ_Q_M-1_Q-1");
+        //(*tmp)["MQ_Q_M-1_Q-1"] = cuts.at("MQ_Q_M-1_Q-1");
         (*tmp)["MQ_Q_M-2_Q-2"] = cuts.at("MQ_Q_M-2_Q-2");
     } catch (const std::out_of_range &err) {
         std::cerr << err.what() << std::endl;
@@ -77,6 +81,7 @@ bool VamosIdentification::Initialize() {
     }
 
     cut_type["MQ_Q"] = *tmp;
+
 #ifdef VERBOSE_DEBUG
     std::cout << "Found all needed cuts\n";
 #endif
