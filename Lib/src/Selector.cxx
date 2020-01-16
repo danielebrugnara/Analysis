@@ -55,6 +55,8 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     for (const auto &Z_it : vamos_fragment.cuts_Z) {
         pConf.VAMOS.mQ_MQ[Z_it] = new TH2D(Form("pConf_VAMOS_mQ_MQ_Z%i", Z_it), Form("M/Q vs Q with Z%i selection", Z_it), 1000, 2, 4, 1000, 3, 24);
         fOutput->Add(pConf.VAMOS.mQ_MQ[Z_it]);
+        pConf.VAMOS.Xf_MQ[Z_it] = new TH2D(Form("pConf_VAMOS_Xf_MQ_Z%i", Z_it), Form("M/Q vs Xf with Z%i selection", Z_it), 1000, 2, 4, 1000, -400, 400);
+        fOutput->Add(pConf.VAMOS.Xf_MQ[Z_it]);
     }
 
     //    pConf.VAMOS.hAmass["Ar"] = new TH1D("pConf-VAMOS-hAmass-Ar", "Mass histogram of Ar", 1000, 20, 50);
@@ -441,6 +443,7 @@ inline void Selector::PlotVamosGraphs() {
 
     if (vamos_fragment.Get_id_Z()==0) return;
     Fill(pConf.VAMOS.mQ_MQ[vamos_fragment.Get_id_Z()], vamos_fragment.Get_M_Q(), vamos_fragment.Get_Charge());
+    Fill(pConf.VAMOS.Xf_MQ[vamos_fragment.Get_id_Z()], vamos_fragment.Get_M_Q(), *Xf);
     if (!vamos_fragment.Identified()) return;
     Fill(pData.VAMOS.mTW_Brho[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()], *TW, *Brho);
     //Fill(pConf.VAMOS.hAmass[Nucleus_tmp], vamos_fragment.Get_M_Q * stoi(Qcut.substr(1, 2)));

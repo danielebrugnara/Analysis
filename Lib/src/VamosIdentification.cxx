@@ -32,10 +32,6 @@ bool VamosIdentification::Initialize() {
 
     //Delta E vs Energy cuts
 
-    for (const auto &c : cuts) {
-        std::cout << c.first << std::endl;
-    }
-
 #ifdef VERBOSE_DEBUG
     std::cout << "Starting to look for VAMOS files\n";
 #endif
@@ -105,8 +101,14 @@ void VamosIdentification::ReadFPTimeShifts() {
         TimeShifts.push_back(std::pair<double, double>(stod(max), stod(shift)));
     }
     double tmp = -1E6;
+#ifdef VERBOSE_DEBUG
+        std::cout << "Dumping FP shift calibration\n";
+#endif
     for (const auto &it : TimeShifts) {
         if (it.first < tmp) throw std::runtime_error("Time shifts not incremental\n");
         tmp = it.first;
+#ifdef VERBOSE_DEBUG
+        std::cout << it.first <<"    "<<it.second<<"\n";
+#endif
     }
 }

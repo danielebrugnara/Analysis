@@ -45,11 +45,9 @@ bool Analysis::Job() {
             //Forking process to avoid ROOT threading problems
             if ((pid = fork()) == 0) {  //Child process
                 RunSelector(current_run);
-                //std::cout << "Finished analysis  of : "<< current_run <<"\n";
                 exit(1);
             } else {            //Parent process
                 wait(&status);  //Wait child process to complete instructions
-                //std::cout << "Parent finished waiting for child process  : " << current_run <<"\n";
             }
         }
     } catch (std::runtime_error &e) {

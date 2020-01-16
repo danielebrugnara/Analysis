@@ -192,6 +192,7 @@ class Selector : public TSelector {
         TH2D *mdE_E;
         TH2D *mdE2_E;
         std::unordered_map<int, TH2D *> mQ_MQ; //map index over [Z]
+        std::unordered_map<int, TH2D *> Xf_MQ; //map index over [Z]
         //std::unordered_map<int, std::unordered_map<TH1D *>> hAmass;
     };
 
