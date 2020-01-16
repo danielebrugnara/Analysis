@@ -9,7 +9,12 @@ VamosIdentification::VamosIdentification() : cuts_Z({18, 19, -1}),
                                              fragment(nullptr){}
 
 bool VamosIdentification::Initialize() {
+
+    //Focal plane aligments
     ReadFPTimeShifts();
+    TFile * tmp_file = new TFile("./Configs/Interpolations/InterpolationTimeFP.root");
+    FP_time_interpolation = new Interpolation(tmp_file);
+    tmp_file->Close();
 
     //Masses in MeV [M][Z] as ints
     for (const auto &it_M : cuts_M) {

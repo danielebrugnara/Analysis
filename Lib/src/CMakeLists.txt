@@ -26,6 +26,6 @@ set_target_properties(Analysis PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/L
 
 #Linking to needed dynamic libraries
 target_link_libraries(Interpolation ${ROOT_LIBRARIES})
-target_link_libraries(VamosIdentification ${ROOT_LIBRARIES})
+target_link_libraries(VamosIdentification ${ROOT_LIBRARIES} Interpolation)
 target_link_libraries(Selector ${ROOT_LIBRARIES}  NPMugast NPMUST2 NPCATS Interpolation VamosIdentification)
 target_link_libraries(Analysis ${ROOT_LIBRARIES} Selector)

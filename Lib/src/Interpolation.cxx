@@ -66,8 +66,4 @@ TSpline* Interpolation::GetSpline() {
     return spline;
 }
 
-inline double Interpolation::Evaluate(double x) {
-    return spline->Eval(x);
-}
-
 #endif

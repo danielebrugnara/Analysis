@@ -131,7 +131,12 @@ class VamosIdentification : public Identification {
         this->data = data;
     }
     inline bool Identify() {
-        fragment->En = ((*data->IC)[0] > IC_threashold) * ((*data->IC)[0] + ((*data->IC)[1] > IC_threashold) * ((*data->IC)[1] + ((*data->IC)[2] > IC_threashold) * ((*data->IC)[2] + ((*data->IC)[3] > IC_threashold) * ((*data->IC)[3] + ((*data->IC)[4] > IC_threashold) * ((*data->IC)[4] + ((*data->IC)[5] > IC_threashold) * ((*data->IC)[5]))))));
+        fragment->En = ((*data->IC)[0] > IC_threashold) * ((*data->IC)[0] + 
+                       ((*data->IC)[1] > IC_threashold) * (((*data->IC)[1] * (**data->Xf<=45)) +(((*data->IC)[1]+1.) * (**data->Xf>45)) + //Correction for mis aligment IC1:Xf
+                       ((*data->IC)[2] > IC_threashold) * ((*data->IC)[2] + 
+                       ((*data->IC)[3] > IC_threashold) * ((*data->IC)[3] + 
+                       ((*data->IC)[4] > IC_threashold) * ((*data->IC)[4] + 
+                       ((*data->IC)[5] > IC_threashold) * ((*data->IC)[5]))))));
         fragment->D_En = ((*data->IC)[0] > IC_threashold) * ((*data->IC)[0] + ((*data->IC)[1] > IC_threashold) * ((*data->IC)[1]));
         fragment->D_En2 = (*data->IC)[0] * ((*data->IC)[1] > IC_threashold);
 
@@ -198,7 +203,7 @@ class VamosIdentification : public Identification {
                 }
         }
         //return 0;
-        return shift;
+        return shift + FP_time_interpolation->Evaluate(**data->Xf);
     }
 
     inline double GetFPTime() {

@@ -14,7 +14,7 @@ class Interpolation {
    public:
     Interpolation(std::string);//Reads from mathematica txt file
     Interpolation(TFile *);//Opens existing Spline in ROOT file
-    inline double Evaluate(double);
+    inline double Evaluate(const double & x){ return spline->Eval(x); };
     TSpline *GetSpline();
     ~Interpolation();
 
