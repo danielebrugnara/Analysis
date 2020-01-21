@@ -59,6 +59,7 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
                     new TH2D(Form("pConf_VAMOS_mQ_MQ_Z%i", Z_it), 
                                 Form("M/Q vs Q with Z%i selection", Z_it), 
                                1000, 2, 4, 1000, 3, 24));
+
         Istantiate(pConf.VAMOS.Xf_MQ[Z_it],
                     new TH2D(Form("pConf_VAMOS_Xf_MQ_Z%i", Z_it), 
                                 Form("M/Q vs Xf with Z%i selection", Z_it), 
@@ -70,6 +71,7 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
                 new TH3D("pConf-AGATA-mmAGATA3D", 
                             "Hit patter on AGATA", 
                             50, -300, 300, 50, -300, 300, 50, -300, 300));
+
     Istantiate(pConf.AGATA.hAddTS_LTS,
                 new TH1D("pConf-AGATA-hAddTS_LTS", 
                             "Difference between AddTS and LTS", 
@@ -97,18 +99,22 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
                     new TH2D(Form("pConf-SI-mE_TOF-%s", SI.c_str()), 
                                 Form("E vs TOF of %s", SI.c_str()),          
                                 1000, 0, 28, 1000, 260, 380));
+
         Istantiate(pConf.SI.mStrip_E[SI]["X"],
                     new TH2D(Form("pConf-SI-mStrip_E-%s-%s", SI.c_str(), "X"), 
                                 Form("Strip vs E of %s %s", SI.c_str(), "X"), 
                                 128, 0, 128, 1000, 0, 30));
+
         Istantiate(pConf.SI.mStrip_E[SI]["Y"],
                     new TH2D(Form("pConf-SI-mStrip_E-%s-%s", SI.c_str(), "Y"), 
                                 Form("Strip vs E of %s %s", SI.c_str(), "Y"), 
                                 128, 0, 128, 1000, 0, 30));
+
         Istantiate(pConf.SI.mStrip_T[SI]["X"],
                     new TH2D(Form("pConf-SI-mStrip_T-%s-%s", SI.c_str(), "X"), 
                                 Form("Strip vs T of %s %s", SI.c_str(), "X"), 
                                 128, 0, 128, 1000, 0, 1500));
+
         Istantiate(pConf.SI.mStrip_T[SI]["Y"],
                     new TH2D(Form("pConf-SI-mStrip_T-%s-%s", SI.c_str(), "Y"), 
                                 Form("Strip vs T of %s %s", SI.c_str(), "Y"), 
@@ -137,15 +143,18 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
             Istantiate(pData.AGATA.mDC[it_M][it_Z],
                         new TH2D(Form("pData_AGATA_mDC_M%i_Z%i", it_M, it_Z), Form("DC gamma gamma of M%i Z%i", it_M, it_Z), 
                                     4000, 0, 4000, 4000, 0, 4000));
+
             Istantiate(pData.AGATA.mDC_ThetaMUGAST[it_M][it_Z],
                         new TH2D(Form("pData_AGATA_mDC_ThetaMUGAST_M%i_Z%i", it_M, it_Z), 
                                     Form("DC gamma vs Theta on MUGAST of M%i Z%i", it_M, it_Z), 
                                     4000, 0, 4000, 180, 0, 180));
+
             for (const auto &particle : particles) {
                 Istantiate(pData.AGATA.mEx_DC[it_M][it_Z][particle],
                             new TH2D(Form("pData_AGATA_mEx_DC_M%i_Z%i_%s", it_M, it_Z, particle.c_str()), 
                                         Form("Excitation energy AGATA vs MUGAST M%i Z%i and %s", it_M, it_Z, particle.c_str()), 
                                         1000, -10, 10, 4000, 0, 4));
+                                        
                 Istantiate(pData.AGATA.mELab_ThetaLab[it_M][it_Z][particle],
                             new TH2D(Form("pData_AGATA_ELab_ThetaLab_M%i_Z%i_%s", it_M, it_Z, particle.c_str()), 
                                         Form("Excitation energy AGATA vs MUGAST M%i Z%i and %s", it_M, it_Z, particle.c_str()), 
@@ -180,19 +189,23 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
                         new TH2D(Form("pData_SI_mE_TOF_MG_M%i_Z%i", it_M, it_Z), 
                                     Form("E vs TOF of all MG with M%i Z%i", it_M, it_Z),  
                                     1000, 0, 28, 1000, 260, 380));
+
             for (const auto &particle : particles) {
                 Istantiate(pData.SI.hEx[it_M][it_Z][particle],             
                             new TH1D(Form("pData_SI-hEx_M%i_Z%i_%s", it_M, it_Z, particle.c_str()), 
                                         Form("Excitation energy with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, particle.c_str()), 
                                         1000, -60, 60));
+
                 Istantiate(pData.SI.mEx_TW[it_M][it_Z][particle],         
                             new TH2D(Form("pData_SI_mEx_TW_M%i_Z%i_%s", it_M, it_Z, particle.c_str()), 
                                         Form("Excitation energy vs Time with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, particle.c_str()), 
                                         5000, 242, 328, 1000, -60, 60));
+
                 Istantiate(pData.SI.mECM_ThetaCM[it_M][it_Z][particle],   
                             new TH2D(Form("pData_SI_mECM_ThetaCM_M%i_Z%i_%s", it_M, it_Z, particle.c_str()), 
                                         Form("E CM vs Theta CM with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, particle.c_str()), 
                                         1000, 0, 180, 1000, 0, 60));
+
                 for (const auto &gamma : gammas) {
                     Istantiate(pData.SI.mELab_ThetaLab[it_M][it_Z][particle][gamma],
                                 new TH2D(Form("pData_SI_mELab_ThetaLab_M%i_Z%i_%s_%s", it_M, it_Z, particle.c_str(), gamma.c_str()), 
@@ -209,10 +222,10 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
                     1000, 0, 180, 1000, 0, 60));
      }
 
-     if (new_graph_file!=nullptr) {
-        new_graph_file->close();
-        //TODO: kill all threads here
-     }
+    if (new_graph_file!=nullptr) {
+       new_graph_file->close();
+       //TODO: kill all threads here
+    }
 
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>finished: SI initialization\n";
@@ -220,9 +233,7 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     ///Loading things from TFiles/////////////////////////////////////////////////////////////
-    std::ifstream *input_file = nullptr;
 
-    //GCuts///////////////////////////////////////////////////////////////////////////////////
     std::string VAMOS_cuts_file = "./Configs/Cuts/VAMOS.root";
     std::string MUGAST_cuts_file = "./Configs/Cuts/MUGAST.root";
 
@@ -230,41 +241,11 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     vamos_fragment.LoadCuts(VAMOS_cuts_file);
     vamos_fragment.Initialize();
 
+    mugast_fragment.LoadCuts(MUGAST_cuts_file);
+    mugast_fragment.Initialize();
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>finished: vamos_fragment initialization\n";
 #endif
-
-    //TODO: update with new identification class
-    input_file = new std::ifstream(MUGAST_cuts_file);
-    if (input_file) {
-        input_file->close();
-        TFile *MUGASTcuts = new TFile(MUGAST_cuts_file.c_str(), "READ");
-        if (!(MUGASTcuts->IsOpen())) {
-            std::cout << "MUGAST file not opened\n";
-        } else {
-            TIter contents(MUGASTcuts->GetListOfKeys());
-            TKey *key;
-            TObject *obj;
-            while ((key = (TKey *)contents())) {
-                obj = MUGASTcuts->Get(key->GetName());
-                //         TClass *cl = gROOT->GetClass(key->GetClassName());
-                //         if (cl->InheritsFrom("TCutG")){
-                if (obj->InheritsFrom("TCutG")) {
-                    TCutG *tmp = (TCutG *)obj;
-                    cut["MUGAST"][tmp->GetName()] = tmp;
-                    //std::cout << "Found cut in MUGAST :" << tmp->GetName() << std::endl;
-                }
-            }
-        }
-    } else {
-        std::cout << "MUGAST cuts not found\n";
-    }
-
-    //Interpolations///////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////////
-    ///Other configs/////////////////////////////////////////////////////////////////////////////////
-    mass["2_H"] = 2.01410177812 * AMU_TO_MEV;  //In MeV
-    mass["1_H"] = 1.00782503223 * AMU_TO_MEV;  //In MeV
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
     ///Temporary histogram///////////////////////////////////////////////////////////////////////////
@@ -291,6 +272,7 @@ Bool_t Selector::Process(Long64_t entry) {
     //Configuration spectra are filled in the identification
 
     LoadVamosData();
+    LoadMugastData();
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>Finished: Loading Vamos data\n";
 #endif
@@ -311,11 +293,14 @@ Bool_t Selector::Process(Long64_t entry) {
         for (long unsigned int ii = 0; ii < AddE.GetSize(); ii++) {
             //if (AddE[ii] > 10 && *GATCONF_MASTER==1) {
             if (AddE[ii] > 10) {
+
                 Fill(pData.AGATA.hDC[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["NONE"], 
                         1E3 * CorrectDoppler(*vamos_fragment.Get_p4(), 
                         AddE[ii] / 1E3, AddX[ii], AddY[ii], AddZ[ii]));
+
                 for (long unsigned int kk = 0; kk < (*Mugast).PosX.size(); kk++) {
                     TVector3 vec((*Mugast).PosX[kk], (*Mugast).PosY[kk], (*Mugast).PosZ[kk]);
+
                     Fill(pData.AGATA.mDC_ThetaMUGAST[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()], 
                             1E3 * CorrectDoppler(*vamos_fragment.Get_p4(), 
                             AddE[ii] / 1E3, AddX[ii], AddY[ii], AddZ[ii]), 
@@ -324,11 +309,13 @@ Bool_t Selector::Process(Long64_t entry) {
                 //Gamma Gamma matrices
                 for (long unsigned int jj = 0; jj < AddE.GetSize(); jj++) {
                     if (AddE[jj] > 10 && ii != jj) {
+
                         Fill(pData.AGATA.mDC[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()], 
                                 1E3 * CorrectDoppler(*vamos_fragment.Get_p4(), AddE[ii] / 1E3, 
                                 AddX[ii], AddY[ii], AddZ[ii]), 
                                 1E3 * CorrectDoppler(*vamos_fragment.Get_p4(), AddE[jj] / 1E3, 
                                 AddX[jj], AddY[jj], AddZ[jj]));
+
                         Fill(pData.AGATA.mDC[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()], 
                                 1E3 * CorrectDoppler(*vamos_fragment.Get_p4(), AddE[jj] / 1E3, 
                                 AddX[jj], AddY[jj], AddZ[jj]), 
@@ -356,8 +343,10 @@ mugast_label:  //Label of goto previous to VAMOS
             for (long unsigned int ii = 0; ii < (*Mugast).DSSD_E.size(); ii++) {
                 //TVector3 hitPos((*Mugast).PosX[ii], (*Mugast).PosY[ii], (*Mugast).PosZ[ii]);
                 //Fill(pData.SI.mE_TOF[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][Form("MG%i", (*Mugast).TelescopeNumber[ii])], (*Mugast).DSSD_E[ii], AlignT((*Mugast).TelescopeNumber[ii], (*Mugast).DSSD_Y[ii], (*Mugast).DSSD_T[ii]));
+
                 Fill(pData.SI.mE_TOF[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][Form("MG%i", (*Mugast).TelescopeNumber[ii])], 
                         (*Mugast).DSSD_E[ii], (*Mugast).DSSD_T[ii]);
+
                 Fill(pData.SI.mE_TOF[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["MG"], 
                         (*Mugast).DSSD_E[ii], AlignPunch((*Mugast).TelescopeNumber[ii], 
                         (*Mugast).DSSD_T[ii]));
@@ -379,10 +368,13 @@ mugast_label:  //Label of goto previous to VAMOS
 
             Fill(pData.SI.hEx           [vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["ANY"], 
                     Ex[MugastEvents]);
+
             Fill(pData.SI.mEx_TW        [vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["ANY"], 
                     *TW, Ex[MugastEvents]);
+
             Fill(pData.SI.mELab_ThetaLab[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["ANY"]["ANY"], 
                     ThetaLab[MugastEvents], ELab[MugastEvents]);
+
             Fill(pData.SI.mECM_ThetaCM  [vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["ANY"], 
                     ThetaCM[MugastEvents], Ecm[MugastEvents]);
 
@@ -496,34 +488,48 @@ inline void Selector::LoadVamosData() {
                                                          &T_FPMW_CATS2_C));
 }
 
+inline void Selector::LoadMugastData(){
+    mugast_fragment.SetData(new MugastIdentification::Data(&Mugast));
+}
+
 inline void Selector::PlotVamosGraphs() {
     //dE-E plot, no conditions
-    Fill(pConf.VAMOS.mdE_E, vamos_fragment.Get_En(), vamos_fragment.Get_D_En());
-    Fill(pConf.VAMOS.mdE2_E, vamos_fragment.Get_En(), vamos_fragment.Get_D_En2());
+    Fill(pConf.VAMOS.mdE_E, 
+            vamos_fragment.Get_En(), vamos_fragment.Get_D_En());
+    Fill(pConf.VAMOS.mdE2_E, 
+            vamos_fragment.Get_En(), vamos_fragment.Get_D_En2());
 
 
     if (vamos_fragment.Get_id_Z()==0) return;
-    Fill(pConf.VAMOS.mQ_MQ[vamos_fragment.Get_id_Z()], vamos_fragment.Get_M_Q(), vamos_fragment.Get_Charge());
-    Fill(pConf.VAMOS.Xf_MQ[vamos_fragment.Get_id_Z()], vamos_fragment.Get_M_Q(), *Xf);
+    Fill(pConf.VAMOS.mQ_MQ[vamos_fragment.Get_id_Z()], 
+            vamos_fragment.Get_M_Q(), vamos_fragment.Get_Charge());
+    Fill(pConf.VAMOS.Xf_MQ[vamos_fragment.Get_id_Z()], 
+            vamos_fragment.Get_M_Q(), *Xf);
     if (!vamos_fragment.Identified()) return;
-    Fill(pData.VAMOS.mTW_Brho[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()], *TW, *Brho);
+    Fill(pData.VAMOS.mTW_Brho[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()], 
+            *TW, *Brho);
 }
 
 inline void Selector::FillMugastConfHistograms() {
     for (long unsigned int ii = 0; ii < (*Mugast).DSSD_E.size(); ii++) {
         //(XE)
-        Fill(pConf.SI.mStrip_E[Form("MG%i", (*Mugast).TelescopeNumber[ii])]["X"], (*Mugast).DSSD_X[ii], (*Mugast).DSSD_E[ii]);
+        Fill(pConf.SI.mStrip_E[Form("MG%i", (*Mugast).TelescopeNumber[ii])]["X"], 
+                (*Mugast).DSSD_X[ii], (*Mugast).DSSD_E[ii]);
         //(YE)
-        Fill(pConf.SI.mStrip_E[Form("MG%i", (*Mugast).TelescopeNumber[ii])]["Y"], (*Mugast).DSSD_Y[ii], (*Mugast).DSSD_E[ii]);
+        Fill(pConf.SI.mStrip_E[Form("MG%i", (*Mugast).TelescopeNumber[ii])]["Y"], 
+                (*Mugast).DSSD_Y[ii], (*Mugast).DSSD_E[ii]);
         //(E TOF)
-        Fill(pConf.SI.mE_TOF[Form("MG%i", (*Mugast).TelescopeNumber[ii])], (*Mugast).DSSD_E[ii], (*Mugast).DSSD_T[ii]);
+        Fill(pConf.SI.mE_TOF[Form("MG%i", (*Mugast).TelescopeNumber[ii])], 
+                (*Mugast).DSSD_E[ii], (*Mugast).DSSD_T[ii]);
         //Fill(pConf.SI.mE_TOF[Form("MG%i", (*Mugast).TelescopeNumber[ii])], (*Mugast).DSSD_E[ii], AlignT((*Mugast).TelescopeNumber[ii], (*Mugast).DSSD_Y[ii], (*Mugast).DSSD_T[ii]));
     }
     for (long unsigned int ii = 0; ii < (*Mugast).DSSD_T.size(); ii++) {
         //(TE)
-        Fill(pConf.SI.mStrip_T[Form("MG%i", (*Mugast).TelescopeNumber[ii])]["X"], (*Mugast).DSSD_X[ii], (*Mugast).DSSD_T[ii]);
+        Fill(pConf.SI.mStrip_T[Form("MG%i", (*Mugast).TelescopeNumber[ii])]["X"], 
+                (*Mugast).DSSD_X[ii], (*Mugast).DSSD_T[ii]);
         //(TE)
-        Fill(pConf.SI.mStrip_T[Form("MG%i", (*Mugast).TelescopeNumber[ii])]["Y"], (*Mugast).DSSD_Y[ii], (*Mugast).DSSD_T[ii]);
+        Fill(pConf.SI.mStrip_T[Form("MG%i", (*Mugast).TelescopeNumber[ii])]["Y"], 
+                (*Mugast).DSSD_Y[ii], (*Mugast).DSSD_T[ii]);
     }
 }
 

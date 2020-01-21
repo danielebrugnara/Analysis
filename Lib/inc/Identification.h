@@ -18,6 +18,7 @@ class Identification {
    private:
 
    protected:
+    //TODO: use templates to include SetData here
     std::unordered_map<std::string, TCutG*> cuts;
     std::unordered_map<std::string, std::unordered_map<std::string, TCutG*>> cut_type;
 };

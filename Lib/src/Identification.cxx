@@ -3,7 +3,11 @@
 Identification::Identification() {
 }
 
-Identification::~Identification() {}
+Identification::~Identification() {
+    for (const auto & it_cuts: cuts){
+        delete it_cuts.second;
+    }
+}
 
 void Identification::LoadCuts(std::string path) {
     std::ifstream input_file(path);

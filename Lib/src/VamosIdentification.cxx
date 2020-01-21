@@ -23,7 +23,7 @@ bool VamosIdentification::Initialize() {
         }
     }
 
-    //More precise data
+    //More precise data [M][Z]
     mass[46][18] = 45.968082712 * AMU_TO_MEV;  //in MeV
     mass[47][18] = 46.972934865 * AMU_TO_MEV;  //in MeV
     mass[47][19] = 46.961661614 * AMU_TO_MEV;  //in MeV
@@ -90,7 +90,11 @@ bool VamosIdentification::Initialize() {
     return true;
 }
 
-VamosIdentification::~VamosIdentification() {}
+VamosIdentification::~VamosIdentification() {
+    delete data;
+    delete fragment;
+    delete FP_time_interpolation;
+}
 
 void VamosIdentification::ReadFPTimeShifts() {
     std::ifstream cali_file("./Configs/FP_Time.cal");

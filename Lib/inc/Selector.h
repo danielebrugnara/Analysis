@@ -18,6 +18,7 @@
 
 #include "Interpolation.h"
 #include "VamosIdentification.h"
+#include "MugastIdentification.h"
 
 #include <TMath.h>
 #include <map>
@@ -156,7 +157,10 @@ class Selector : public TSelector {
 
     //My methods
     inline void LoadVamosData();
+    inline void LoadMugastData();
+
     inline void PlotVamosGraphs();
+    inline void PlotMugastGraphs();
     inline void FillMugastConfHistograms();
 
     //Constants
@@ -177,6 +181,7 @@ class Selector : public TSelector {
 
     //VAMOS/////////////////////////////////////////////////////////////////////////////////
     VamosIdentification vamos_fragment;
+    MugastIdentification mugast_fragment;
 
     //Interpolation *FP_time_interpolation;
 
