@@ -482,7 +482,7 @@ inline void Selector::FillMugastConfHistograms() {
         //(YE)
         Fill(pConf.SI.mStrip_E[Form("MG%i", (*Mugast).TelescopeNumber[ii])]["Y"], (*Mugast).DSSD_Y[ii], (*Mugast).DSSD_E[ii]);
         //(E TOF)
-        Fill(pConf.SI.mE_TOF[Form("MG%i", (*Mugast).TelescopeNumber[ii])], (*Mugast).DSSD_T[ii]);
+        Fill(pConf.SI.mE_TOF[Form("MG%i", (*Mugast).TelescopeNumber[ii])], (*Mugast).DSSD_E[ii], (*Mugast).DSSD_T[ii]);
         //Fill(pConf.SI.mE_TOF[Form("MG%i", (*Mugast).TelescopeNumber[ii])], (*Mugast).DSSD_E[ii], AlignT((*Mugast).TelescopeNumber[ii], (*Mugast).DSSD_Y[ii], (*Mugast).DSSD_T[ii]));
     }
     for (long unsigned int ii = 0; ii < (*Mugast).DSSD_T.size(); ii++) {
@@ -538,7 +538,17 @@ inline bool Selector::Fill(TH1 *histo, const Double_t &data1) {
     if (histo == nullptr) {
         return false;
     } else {
+#ifndef VERBOSE_DEBUG
         histo->Fill(data1);
+#endif
+#ifdef VERBOSE_DEBUG
+        int i=0;
+        i = histo->Fill(data1);
+        if (1) {
+            std::cout << "Name : " << histo->GetName() << std::endl;
+            std::cout << "Values : " << data1 <<std::endl;
+        }
+#endif
     }
     return true;
 }
@@ -548,7 +558,17 @@ inline bool Selector::Fill(TH2 *histo,
     if (histo == nullptr) {
         return false;
     } else {
+#ifndef VERBOSE_DEBUG
         histo->Fill(data1, data2);
+#endif
+#ifdef VERBOSE_DEBUG
+        int i=0;
+        i = histo->Fill(data1, data2);
+        if (1) {
+            std::cout << "Name : " << histo->GetName() << std::endl;
+            std::cout << "Values : " << data1 <<"  "<< data2 <<std::endl;
+        }
+#endif
     }
     return true;
 }
@@ -558,7 +578,17 @@ inline bool Selector::Fill(TH3 *histo, const Double_t &data1,
     if (histo == nullptr) {
         return false;
     } else {
+#ifndef VERBOSE_DEBUG
         histo->Fill(data1, data2, data3);
+#endif
+#ifdef VERBOSE_DEBUG
+        int i=0;
+        i = histo->Fill(data1, data2, data3);
+        if (1) {
+            std::cout << "Name : " << histo->GetName() << std::endl;
+            std::cout << "Values : " << data1 <<"  "<< data2 << "   " << data3<<std::endl;
+        }
+#endif
     }
     return true;
 }
