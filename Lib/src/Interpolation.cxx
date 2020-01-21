@@ -38,7 +38,6 @@ bool Interpolation::ReadFile(std::string input_file_name) {
     std::string line;
     std::string delimiter = ", ";
     int ii = -1;
-    std::cout << "Reading file\n";
     std::vector<double> fValues_x;
     std::vector<double> fValues_y;
     while (std::getline(in_file, line)) {

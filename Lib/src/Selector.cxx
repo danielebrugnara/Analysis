@@ -209,6 +209,11 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
                     1000, 0, 180, 1000, 0, 60));
      }
 
+     if (new_graph_file!=nullptr) {
+        new_graph_file->close();
+        //TODO: kill all threads here
+     }
+
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>finished: SI initialization\n";
 #endif
@@ -306,16 +311,29 @@ Bool_t Selector::Process(Long64_t entry) {
         for (long unsigned int ii = 0; ii < AddE.GetSize(); ii++) {
             //if (AddE[ii] > 10 && *GATCONF_MASTER==1) {
             if (AddE[ii] > 10) {
-                Fill(pData.AGATA.hDC[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["NONE"], 1E3 * CorrectDoppler(*vamos_fragment.Get_p4(), AddE[ii] / 1E3, AddX[ii], AddY[ii], AddZ[ii]));
+                Fill(pData.AGATA.hDC[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["NONE"], 
+                        1E3 * CorrectDoppler(*vamos_fragment.Get_p4(), 
+                        AddE[ii] / 1E3, AddX[ii], AddY[ii], AddZ[ii]));
                 for (long unsigned int kk = 0; kk < (*Mugast).PosX.size(); kk++) {
                     TVector3 vec((*Mugast).PosX[kk], (*Mugast).PosY[kk], (*Mugast).PosZ[kk]);
-                    Fill(pData.AGATA.mDC_ThetaMUGAST[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()], 1E3 * CorrectDoppler(*vamos_fragment.Get_p4(), AddE[ii] / 1E3, AddX[ii], AddY[ii], AddZ[ii]), vec.Theta() * TMath::RadToDeg());
+                    Fill(pData.AGATA.mDC_ThetaMUGAST[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()], 
+                            1E3 * CorrectDoppler(*vamos_fragment.Get_p4(), 
+                            AddE[ii] / 1E3, AddX[ii], AddY[ii], AddZ[ii]), 
+                            vec.Theta() * TMath::RadToDeg());
                 }
                 //Gamma Gamma matrices
                 for (long unsigned int jj = 0; jj < AddE.GetSize(); jj++) {
                     if (AddE[jj] > 10 && ii != jj) {
-                        Fill(pData.AGATA.mDC[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()], 1E3 * CorrectDoppler(*vamos_fragment.Get_p4(), AddE[ii] / 1E3, AddX[ii], AddY[ii], AddZ[ii]), 1E3 * CorrectDoppler(*vamos_fragment.Get_p4(), AddE[jj] / 1E3, AddX[jj], AddY[jj], AddZ[jj]));
-                        Fill(pData.AGATA.mDC[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()], 1E3 * CorrectDoppler(*vamos_fragment.Get_p4(), AddE[jj] / 1E3, AddX[jj], AddY[jj], AddZ[jj]), 1E3 * CorrectDoppler(*vamos_fragment.Get_p4(), AddE[ii] / 1E3, AddX[ii], AddY[ii], AddZ[ii]));
+                        Fill(pData.AGATA.mDC[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()], 
+                                1E3 * CorrectDoppler(*vamos_fragment.Get_p4(), AddE[ii] / 1E3, 
+                                AddX[ii], AddY[ii], AddZ[ii]), 
+                                1E3 * CorrectDoppler(*vamos_fragment.Get_p4(), AddE[jj] / 1E3, 
+                                AddX[jj], AddY[jj], AddZ[jj]));
+                        Fill(pData.AGATA.mDC[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()], 
+                                1E3 * CorrectDoppler(*vamos_fragment.Get_p4(), AddE[jj] / 1E3, 
+                                AddX[jj], AddY[jj], AddZ[jj]), 
+                                1E3 * CorrectDoppler(*vamos_fragment.Get_p4(), AddE[ii] / 1E3, 
+                                AddX[ii], AddY[ii], AddZ[ii]));
                     }
                 }
             }
@@ -341,7 +359,8 @@ mugast_label:  //Label of goto previous to VAMOS
                 Fill(pData.SI.mE_TOF[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][Form("MG%i", (*Mugast).TelescopeNumber[ii])], 
                         (*Mugast).DSSD_E[ii], (*Mugast).DSSD_T[ii]);
                 Fill(pData.SI.mE_TOF[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["MG"], 
-                        (*Mugast).DSSD_E[ii], AlignPunch((*Mugast).TelescopeNumber[ii], (*Mugast).DSSD_T[ii]));
+                        (*Mugast).DSSD_E[ii], AlignPunch((*Mugast).TelescopeNumber[ii], 
+                        (*Mugast).DSSD_T[ii]));
             }
         }
 #ifdef VERBOSE_DEBUG
@@ -358,20 +377,25 @@ mugast_label:  //Label of goto previous to VAMOS
                 std::cout << "Something is wrong matching Mugast events\n";
             //Excitation energy and kinematic lines
 
-            Fill(pData.SI.hEx           [vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["ANY"], Ex[MugastEvents]);
-            Fill(pData.SI.mEx_TW        [vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["ANY"], *TW, Ex[MugastEvents]);
-            Fill(pData.SI.mELab_ThetaLab[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["ANY"]["ANY"], ThetaLab[MugastEvents], ELab[MugastEvents]);
-            Fill(pData.SI.mECM_ThetaCM  [vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["ANY"], ThetaCM[MugastEvents], Ecm[MugastEvents]);
+            Fill(pData.SI.hEx           [vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["ANY"], 
+                    Ex[MugastEvents]);
+            Fill(pData.SI.mEx_TW        [vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["ANY"], 
+                    *TW, Ex[MugastEvents]);
+            Fill(pData.SI.mELab_ThetaLab[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["ANY"]["ANY"], 
+                    ThetaLab[MugastEvents], ELab[MugastEvents]);
+            Fill(pData.SI.mECM_ThetaCM  [vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["ANY"], 
+                    ThetaCM[MugastEvents], Ecm[MugastEvents]);
 
             if (AGATA_GOOD) {
                 //Loop over gammas
                 for (long unsigned int ii = 0; ii < AddE.GetSize(); ii++) {
                     if (AddE[ii] > 10) {
-                        Fill(pData.AGATA.mEx_DC     [vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["ANY"], 
-                                Ex[MugastEvents], CorrectDoppler(*vamos_fragment.Get_p4(), AddE[ii] / 1E3, AddX[ii], AddY[ii], AddZ[ii]));
+                        Fill(pData.AGATA.mEx_DC     [vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["ANY"],
+                                Ex[MugastEvents], 
+                                CorrectDoppler(*vamos_fragment.Get_p4(), AddE[ii] / 1E3, AddX[ii], AddY[ii], AddZ[ii]));
                     }
                     if (AddE[ii] > 320 && AddE[ii] < 390) {
-                        Fill(pData.SI.mELab_ThetaLab[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["ANY"]["360 keV"], 
+                        Fill(pData.SI.mELab_ThetaLab[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["ANY"]["360 keV"],
                                 ThetaLab[MugastEvents], ELab[MugastEvents]);
                     }
                 }
@@ -388,19 +412,31 @@ mugast_label:  //Label of goto previous to VAMOS
                         //Loop over gammas
                         for (long unsigned int ii = 0; ii < AddE.GetSize(); ii++) {
                             if (AddE[ii] > 10) {
-                                Fill(pData.AGATA.mEx_DC[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][particle], Ex[MugastEvents], CorrectDoppler(*vamos_fragment.Get_p4(), AddE[ii] / 1E3, AddX[ii], AddY[ii], AddZ[ii]));
+                                Fill(pData.AGATA.mEx_DC[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][particle], 
+                                        Ex[MugastEvents], CorrectDoppler(*vamos_fragment.Get_p4(), 
+                                        AddE[ii] / 1E3, AddX[ii], AddY[ii], AddZ[ii]));
                             }
                             if (AddE[ii] > 320 && AddE[ii] < 390) {
                                 if (particle == "2_H")
-                                    Fill(pData.SI.mELab_ThetaLab[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][particle]["360 keV"], ThetaLab[MugastEvents], ELab[MugastEvents]);
+                                    Fill(pData.SI.mELab_ThetaLab[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][particle]["360 keV"], 
+                                            ThetaLab[MugastEvents], ELab[MugastEvents]);
                             }
                         }
                     }
-                    Fill(pData.SI.hEx           [vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][particle],           Ex[MugastEvents]);
-                    Fill(pData.SI.mEx_TW        [vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][particle],           *TW, Ex[MugastEvents]);
-                    Fill(pData.SI.mELab_ThetaLab[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][particle]["ANY"],    ThetaLab[MugastEvents], ELab[MugastEvents]);
-                    Fill(pData.SI.mECM_ThetaCM  [vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][particle],           ThetaCM[MugastEvents], Ecm[MugastEvents]);
-                    Fill(pData.SI.mELab_ThetaLab[0][0][particle]["ANY"],                                                    ThetaLab[MugastEvents], ELab[MugastEvents]);
+                    Fill(pData.SI.hEx           [vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][particle],           
+                            Ex[MugastEvents]);
+
+                    Fill(pData.SI.mEx_TW        [vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][particle],           
+                            *TW, Ex[MugastEvents]);
+
+                    Fill(pData.SI.mELab_ThetaLab[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][particle]["ANY"],    
+                            ThetaLab[MugastEvents], ELab[MugastEvents]);
+                            
+                    Fill(pData.SI.mECM_ThetaCM  [vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][particle],           
+                            ThetaCM[MugastEvents], Ecm[MugastEvents]);
+
+                    Fill(pData.SI.mELab_ThetaLab[0][0][particle]["ANY"],                                                    
+                            ThetaLab[MugastEvents], ELab[MugastEvents]);
                 }
             }
             MugastEvents++;
@@ -415,7 +451,8 @@ mugast_label:  //Label of goto previous to VAMOS
 
     //MUST2
     for (long unsigned int ii = 0; ii < (*MUST2).Si_E.size(); ii++) {
-        Fill(pConf.SI.mE_TOF[Form("MM%i", (*MUST2).TelescopeNumber[ii])], (*MUST2).Si_E[ii], (*MUST2).Si_T[ii]);
+        Fill(pConf.SI.mE_TOF[Form("MM%i", (*MUST2).TelescopeNumber[ii])], 
+                (*MUST2).Si_E[ii], (*MUST2).Si_T[ii]);
         if (vamos_fragment.Identified()) {
             Fill(pData.SI.mE_TOF[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][Form("MM%i",(*MUST2).TelescopeNumber[ii])],
                  (*MUST2).Si_E[ii], (*MUST2).Si_T[ii]);
@@ -445,9 +482,6 @@ void Selector::SlaveTerminate() {
         obj->Write();
     }
     top->Close();
-
-
-    if (new_graph_file!=nullptr) new_graph_file->close();
 }
 
 void Selector::Terminate() {
