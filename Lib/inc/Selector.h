@@ -138,7 +138,7 @@ class Selector : public TSelector {
     TTreeReaderArray<Float_t> AddY = {fReader, "AddY"};
     TTreeReaderArray<Float_t> AddZ = {fReader, "AddZ"};
 
-    Selector(TTree * /*tree*/ = 0); 
+    Selector(TTree * /*tree*/ = 0);
     virtual ~Selector();
     virtual Int_t Version() const { return 2; }
     virtual void Begin(TTree *tree);
@@ -154,27 +154,22 @@ class Selector : public TSelector {
     virtual void SlaveTerminate();
     virtual void Terminate();
 
-
     //My methods
     inline void LoadVamosData();
     inline void PlotVamosGraphs();
     inline void FillMugastConfHistograms();
 
     //Constants
-    const Long64_t TS_TO_S      = 1E8;
-    const Long64_t TS_TO_HR     = 1E8 * 3600;
-    const Double_t AMU_TO_MEV   = 931.4936148;
-    const Double_t c_speed      = 299792458;  //m/s
-    const Double_t MEV_TO_J     = 1.60217733e-13;
+    const Long64_t TS_TO_S = 1E8;
+    const Long64_t TS_TO_HR = 1E8 * 3600;
+    const Double_t AMU_TO_MEV = 931.4936148;
+    const Double_t c_speed = 299792458;  //m/s
+    const Double_t MEV_TO_J = 1.60217733e-13;
 
-    //Graphs
-    //General
-
-    TH1 * general_histo_ptr;
+    //Jolly pointer to fill histogram
+    TH1 *general_histo_ptr;
 
     std::string file_name;
-
-    //Reactions
 
     //Target
     Interpolation *thickness_angle;
@@ -187,18 +182,17 @@ class Selector : public TSelector {
 
     //VamosId *IdentifiedNucleus;  //Pointer deleted and created every event
 
-
     struct VamosConf {  //Configuration spectra
         TH2D *mdE_E;
         TH2D *mdE2_E;
-        std::unordered_map<int, TH2D *> mQ_MQ; //map index over [Z]
-        std::unordered_map<int, TH2D *> Xf_MQ; //map index over [Z]
+        std::unordered_map<int, TH2D *> mQ_MQ;  //map index over [Z]
+        std::unordered_map<int, TH2D *> Xf_MQ;  //map index over [Z]
         //std::unordered_map<int, std::unordered_map<TH1D *>> hAmass;
     };
 
     struct VamosData {  //Data spectra
         //std::unordered_map<int, std::unordered_map<int, int>> evNr; //[M][Z]
-        std::unordered_map<int, std::unordered_map<int, TH2D *>> mTW_Brho; //[M][Z]
+        std::unordered_map<int, std::unordered_map<int, TH2D *>> mTW_Brho;  //[M][Z]
     };
 
     //AGATA////////////////////////////////////////////////////////////////////////////////////
@@ -211,8 +205,8 @@ class Selector : public TSelector {
 
     struct AgataData {
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH1D *>>> hDC;             //[mass][nucleus][condition]
-        std::unordered_map<int, std::unordered_map<int, TH2D *>>                                  mDC;             //[mass][nucleus]
-        std::unordered_map<int, std::unordered_map<int, TH2D *>>                                  mDC_ThetaMUGAST; //[mass][nucleus]
+        std::unordered_map<int, std::unordered_map<int, TH2D *>> mDC;                                              //[mass][nucleus]
+        std::unordered_map<int, std::unordered_map<int, TH2D *>> mDC_ThetaMUGAST;                                  //[mass][nucleus]
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mEx_DC;          //[mass][nucleus][particle]
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mELab_ThetaLab;  //[mass][nucleus][particle]
     };
@@ -226,28 +220,28 @@ class Selector : public TSelector {
     };
 
     //Mugast////////////////////////////////////////////////////////////////////////////////////
-    std::vector<std::string> silicons           = {"MM1", "MM2", "MM3", "MM4", "MG1", "MG2", "MG3", "MG4", "MG5", "MG6", "MG7", "MG8", "MG9", "MG10", "MG11"};
-    std::vector<std::string> siliconsMM         = {"MM1", "MM2", "MM3", "MM4"};
-    std::vector<std::string> siliconsMG         = {"MG1", "MG2", "MG3", "MG4", "MG5", "MG6", "MG7", "MG8", "MG9", "MG10", "MG11"};
-    std::vector<std::string> alpha_correction   = {"70", "80", "90", "100", "110", "120", "130", "140", "150", "160", "170"};
-    std::vector<std::string> particles          = {"p", "d", "ANY"};
-    std::vector<std::string> gammas             = {"360keV", "ANY"};
+    std::vector<std::string> silicons = {"MM1", "MM2", "MM3", "MM4", "MG1", "MG2", "MG3", "MG4", "MG5", "MG6", "MG7", "MG8", "MG9", "MG10", "MG11"};
+    std::vector<std::string> siliconsMM = {"MM1", "MM2", "MM3", "MM4"};
+    std::vector<std::string> siliconsMG = {"MG1", "MG2", "MG3", "MG4", "MG5", "MG6", "MG7", "MG8", "MG9", "MG10", "MG11"};
+    std::vector<std::string> alpha_correction = {"70", "80", "90", "100", "110", "120", "130", "140", "150", "160", "170"};
+    std::vector<std::string> particles = {"p", "d", "ANY"};
+    std::vector<std::string> gammas = {"360keV", "ANY"};
     std::vector<std::string> strips;
 
-    struct SiConf { 
-        std::unordered_map<std::string, TH2D *>                                     mE_TOF;     //[M*#]
-        std::unordered_map<std::string, TH2D *>                                     mdE_E_Si;   //[MM#]
-        std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>>    mStrip_E;  //[M*#][X\Y]
-        std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>>    mStrip_T;  //[M*#][X\Y]
+    struct SiConf {
+        std::unordered_map<std::string, TH2D *> mE_TOF;                                     //[M*#]
+        std::unordered_map<std::string, TH2D *> mdE_E_Si;                                   //[MM#]
+        std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>> mStrip_E;  //[M*#][X\Y]
+        std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>> mStrip_T;  //[M*#][X\Y]
     };
 
-    struct SiData {                                                                            //
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>>                                   mE_TOF;    //[Mass][Nucl][M*#]
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>>                                   mdE_E_Si;  //[Mass][Nucl][M*#]
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH1D *>>>                                   hEx;       //[Mass][Nucl][Parcle]
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>>                                   mEx_TW;    //[Mass][Nucl][Parcle]
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>>                                   mECM_ThetaCM;
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>>>>  mELab_ThetaLab;
+    struct SiData {                                                                                          //
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mE_TOF;    //[Mass][Nucl][M*#]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mdE_E_Si;  //[Mass][Nucl][M*#]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH1D *>>> hEx;       //[Mass][Nucl][Parcle]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mEx_TW;    //[Mass][Nucl][Parcle]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mECM_ThetaCM;
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>>>> mELab_ThetaLab;
     };
 
     inline double AlignPunch(int detector, double time) {
@@ -300,7 +294,7 @@ class Selector : public TSelector {
     Data pData;
 
     //Graphical cuts////////////////////////////////////////////////////////////////////////////////////
-    std::map<std::string, std::map<std::string, TCutG *>> cut;
+    std::unordered_map<std::string, std::map<std::string, TCutG *>> cut;
 
     //TFile *MUGASTcuts;
 
@@ -309,10 +303,32 @@ class Selector : public TSelector {
     std::map<std::string, double> mass;
 
    private:
-    inline Double_t CorrectDoppler(const TLorentzVector &, const Double_t &, const Double_t &, const Double_t &, const Double_t &);
-    inline Double_t CorrectTOF(const Double_t &, const TVector3 &, const Double_t &, const std::string &);
-    const Double_t agata_Zshift = -4;
+    inline double CorrectDoppler(const TLorentzVector &, const Double_t &, const Double_t &, const Double_t &, const Double_t &);
+    inline double CorrectTOF(const Double_t &, const TVector3 &, const Double_t &, const std::string &);
+    const double agata_Zshift = -4;
+
+    std::unordered_map<std::string, bool> enabled_histograms;
+    std::ofstream* new_graph_file = nullptr;
     bool GetSettings();
+
+    template <class T>
+    bool Istantiate(T *& ptr, T * ptr_value) {
+        //if (fOutput->FindObject(name)) {
+        if (enabled_histograms.find(ptr_value->GetName())!=enabled_histograms.end()) {
+            ptr = ptr_value;
+            fOutput->Add(ptr);
+        } else if (new_graph_file!=nullptr){
+            *new_graph_file  << ptr_value->GetName() 
+                            << "\t\t\t\t\t"
+                            << "false"
+                            << std::endl;
+        }else{
+            delete ptr_value;
+            ptr = nullptr;
+        }
+        return true;
+    };
+
 
     inline bool Fill(TH1 *, const Double_t &);
     inline bool Fill(TH2 *, const Double_t &, const Double_t &);
@@ -345,4 +361,4 @@ Bool_t Selector::Notify() {
     return kTRUE;
 }
 
-#endif  // #ifdef Selector_cxx
+#endif

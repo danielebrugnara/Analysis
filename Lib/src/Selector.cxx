@@ -13,9 +13,6 @@ Selector::~Selector() {
 }
 
 void Selector::Begin(TTree * /*tree*/) {
-    // The Begin() function is called at the start of the query.
-    // When running with PROOF Begin() is only called on the client.
-    // The tree argument is deprecated (on PROOF 0 is passed).
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>Selector::Begin()\n";
 #endif
@@ -24,15 +21,16 @@ void Selector::Begin(TTree * /*tree*/) {
 }
 
 void Selector::SlaveBegin(TTree * /*tree*/) {
-    // The SlaveBegin() function is called after the Begin() function.
-    // When running with PROOF SlaveBegin() is called on each slave server.
-    // The tree argument is deprecated (on PROOF 0 is passed).
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>Selector::SlaveBegin()\n";
 #endif
 
     TString option = GetOption();
     file_name = "./Out/" + option;
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    ///Deciding which graphs to plot/////////////////////////////////////////////////////////////////
+    GetSettings();  //Decides which histograms to fill
 
     //Initializing Histograms
 
@@ -46,33 +44,42 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
 
     //Config histograms//////////////////////////////////////////////////////////////////////////////
     //VAMOS
-    pConf.VAMOS.mdE_E = new TH2D("pConf_VAMOS_mdE_E", "dE E in VAMOS", 4000, 10, 350, 4000, 10, 140);
-    fOutput->Add(pConf.VAMOS.mdE_E);
+    Istantiate(pConf.VAMOS.mdE_E , 
+                new TH2D("pConf_VAMOS_mdE_E", 
+                            "dE E in VAMOS", 
+                            4000, 10, 350, 4000, 10, 140));
 
-    pConf.VAMOS.mdE2_E = new TH2D("pConf_VAMOS_mdE2_E", "dE2 E in VAMOS", 2000, 10, 350, 2000, 10, 140);
-    fOutput->Add(pConf.VAMOS.mdE2_E);
+    Istantiate(pConf.VAMOS.mdE2_E,
+                new TH2D("pConf_VAMOS_mdE2_E", 
+                            "dE2 E in VAMOS", 
+                            2000, 10, 350, 2000, 10, 140));
 
     for (const auto &Z_it : vamos_fragment.cuts_Z) {
-        pConf.VAMOS.mQ_MQ[Z_it] = new TH2D(Form("pConf_VAMOS_mQ_MQ_Z%i", Z_it), Form("M/Q vs Q with Z%i selection", Z_it), 1000, 2, 4, 1000, 3, 24);
-        fOutput->Add(pConf.VAMOS.mQ_MQ[Z_it]);
-        pConf.VAMOS.Xf_MQ[Z_it] = new TH2D(Form("pConf_VAMOS_Xf_MQ_Z%i", Z_it), Form("M/Q vs Xf with Z%i selection", Z_it), 1000, 2, 4, 1000, -400, 400);
-        fOutput->Add(pConf.VAMOS.Xf_MQ[Z_it]);
+        Istantiate(pConf.VAMOS.mQ_MQ[Z_it],
+                    new TH2D(Form("pConf_VAMOS_mQ_MQ_Z%i", Z_it), 
+                                Form("M/Q vs Q with Z%i selection", Z_it), 
+                               1000, 2, 4, 1000, 3, 24));
+        Istantiate(pConf.VAMOS.Xf_MQ[Z_it],
+                    new TH2D(Form("pConf_VAMOS_Xf_MQ_Z%i", Z_it), 
+                                Form("M/Q vs Xf with Z%i selection", Z_it), 
+                                1000, 2, 4, 1000, -400, 400));
     }
 
-    //    pConf.VAMOS.hAmass["Ar"] = new TH1D("pConf-VAMOS-hAmass-Ar", "Mass histogram of Ar", 1000, 20, 50);
-    //    fOutput->Add(pConf.VAMOS.hAmass["Ar"]);
-    //    pConf.VAMOS.hAmass["K"] = new TH1D("pConf-VAMOS-hAmass-K", "Mass histogram of K", 1000, 20, 50);
-    //    fOutput->Add(pConf.VAMOS.hAmass["K"]);
-
     //AGATA
-    pConf.AGATA.mmAGATA3D = new TH3D("pConf-AGATA-mmAGATA3D", "Hit patter on AGATA", 50, -300, 300, 50, -300, 300, 50, -300, 300);
-    fOutput->Add(pConf.AGATA.mmAGATA3D);
-    pConf.AGATA.hAddTS_LTS = new TH1D("pConf-AGATA-hAddTS_LTS", "Difference between AddTS and LTS", 1000, 0, 300);
-    fOutput->Add(pConf.AGATA.hAddTS_LTS);
+    Istantiate(pConf.AGATA.mmAGATA3D,
+                new TH3D("pConf-AGATA-mmAGATA3D", 
+                            "Hit patter on AGATA", 
+                            50, -300, 300, 50, -300, 300, 50, -300, 300));
+    Istantiate(pConf.AGATA.hAddTS_LTS,
+                new TH1D("pConf-AGATA-hAddTS_LTS", 
+                            "Difference between AddTS and LTS", 
+                            1000, 0, 300));
 
     //CATS
-    pConf.CATS.mCATSpos = new TH2D("pConf-CATS-mCATSpos", "Beam position on CATS", 1000, -50, 50, 1000, -50, 50);
-    fOutput->Add(pConf.CATS.mCATSpos);
+    Istantiate(pConf.CATS.mCATSpos,
+                new TH2D("pConf-CATS-mCATSpos", 
+                            "Beam position on CATS", 
+                            1000, -50, 50, 1000, -50, 50));
 
     //MUGAST
     for (int ii = 0; ii < 128; ii++) {
@@ -80,27 +87,40 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     }
 
     for (const auto &MM : siliconsMM) {
-        pConf.SI.mdE_E_Si[MM] = new TH2D(Form("pConf-SI-mdE_E_Si-%s", MM.c_str()), Form("dE E of %s", MM.c_str()), 1000, 0, 28, 1000, 0, 28);
-        fOutput->Add(pConf.SI.mdE_E_Si[MM]);
+        Istantiate(pConf.SI.mdE_E_Si[MM], 
+                    new TH2D(Form("pConf-SI-mdE_E_Si-%s", MM.c_str()), 
+                                Form("dE E of %s", MM.c_str()), 
+                                1000, 0, 28, 1000, 0, 28));
     }
     for (const auto &SI : silicons) {
-        pConf.SI.mE_TOF[SI] = new TH2D(Form("pConf-SI-mE_TOF-%s", SI.c_str()), Form("E vs TOF of %s", SI.c_str()), 1000, 0, 28, 1000, 260, 380);
-        fOutput->Add(pConf.SI.mE_TOF[SI]);
-        pConf.SI.mStrip_E[SI]["X"] = new TH2D(Form("pConf-SI-mStrip_E-%s-%s", SI.c_str(), "X"), Form("Strip vs E of %s %s", SI.c_str(), "X"), 128, 0, 128, 1000, 0, 30);
-        fOutput->Add(pConf.SI.mStrip_E[SI]["X"]);
-        pConf.SI.mStrip_E[SI]["Y"] = new TH2D(Form("pConf-SI-mStrip_E-%s-%s", SI.c_str(), "Y"), Form("Strip vs E of %s %s", SI.c_str(), "Y"), 128, 0, 128, 1000, 0, 30);
-        fOutput->Add(pConf.SI.mStrip_E[SI]["Y"]);
-        pConf.SI.mStrip_T[SI]["X"] = new TH2D(Form("pConf-SI-mStrip_T-%s-%s", SI.c_str(), "X"), Form("Strip vs T of %s %s", SI.c_str(), "X"), 128, 0, 128, 1000, 0, 1500);
-        fOutput->Add(pConf.SI.mStrip_T[SI]["X"]);
-        pConf.SI.mStrip_T[SI]["Y"] = new TH2D(Form("pConf-SI-mStrip_T-%s-%s", SI.c_str(), "Y"), Form("Strip vs T of %s %s", SI.c_str(), "Y"), 128, 0, 128, 1000, 0, 1500);
-        fOutput->Add(pConf.SI.mStrip_T[SI]["Y"]);
+        Istantiate(pConf.SI.mE_TOF[SI],
+                    new TH2D(Form("pConf-SI-mE_TOF-%s", SI.c_str()), 
+                                Form("E vs TOF of %s", SI.c_str()),          
+                                1000, 0, 28, 1000, 260, 380));
+        Istantiate(pConf.SI.mStrip_E[SI]["X"],
+                    new TH2D(Form("pConf-SI-mStrip_E-%s-%s", SI.c_str(), "X"), 
+                                Form("Strip vs E of %s %s", SI.c_str(), "X"), 
+                                128, 0, 128, 1000, 0, 30));
+        Istantiate(pConf.SI.mStrip_E[SI]["Y"],
+                    new TH2D(Form("pConf-SI-mStrip_E-%s-%s", SI.c_str(), "Y"), 
+                                Form("Strip vs E of %s %s", SI.c_str(), "Y"), 
+                                128, 0, 128, 1000, 0, 30));
+        Istantiate(pConf.SI.mStrip_T[SI]["X"],
+                    new TH2D(Form("pConf-SI-mStrip_T-%s-%s", SI.c_str(), "X"), 
+                                Form("Strip vs T of %s %s", SI.c_str(), "X"), 
+                                128, 0, 128, 1000, 0, 1500));
+        Istantiate(pConf.SI.mStrip_T[SI]["Y"],
+                    new TH2D(Form("pConf-SI-mStrip_T-%s-%s", SI.c_str(), "Y"), 
+                                Form("Strip vs T of %s %s", SI.c_str(), "Y"), 
+                                128, 0, 128, 1000, 0, 1500));
     }
 
     //Data histograms//////////////////////////////////////////////////////////////////////////////
     for (const auto &it_M : vamos_fragment.cuts_M) {
         for (const auto &it_Z : vamos_fragment.cuts_Z) {
-            pData.VAMOS.mTW_Brho[it_M][it_Z] = new TH2D(Form("pData-VAMOS-mTW_Brho-%i-%i", it_M, it_Z), Form("Time vs Brho with %i %i in VAMOS", it_M, it_Z), 5000, 242, 328, 1000, 0.5, 1.5);
-            fOutput->Add(pData.VAMOS.mTW_Brho[it_M][it_Z]);
+            Istantiate(pData.VAMOS.mTW_Brho[it_M][it_Z], 
+                        new TH2D(Form("pData-VAMOS-mTW_Brho-%i-%i", it_M, it_Z), Form("Time vs Brho with %i %i in VAMOS", it_M, it_Z), 
+                                    5000, 242, 328, 1000, 0.5, 1.5));
         }
     }
     //VAMOS
@@ -109,18 +129,27 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     for (const auto &it_M : vamos_fragment.cuts_M) {
         for (const auto &it_Z : vamos_fragment.cuts_Z) {
             for (const auto &condition : AGATAconditions) {
-                pData.AGATA.hDC[it_M][it_Z][condition] = new TH1D(Form("pData_AGATA_hDC_M%i_Z%i_cond%s", it_M, it_Z, condition.c_str()), Form("DC spectrum of M%i Z%i with condition %s", it_M, it_Z, condition.c_str()), 4000, 0, 4000);
-                fOutput->Add(pData.AGATA.hDC[it_M][it_Z][condition]);
+                Istantiate(pData.AGATA.hDC[it_M][it_Z][condition],
+                            new TH1D(Form("pData_AGATA_hDC_M%i_Z%i_cond%s", it_M, it_Z, condition.c_str()), 
+                                        Form("DC spectrum of M%i Z%i with condition %s", it_M, it_Z, condition.c_str()), 
+                                        4000, 0, 4000));
             }
-            pData.AGATA.mDC[it_M][it_Z] = new TH2D(Form("pData_AGATA_mDC_M%i_Z%i", it_M, it_Z), Form("DC gamma gamma of M%i Z%i", it_M, it_Z), 4000, 0, 4000, 4000, 0, 4000);
-            fOutput->Add(pData.AGATA.mDC[it_M][it_Z]);
-            pData.AGATA.mDC_ThetaMUGAST[it_M][it_Z] = new TH2D(Form("pData_AGATA_mDC_ThetaMUGAST_M%i_Z%i", it_M, it_Z), Form("DC gamma vs Theta on MUGAST of M%i Z%i", it_M, it_Z), 4000, 0, 4000, 180, 0, 180);
-            fOutput->Add(pData.AGATA.mDC_ThetaMUGAST[it_M][it_Z]);
+            Istantiate(pData.AGATA.mDC[it_M][it_Z],
+                        new TH2D(Form("pData_AGATA_mDC_M%i_Z%i", it_M, it_Z), Form("DC gamma gamma of M%i Z%i", it_M, it_Z), 
+                                    4000, 0, 4000, 4000, 0, 4000));
+            Istantiate(pData.AGATA.mDC_ThetaMUGAST[it_M][it_Z],
+                        new TH2D(Form("pData_AGATA_mDC_ThetaMUGAST_M%i_Z%i", it_M, it_Z), 
+                                    Form("DC gamma vs Theta on MUGAST of M%i Z%i", it_M, it_Z), 
+                                    4000, 0, 4000, 180, 0, 180));
             for (const auto &particle : particles) {
-                pData.AGATA.mEx_DC[it_M][it_Z][particle] = new TH2D(Form("pData_AGATA_mEx_DC_M%i_Z%i_%s", it_M, it_Z, particle.c_str()), Form("Excitation energy AGATA vs MUGAST M%i Z%i and %s", it_M, it_Z, particle.c_str()), 1000, 0, 10, 1000, 0, 10);
-                fOutput->Add(pData.AGATA.mEx_DC[it_M][it_Z][particle]);
-                pData.AGATA.mELab_ThetaLab[it_M][it_Z][particle] = new TH2D(Form("pData_AGATA_ELab_ThetaLab_M%i_Z%i_%s", it_M, it_Z, particle.c_str()), Form("Excitation energy AGATA vs MUGAST M%i Z%i and %s", it_M, it_Z, particle.c_str()), 1000, 0, 10, 1000, 0, 10);
-                fOutput->Add(pData.AGATA.mELab_ThetaLab[it_M][it_Z][particle]);
+                Istantiate(pData.AGATA.mEx_DC[it_M][it_Z][particle],
+                            new TH2D(Form("pData_AGATA_mEx_DC_M%i_Z%i_%s", it_M, it_Z, particle.c_str()), 
+                                        Form("Excitation energy AGATA vs MUGAST M%i Z%i and %s", it_M, it_Z, particle.c_str()), 
+                                        1000, -10, 10, 4000, 0, 4));
+                Istantiate(pData.AGATA.mELab_ThetaLab[it_M][it_Z][particle],
+                            new TH2D(Form("pData_AGATA_ELab_ThetaLab_M%i_Z%i_%s", it_M, it_Z, particle.c_str()), 
+                                        Form("Excitation energy AGATA vs MUGAST M%i Z%i and %s", it_M, it_Z, particle.c_str()), 
+                                        1000, 0, 10, 1000, 0, 10));
             }
         }
     }
@@ -136,33 +165,49 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     for (const auto &it_M : vamos_fragment.cuts_M) {
         for (const auto &it_Z : vamos_fragment.cuts_Z) {
             for (const auto &MM : siliconsMM) {
-                pData.SI.mdE_E_Si[it_M][it_Z][MM] = new TH2D(Form("pData_SI_mdE_E_Si_M%i_Z%i_%s", it_M, it_Z, MM.c_str()), Form("dE E of %s with M%i Z%i", MM.c_str(), it_M, it_Z), 1000, 0, 28, 1000, 0, 28);
-                fOutput->Add(pData.SI.mdE_E_Si[it_M][it_Z][MM]);
+                Istantiate(pData.SI.mdE_E_Si[it_M][it_Z][MM],
+                            new TH2D(Form("pData_SI_mdE_E_Si_M%i_Z%i_%s", it_M, it_Z, MM.c_str()), 
+                            Form("dE E of %s with M%i Z%i", MM.c_str(), it_M, it_Z), 
+                            1000, 0, 28, 1000, 0, 28));
             }
             for (const auto &SI : silicons) {
-                pData.SI.mE_TOF[it_M][it_Z][SI] = new TH2D(Form("pData_SI_mE_TOF_M%i_Z%i_%s", it_M, it_Z, SI.c_str()), Form("E vs TOF of %s with M%i Z%i", SI.c_str(), it_M, it_Z), 1000, 0, 28, 1000, 260, 380);
-                fOutput->Add(pData.SI.mE_TOF[it_M][it_Z][SI]);
+                Istantiate(pData.SI.mE_TOF[it_M][it_Z][SI],
+                            new TH2D(Form("pData_SI_mE_TOF_M%i_Z%i_%s", it_M, it_Z, SI.c_str()), 
+                                        Form("E vs TOF of %s with M%i Z%i", SI.c_str(), it_M, it_Z), 
+                                        1000, 0, 28, 1000, 260, 380));
             }
-            pData.SI.mE_TOF[it_M][it_Z]["MG"] = new TH2D(Form("pData_SI_mE_TOF_MG_M%i_Z%i", it_M, it_Z), Form("E vs TOF of all MG with M%i Z%i", it_M, it_Z), 1000, 0, 28, 1000, 260, 380);
-            fOutput->Add(pData.SI.mE_TOF[it_M][it_Z]["MG"]);
+            Istantiate(pData.SI.mE_TOF[it_M][it_Z]["MG"],
+                        new TH2D(Form("pData_SI_mE_TOF_MG_M%i_Z%i", it_M, it_Z), 
+                                    Form("E vs TOF of all MG with M%i Z%i", it_M, it_Z),  
+                                    1000, 0, 28, 1000, 260, 380));
             for (const auto &particle : particles) {
-                pData.SI.hEx[it_M][it_Z][particle] = new TH1D(Form("pData_SI-hEx_M%i_Z%i_%s", it_M, it_Z, particle.c_str()), Form("Excitation energy with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, particle.c_str()), 1000, -60, 60);
-                fOutput->Add(pData.SI.hEx[it_M][it_Z][particle]);
-                pData.SI.mEx_TW[it_M][it_Z][particle] = new TH2D(Form("pData_SI_mEx_TW_M%i_Z%i_%s", it_M, it_Z, particle.c_str()), Form("Excitation energy vs Time with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, particle.c_str()), 5000, 242, 328, 1000, -60, 60);
-                fOutput->Add(pData.SI.mEx_TW[it_M][it_Z][particle]);
-                pData.SI.mECM_ThetaCM[it_M][it_Z][particle] = new TH2D(Form("pData_SI_mECM_ThetaCM_M%i_Z%i_%s", it_M, it_Z, particle.c_str()), Form("E CM vs Theta CM with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, particle.c_str()), 1000, 0, 180, 1000, 0, 60);
-                fOutput->Add(pData.SI.mECM_ThetaCM[it_M][it_Z][particle]);
+                Istantiate(pData.SI.hEx[it_M][it_Z][particle],             
+                            new TH1D(Form("pData_SI-hEx_M%i_Z%i_%s", it_M, it_Z, particle.c_str()), 
+                                        Form("Excitation energy with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, particle.c_str()), 
+                                        1000, -60, 60));
+                Istantiate(pData.SI.mEx_TW[it_M][it_Z][particle],         
+                            new TH2D(Form("pData_SI_mEx_TW_M%i_Z%i_%s", it_M, it_Z, particle.c_str()), 
+                                        Form("Excitation energy vs Time with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, particle.c_str()), 
+                                        5000, 242, 328, 1000, -60, 60));
+                Istantiate(pData.SI.mECM_ThetaCM[it_M][it_Z][particle],   
+                            new TH2D(Form("pData_SI_mECM_ThetaCM_M%i_Z%i_%s", it_M, it_Z, particle.c_str()), 
+                                        Form("E CM vs Theta CM with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, particle.c_str()), 
+                                        1000, 0, 180, 1000, 0, 60));
                 for (const auto &gamma : gammas) {
-                    pData.SI.mELab_ThetaLab[it_M][it_Z][particle][gamma] = new TH2D(Form("pData_SI_mELab_ThetaLab_M%i_Z%i_%s_%s", it_M, it_Z, particle.c_str(), gamma.c_str()), Form("ELab vs Theta Lab with M%i Z%i in VAMOS and %s in MUGAST and %s in AGATA", it_M, it_Z, particle.c_str(), gamma.c_str()), 1000, 0, 180, 1000, 0, 60);
-                    fOutput->Add(pData.SI.mELab_ThetaLab[it_M][it_Z][particle][gamma]);
+                    Istantiate(pData.SI.mELab_ThetaLab[it_M][it_Z][particle][gamma],
+                                new TH2D(Form("pData_SI_mELab_ThetaLab_M%i_Z%i_%s_%s", it_M, it_Z, particle.c_str(), gamma.c_str()), 
+                                Form("ELab vs Theta Lab with M%i Z%i in VAMOS and %s in MUGAST and %s in AGATA", it_M, it_Z, particle.c_str(), gamma.c_str()), 
+                                1000, 0, 180, 1000, 0, 60));
                 }
             }
         }
     }
     for (const auto &particle : particles) {
-        pData.SI.mELab_ThetaLab[0][0][particle]["ANY"] = new TH2D(Form("pData-SI-mELab_ThetaLab-%s-%s-%s", "ANY", "ANY", particle.c_str()), Form("E Lab vs Theta Lab with %s %s in VAMOS and %s in MUGAST", "ANY", "ANY", particle.c_str()), 1000, 0, 180, 1000, 0, 60);
-        fOutput->Add(pData.SI.mELab_ThetaLab[0][0][particle]["ANY"]);
-    }
+        Istantiate(pData.SI.mELab_ThetaLab[0][0][particle]["ANY"],
+                    new TH2D(Form("pData-SI-mELab_ThetaLab-%s-%s-%s", "ANY", "ANY", particle.c_str()), 
+                    Form("E Lab vs Theta Lab with %s %s in VAMOS and %s in MUGAST", "ANY", "ANY", particle.c_str()), 
+                    1000, 0, 180, 1000, 0, 60));
+     }
 
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>finished: SI initialization\n";
@@ -221,30 +266,12 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     general_histo_ptr = new TH2D("test", "test", 1000, -400, 400, 1000, 0, 100);
     fOutput->Add(general_histo_ptr);
 
-    //////////////////////////////////////////////////////////////////////////////////////////////////
-    ///Deciding which graphs to plot/////////////////////////////////////////////////////////////////
-    GetSettings();  //Decides which histograms to fill
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>finished: Selector::SlaveBegin()\n";
 #endif
 }
 
 Bool_t Selector::Process(Long64_t entry) {
-    // The Process() function is called for each entry in the tree (or possibly
-    // keyed object in the case of PROOF) to be processed. The entry argument
-    // specifies which entry in the currently loaded tree is to be processed.
-    // When processing keyed objects with PROOF, the object is already loaded
-    // and is available via the fObject pointer.
-    //
-    // This function should contain the \"body\" of the analysis. It can contain
-    // simple or elaborate selection criteria, run algorithms on the data
-    // of the event and typically fill histograms.
-    //
-    // The processing can be stopped by calling Abort().
-    //
-    // Use fStatus to set the return value of TTree::Process().
-    //
-    // The return value is currently not used.
 
     fReader.SetLocalEntry(entry);
 
@@ -277,6 +304,7 @@ Bool_t Selector::Process(Long64_t entry) {
     //AGATA///////////////////////////////////////////////////////////////////////////////////////////////////
     if (AGATA_GOOD) {
         for (long unsigned int ii = 0; ii < AddE.GetSize(); ii++) {
+            //if (AddE[ii] > 10 && *GATCONF_MASTER==1) {
             if (AddE[ii] > 10) {
                 Fill(pData.AGATA.hDC[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["NONE"], 1E3 * CorrectDoppler(*vamos_fragment.Get_p4(), AddE[ii] / 1E3, AddX[ii], AddY[ii], AddZ[ii]));
                 for (long unsigned int kk = 0; kk < (*Mugast).PosX.size(); kk++) {
@@ -316,6 +344,9 @@ mugast_label:  //Label of goto previous to VAMOS
                         (*Mugast).DSSD_E[ii], AlignPunch((*Mugast).TelescopeNumber[ii], (*Mugast).DSSD_T[ii]));
             }
         }
+#ifdef VERBOSE_DEBUG
+    std::cout << "------------>Finished: E TOF histos filled\n";
+#endif
 
         //Loop on physics data
         int MugastEvents = 0;
@@ -345,6 +376,9 @@ mugast_label:  //Label of goto previous to VAMOS
                     }
                 }
             }
+#ifdef VERBOSE_DEBUG
+    std::cout << "------------>Finished: kinematic histos filled\n";
+#endif
             //if (cut.at("MUGAST").at(Form("CUT_ETOF_MG%d", (*Mugast).TelescopeNumber[MugastEvents]))->IsInside((*Mugast).DSSD_E[MugastEvents], AlignT((*Mugast).TelescopeNumber[MugastEvents], (*Mugast).DSSD_Y[MugastEvents], (*Mugast).DSSD_T[MugastEvents])))
             for (const auto &particle : particles) {
                 if (particle == "ANY")
@@ -358,10 +392,6 @@ mugast_label:  //Label of goto previous to VAMOS
                             }
                             if (AddE[ii] > 320 && AddE[ii] < 390) {
                                 if (particle == "2_H")
-                                    //cout << "Filling gammas "
-                                    //     << " id->GetMass(): " << IdentifiedNucleus->GetMass() << " i->GetNucleus(): " << IdentifiedNucleus->GetNucleus() << " particle: " << particle << " gamma: "
-                                    //     << "360 keV"
-                                    //     << " ELab: " << ThetaLab[MugastEvents] << " ELab: " << ELab[MugastEvents] << std::endl;
                                     Fill(pData.SI.mELab_ThetaLab[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][particle]["360 keV"], ThetaLab[MugastEvents], ELab[MugastEvents]);
                             }
                         }
@@ -391,6 +421,9 @@ mugast_label:  //Label of goto previous to VAMOS
                  (*MUST2).Si_E[ii], (*MUST2).Si_T[ii]);
         }
     }
+#ifdef VERBOSE_DEBUG
+    std::cout << "------------>Finished: Si histos filled\n";
+#endif
 
     //AGATA
     // Fill(pConf.AGATA.hAddTS_LTS,*AddTS-*LTS);
@@ -401,9 +434,6 @@ mugast_label:  //Label of goto previous to VAMOS
 }
 
 void Selector::SlaveTerminate() {
-    // The SlaveTerminate() function is called after all entries or objects
-    // have been processed. When running with PROOF SlaveTerminate() is called
-    // on each slave server.
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>Selector::SlaveTerminate()\n";
 #endif
@@ -415,19 +445,16 @@ void Selector::SlaveTerminate() {
         obj->Write();
     }
     top->Close();
+
+
+    if (new_graph_file!=nullptr) new_graph_file->close();
 }
 
 void Selector::Terminate() {
-    // The Terminate() function is the last function to be called during
-    // a query. It always runs on the client, it can be used to present
-    // the results graphically or save the results to file.
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>Selector::Terminate()\n";
 #endif
 }
-
-//Identification of the VAMOS fragments
-//inline void Selector::IdentifyFragment() {
 
 inline void Selector::LoadVamosData() {
     vamos_fragment.SetData(new VamosIdentification::Data(&IC, &Path, &Brho, &Xf,
@@ -446,7 +473,6 @@ inline void Selector::PlotVamosGraphs() {
     Fill(pConf.VAMOS.Xf_MQ[vamos_fragment.Get_id_Z()], vamos_fragment.Get_M_Q(), *Xf);
     if (!vamos_fragment.Identified()) return;
     Fill(pData.VAMOS.mTW_Brho[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()], *TW, *Brho);
-    //Fill(pConf.VAMOS.hAmass[Nucleus_tmp], vamos_fragment.Get_M_Q * stoi(Qcut.substr(1, 2)));
 }
 
 inline void Selector::FillMugastConfHistograms() {
@@ -497,39 +523,29 @@ bool Selector::GetSettings() {
             str >> Graph;
             std::string enabled;
             str >> enabled;
-            if (!enabled.compare("false")) {
-                TObject *to_delete = fOutput->FindObject(Graph.c_str());
-                if (to_delete) {
-                    fOutput->Remove(to_delete);
-                    //std::cout<<"Deleted :"<< Graph <<std::endl;
-                }
+            if (enabled.compare("false")) {//IS ENABLED
+                enabled_histograms[Graph]=true;
             }
         }
     } else {
-        std::ofstream file(config_file);
-        TIter iter(fOutput);
-        TObject *obj;
-        while ((obj = iter())) {
-            file << obj->GetName() << "\t\t\t\t"
-                 << "false" << std::endl;
-        }
-        file.close();
+        ifile.close();
+        new_graph_file = new std::ofstream(config_file);
     }
     return true;
 }
 
 inline bool Selector::Fill(TH1 *histo, const Double_t &data1) {
-    if (histo == nullptr || !fOutput->FindObject(histo)) {
+    if (histo == nullptr) {
         return false;
     } else {
         histo->Fill(data1);
-        //  std::cout << "filling :"<<data1 <<std::endl;
     }
     return true;
 }
 
-inline bool Selector::Fill(TH2 *histo, const Double_t &data1, const Double_t &data2) {
-    if (histo == nullptr || !fOutput->FindObject(histo)) {
+inline bool Selector::Fill(TH2 *histo, 
+                            const Double_t &data1, const Double_t &data2) {
+    if (histo == nullptr) {
         return false;
     } else {
         histo->Fill(data1, data2);
@@ -539,7 +555,7 @@ inline bool Selector::Fill(TH2 *histo, const Double_t &data1, const Double_t &da
 
 inline bool Selector::Fill(TH3 *histo, const Double_t &data1,
                            const Double_t &data2, const Double_t &data3) {
-    if (histo == nullptr || !fOutput->FindObject(histo)) {
+    if (histo == nullptr) {
         return false;
     } else {
         histo->Fill(data1, data2, data3);

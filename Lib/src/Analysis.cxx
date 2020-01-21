@@ -3,10 +3,11 @@
 //ClassImp(Analysis);
 
 Analysis::Analysis(int n_threads) : n_threads(n_threads) {
-    std::string file_with_runs = "./Configs/Runs.txt";
-    std::ifstream file(file_with_runs);
+    std::string     file_with_runs = "./Configs/Runs.txt";
+    std::ifstream   file(file_with_runs);
     if (!file.is_open()) throw std::runtime_error(std::string("Unable to read :") + std::string(file_with_runs));
-    std::string line;
+    std::string     line;
+
     while (std::getline(file, line)) {
         std::ifstream file_check(line);
         if (line.at(0) == '#') continue;
@@ -19,25 +20,33 @@ Analysis::~Analysis() {
 }
 
 bool Analysis::RunAnalysis() {
+
+    //Removing previous data
     system("rm -rf ./Out");
     system("mkdir ./Out");
+
+    //Assigning to threads
     for (int ii = 0; ii < n_threads; ++ii) {
         threads.push_back(std::thread(&Analysis::Job, this));
     }
+
+    //Waiting for threads to finish
     for (int ii = 0; ii < n_threads; ++ii) {
         threads.at(ii).join();
     }
 
     std::cout << "Joined threads, adding output files :\n";
 
+    //Adding all data in unique file
     system("hadd -f ./Out/sum.root ./Out/*");
 
     return true;
 }
 
+//This job will be assigned to a thread
 bool Analysis::Job() {
     try {
-        while (1) {
+        while (1) {//Repeat while there are jobs
             std::string current_run = GetRun();
             std::cout << "Run : " << current_run << " assigned to thread\n";
             pid_t pid;
@@ -60,7 +69,7 @@ bool Analysis::RunSelector(std::string run) {
     TFile *file = new TFile(run.c_str());
     if (!file) throw std::runtime_error("Run : " + run + " Not opened\n");
     TTree *tree = (TTree *)file->Get("PhysicsTree");
-    std::cout << "Starting selector for run : " << run << "\n";
+    std::cout << "---------->Starting selector for run : " << run << "<----------\n";
     Selector *selector = new Selector();
     tree->Process(selector, ("analyzed_" + run.substr(run.find_last_of("/") + 1)).c_str());
     delete selector;

@@ -13,77 +13,77 @@ pConf-SI-mdE_E_Si-MM1				false
 pConf-SI-mdE_E_Si-MM2				false
 pConf-SI-mdE_E_Si-MM3				false
 pConf-SI-mdE_E_Si-MM4				false
-pConf-SI-mE_TOF-MM1				false
+pConf-SI-mE_TOF-MM1				
 pConf-SI-mStrip_E-MM1-X				false
 pConf-SI-mStrip_E-MM1-Y				false
 pConf-SI-mStrip_T-MM1-X				false
 pConf-SI-mStrip_T-MM1-Y				false
-pConf-SI-mE_TOF-MM2				false
+pConf-SI-mE_TOF-MM2				
 pConf-SI-mStrip_E-MM2-X				false
 pConf-SI-mStrip_E-MM2-Y				false
 pConf-SI-mStrip_T-MM2-X				false
 pConf-SI-mStrip_T-MM2-Y				false
-pConf-SI-mE_TOF-MM3				false
+pConf-SI-mE_TOF-MM3				
 pConf-SI-mStrip_E-MM3-X				false
 pConf-SI-mStrip_E-MM3-Y				false
 pConf-SI-mStrip_T-MM3-X				false
 pConf-SI-mStrip_T-MM3-Y				false
-pConf-SI-mE_TOF-MM4				false
+pConf-SI-mE_TOF-MM4				
 pConf-SI-mStrip_E-MM4-X				false
 pConf-SI-mStrip_E-MM4-Y				false
 pConf-SI-mStrip_T-MM4-X				false
 pConf-SI-mStrip_T-MM4-Y				false
-pConf-SI-mE_TOF-MG1				false
+pConf-SI-mE_TOF-MG1				
 pConf-SI-mStrip_E-MG1-X				false
 pConf-SI-mStrip_E-MG1-Y				false
 pConf-SI-mStrip_T-MG1-X				false
 pConf-SI-mStrip_T-MG1-Y				false
-pConf-SI-mE_TOF-MG2				false
+pConf-SI-mE_TOF-MG2				
 pConf-SI-mStrip_E-MG2-X				false
 pConf-SI-mStrip_E-MG2-Y				false
 pConf-SI-mStrip_T-MG2-X				false
 pConf-SI-mStrip_T-MG2-Y				false
-pConf-SI-mE_TOF-MG3				false
+pConf-SI-mE_TOF-MG3				
 pConf-SI-mStrip_E-MG3-X				false
 pConf-SI-mStrip_E-MG3-Y				false
 pConf-SI-mStrip_T-MG3-X				false
 pConf-SI-mStrip_T-MG3-Y				false
-pConf-SI-mE_TOF-MG4				false
+pConf-SI-mE_TOF-MG4				
 pConf-SI-mStrip_E-MG4-X				false
 pConf-SI-mStrip_E-MG4-Y				false
 pConf-SI-mStrip_T-MG4-X				false
 pConf-SI-mStrip_T-MG4-Y				false
-pConf-SI-mE_TOF-MG5				false
+pConf-SI-mE_TOF-MG5				
 pConf-SI-mStrip_E-MG5-X				false
 pConf-SI-mStrip_E-MG5-Y				false
 pConf-SI-mStrip_T-MG5-X				false
 pConf-SI-mStrip_T-MG5-Y				false
-pConf-SI-mE_TOF-MG6				false
+pConf-SI-mE_TOF-MG6				
 pConf-SI-mStrip_E-MG6-X				false
 pConf-SI-mStrip_E-MG6-Y				false
 pConf-SI-mStrip_T-MG6-X				false
 pConf-SI-mStrip_T-MG6-Y				false
-pConf-SI-mE_TOF-MG7				false
+pConf-SI-mE_TOF-MG7				
 pConf-SI-mStrip_E-MG7-X				false
 pConf-SI-mStrip_E-MG7-Y				false
 pConf-SI-mStrip_T-MG7-X				false
 pConf-SI-mStrip_T-MG7-Y				false
-pConf-SI-mE_TOF-MG8				false
+pConf-SI-mE_TOF-MG8				
 pConf-SI-mStrip_E-MG8-X				false
 pConf-SI-mStrip_E-MG8-Y				false
 pConf-SI-mStrip_T-MG8-X				false
 pConf-SI-mStrip_T-MG8-Y				false
-pConf-SI-mE_TOF-MG9				false
+pConf-SI-mE_TOF-MG9				
 pConf-SI-mStrip_E-MG9-X				false
 pConf-SI-mStrip_E-MG9-Y				false
 pConf-SI-mStrip_T-MG9-X				false
 pConf-SI-mStrip_T-MG9-Y				false
-pConf-SI-mE_TOF-MG10				false
+pConf-SI-mE_TOF-MG10				
 pConf-SI-mStrip_E-MG10-X				false
 pConf-SI-mStrip_E-MG10-Y				false
 pConf-SI-mStrip_T-MG10-X				false
 pConf-SI-mStrip_T-MG10-Y				false
-pConf-SI-mE_TOF-MG11				false
+pConf-SI-mE_TOF-MG11				
 pConf-SI-mStrip_E-MG11-X				false
 pConf-SI-mStrip_E-MG11-Y				false
 pConf-SI-mStrip_T-MG11-X				false
@@ -100,9 +100,9 @@ pData-VAMOS-mTW_Brho-47--1				false
 pData-VAMOS-mTW_Brho--2-18				false
 pData-VAMOS-mTW_Brho--2-19				false
 pData-VAMOS-mTW_Brho--2--1				false
-pData_AGATA_hDC_M45_Z18_condNONE				false
-pData_AGATA_hDC_M45_Z18_condMUGASTtap				false
-pData_AGATA_hDC_M45_Z18_condMUGASTan				false
+pData_AGATA_hDC_M45_Z18_condNONE				
+pData_AGATA_hDC_M45_Z18_condMUGASTtap				
+pData_AGATA_hDC_M45_Z18_condMUGASTan				
 pData_AGATA_mDC_M45_Z18				false
 pData_AGATA_mDC_ThetaMUGAST_M45_Z18				false
 pData_AGATA_mEx_DC_M45_Z18_p				false
@@ -111,9 +111,9 @@ pData_AGATA_mEx_DC_M45_Z18_d				false
 pData_AGATA_ELab_ThetaLab_M45_Z18_d				false
 pData_AGATA_mEx_DC_M45_Z18_ANY				false
 pData_AGATA_ELab_ThetaLab_M45_Z18_ANY				false
-pData_AGATA_hDC_M45_Z19_condNONE				false
-pData_AGATA_hDC_M45_Z19_condMUGASTtap				false
-pData_AGATA_hDC_M45_Z19_condMUGASTan				false
+pData_AGATA_hDC_M45_Z19_condNONE		
+pData_AGATA_hDC_M45_Z19_condMUGASTtap	
+pData_AGATA_hDC_M45_Z19_condMUGASTan	
 pData_AGATA_mDC_M45_Z19				false
 pData_AGATA_mDC_ThetaMUGAST_M45_Z19				false
 pData_AGATA_mEx_DC_M45_Z19_p				false
@@ -122,9 +122,9 @@ pData_AGATA_mEx_DC_M45_Z19_d				false
 pData_AGATA_ELab_ThetaLab_M45_Z19_d				false
 pData_AGATA_mEx_DC_M45_Z19_ANY				false
 pData_AGATA_ELab_ThetaLab_M45_Z19_ANY				false
-pData_AGATA_hDC_M45_Z-1_condNONE				false
-pData_AGATA_hDC_M45_Z-1_condMUGASTtap				false
-pData_AGATA_hDC_M45_Z-1_condMUGASTan				false
+pData_AGATA_hDC_M45_Z-1_condNONE			
+pData_AGATA_hDC_M45_Z-1_condMUGASTtap		
+pData_AGATA_hDC_M45_Z-1_condMUGASTan		
 pData_AGATA_mDC_M45_Z-1				false
 pData_AGATA_mDC_ThetaMUGAST_M45_Z-1				false
 pData_AGATA_mEx_DC_M45_Z-1_p				false
@@ -133,9 +133,9 @@ pData_AGATA_mEx_DC_M45_Z-1_d				false
 pData_AGATA_ELab_ThetaLab_M45_Z-1_d				false
 pData_AGATA_mEx_DC_M45_Z-1_ANY				false
 pData_AGATA_ELab_ThetaLab_M45_Z-1_ANY				false
-pData_AGATA_hDC_M46_Z18_condNONE				false
-pData_AGATA_hDC_M46_Z18_condMUGASTtap				false
-pData_AGATA_hDC_M46_Z18_condMUGASTan				false
+pData_AGATA_hDC_M46_Z18_condNONE				
+pData_AGATA_hDC_M46_Z18_condMUGASTtap			
+pData_AGATA_hDC_M46_Z18_condMUGASTan			
 pData_AGATA_mDC_M46_Z18				false
 pData_AGATA_mDC_ThetaMUGAST_M46_Z18				false
 pData_AGATA_mEx_DC_M46_Z18_p				false
@@ -144,9 +144,9 @@ pData_AGATA_mEx_DC_M46_Z18_d				false
 pData_AGATA_ELab_ThetaLab_M46_Z18_d				false
 pData_AGATA_mEx_DC_M46_Z18_ANY				false
 pData_AGATA_ELab_ThetaLab_M46_Z18_ANY				false
-pData_AGATA_hDC_M46_Z19_condNONE				false
-pData_AGATA_hDC_M46_Z19_condMUGASTtap				false
-pData_AGATA_hDC_M46_Z19_condMUGASTan				false
+pData_AGATA_hDC_M46_Z19_condNONE				
+pData_AGATA_hDC_M46_Z19_condMUGASTtap				
+pData_AGATA_hDC_M46_Z19_condMUGASTan				
 pData_AGATA_mDC_M46_Z19				false
 pData_AGATA_mDC_ThetaMUGAST_M46_Z19				false
 pData_AGATA_mEx_DC_M46_Z19_p				false
@@ -155,9 +155,9 @@ pData_AGATA_mEx_DC_M46_Z19_d				false
 pData_AGATA_ELab_ThetaLab_M46_Z19_d				false
 pData_AGATA_mEx_DC_M46_Z19_ANY				false
 pData_AGATA_ELab_ThetaLab_M46_Z19_ANY				false
-pData_AGATA_hDC_M46_Z-1_condNONE				false
-pData_AGATA_hDC_M46_Z-1_condMUGASTtap				false
-pData_AGATA_hDC_M46_Z-1_condMUGASTan				false
+pData_AGATA_hDC_M46_Z-1_condNONE				
+pData_AGATA_hDC_M46_Z-1_condMUGASTtap				
+pData_AGATA_hDC_M46_Z-1_condMUGASTan				
 pData_AGATA_mDC_M46_Z-1				false
 pData_AGATA_mDC_ThetaMUGAST_M46_Z-1				false
 pData_AGATA_mEx_DC_M46_Z-1_p				false
@@ -166,9 +166,9 @@ pData_AGATA_mEx_DC_M46_Z-1_d				false
 pData_AGATA_ELab_ThetaLab_M46_Z-1_d				false
 pData_AGATA_mEx_DC_M46_Z-1_ANY				false
 pData_AGATA_ELab_ThetaLab_M46_Z-1_ANY				false
-pData_AGATA_hDC_M47_Z18_condNONE				false
-pData_AGATA_hDC_M47_Z18_condMUGASTtap				false
-pData_AGATA_hDC_M47_Z18_condMUGASTan				false
+pData_AGATA_hDC_M47_Z18_condNONE				
+pData_AGATA_hDC_M47_Z18_condMUGASTtap				
+pData_AGATA_hDC_M47_Z18_condMUGASTan				
 pData_AGATA_mDC_M47_Z18				false
 pData_AGATA_mDC_ThetaMUGAST_M47_Z18				false
 pData_AGATA_mEx_DC_M47_Z18_p				false
@@ -176,10 +176,10 @@ pData_AGATA_ELab_ThetaLab_M47_Z18_p				false
 pData_AGATA_mEx_DC_M47_Z18_d				false
 pData_AGATA_ELab_ThetaLab_M47_Z18_d				false
 pData_AGATA_mEx_DC_M47_Z18_ANY				false
-pData_AGATA_ELab_ThetaLab_M47_Z18_ANY				false
-pData_AGATA_hDC_M47_Z19_condNONE				false
-pData_AGATA_hDC_M47_Z19_condMUGASTtap				false
-pData_AGATA_hDC_M47_Z19_condMUGASTan				false
+pData_AGATA_ELab_ThetaLab_M47_Z18_ANY				
+pData_AGATA_hDC_M47_Z19_condNONE				
+pData_AGATA_hDC_M47_Z19_condMUGASTtap				
+pData_AGATA_hDC_M47_Z19_condMUGASTan				
 pData_AGATA_mDC_M47_Z19				false
 pData_AGATA_mDC_ThetaMUGAST_M47_Z19				false
 pData_AGATA_mEx_DC_M47_Z19_p				false
@@ -188,9 +188,9 @@ pData_AGATA_mEx_DC_M47_Z19_d				false
 pData_AGATA_ELab_ThetaLab_M47_Z19_d				false
 pData_AGATA_mEx_DC_M47_Z19_ANY				false
 pData_AGATA_ELab_ThetaLab_M47_Z19_ANY				false
-pData_AGATA_hDC_M47_Z-1_condNONE				false
-pData_AGATA_hDC_M47_Z-1_condMUGASTtap				false
-pData_AGATA_hDC_M47_Z-1_condMUGASTan				false
+pData_AGATA_hDC_M47_Z-1_condNONE				
+pData_AGATA_hDC_M47_Z-1_condMUGASTtap				
+pData_AGATA_hDC_M47_Z-1_condMUGASTan				
 pData_AGATA_mDC_M47_Z-1				false
 pData_AGATA_mDC_ThetaMUGAST_M47_Z-1				false
 pData_AGATA_mEx_DC_M47_Z-1_p				false
@@ -199,9 +199,9 @@ pData_AGATA_mEx_DC_M47_Z-1_d				false
 pData_AGATA_ELab_ThetaLab_M47_Z-1_d				false
 pData_AGATA_mEx_DC_M47_Z-1_ANY				false
 pData_AGATA_ELab_ThetaLab_M47_Z-1_ANY				false
-pData_AGATA_hDC_M-2_Z18_condNONE				false
-pData_AGATA_hDC_M-2_Z18_condMUGASTtap				false
-pData_AGATA_hDC_M-2_Z18_condMUGASTan				false
+pData_AGATA_hDC_M-2_Z18_condNONE				
+pData_AGATA_hDC_M-2_Z18_condMUGASTtap				
+pData_AGATA_hDC_M-2_Z18_condMUGASTan				
 pData_AGATA_mDC_M-2_Z18				false
 pData_AGATA_mDC_ThetaMUGAST_M-2_Z18				false
 pData_AGATA_mEx_DC_M-2_Z18_p				false
@@ -210,9 +210,9 @@ pData_AGATA_mEx_DC_M-2_Z18_d				false
 pData_AGATA_ELab_ThetaLab_M-2_Z18_d				false
 pData_AGATA_mEx_DC_M-2_Z18_ANY				false
 pData_AGATA_ELab_ThetaLab_M-2_Z18_ANY				false
-pData_AGATA_hDC_M-2_Z19_condNONE				false
-pData_AGATA_hDC_M-2_Z19_condMUGASTtap				false
-pData_AGATA_hDC_M-2_Z19_condMUGASTan				false
+pData_AGATA_hDC_M-2_Z19_condNONE				
+pData_AGATA_hDC_M-2_Z19_condMUGASTtap				
+pData_AGATA_hDC_M-2_Z19_condMUGASTan				
 pData_AGATA_mDC_M-2_Z19				false
 pData_AGATA_mDC_ThetaMUGAST_M-2_Z19				false
 pData_AGATA_mEx_DC_M-2_Z19_p				false
@@ -221,9 +221,9 @@ pData_AGATA_mEx_DC_M-2_Z19_d				false
 pData_AGATA_ELab_ThetaLab_M-2_Z19_d				false
 pData_AGATA_mEx_DC_M-2_Z19_ANY				false
 pData_AGATA_ELab_ThetaLab_M-2_Z19_ANY				false
-pData_AGATA_hDC_M-2_Z-1_condNONE				false
-pData_AGATA_hDC_M-2_Z-1_condMUGASTtap				false
-pData_AGATA_hDC_M-2_Z-1_condMUGASTan				false
+pData_AGATA_hDC_M-2_Z-1_condNONE				
+pData_AGATA_hDC_M-2_Z-1_condMUGASTtap				
+pData_AGATA_hDC_M-2_Z-1_condMUGASTan				
 pData_AGATA_mDC_M-2_Z-1				false
 pData_AGATA_mDC_ThetaMUGAST_M-2_Z-1				false
 pData_AGATA_mEx_DC_M-2_Z-1_p				false
@@ -236,22 +236,22 @@ pData_SI_mdE_E_Si_M45_Z18_MM1				false
 pData_SI_mdE_E_Si_M45_Z18_MM2				false
 pData_SI_mdE_E_Si_M45_Z18_MM3				false
 pData_SI_mdE_E_Si_M45_Z18_MM4				false
-pData_SI_mE_TOF_M45_Z18_MM1				false
-pData_SI_mE_TOF_M45_Z18_MM2				false
-pData_SI_mE_TOF_M45_Z18_MM3				false
-pData_SI_mE_TOF_M45_Z18_MM4				false
-pData_SI_mE_TOF_M45_Z18_MG1				false
-pData_SI_mE_TOF_M45_Z18_MG2				false
-pData_SI_mE_TOF_M45_Z18_MG3				false
-pData_SI_mE_TOF_M45_Z18_MG4				false
-pData_SI_mE_TOF_M45_Z18_MG5				false
-pData_SI_mE_TOF_M45_Z18_MG6				false
-pData_SI_mE_TOF_M45_Z18_MG7				false
-pData_SI_mE_TOF_M45_Z18_MG8				false
-pData_SI_mE_TOF_M45_Z18_MG9				false
-pData_SI_mE_TOF_M45_Z18_MG10				false
-pData_SI_mE_TOF_M45_Z18_MG11				false
-pData_SI_mE_TOF_MG_M45_Z18				false
+pData_SI_mE_TOF_M45_Z18_MM1				
+pData_SI_mE_TOF_M45_Z18_MM2				
+pData_SI_mE_TOF_M45_Z18_MM3				
+pData_SI_mE_TOF_M45_Z18_MM4				
+pData_SI_mE_TOF_M45_Z18_MG1				
+pData_SI_mE_TOF_M45_Z18_MG2				
+pData_SI_mE_TOF_M45_Z18_MG3				
+pData_SI_mE_TOF_M45_Z18_MG4				
+pData_SI_mE_TOF_M45_Z18_MG5				
+pData_SI_mE_TOF_M45_Z18_MG6				
+pData_SI_mE_TOF_M45_Z18_MG7				
+pData_SI_mE_TOF_M45_Z18_MG8				
+pData_SI_mE_TOF_M45_Z18_MG9				
+pData_SI_mE_TOF_M45_Z18_MG10			
+pData_SI_mE_TOF_M45_Z18_MG11			
+pData_SI_mE_TOF_MG_M45_Z18				
 pData_SI-hEx_M45_Z18_p				false
 pData_SI_mEx_TW_M45_Z18_p				false
 pData_SI_mECM_ThetaCM_M45_Z18_p				false
@@ -271,22 +271,22 @@ pData_SI_mdE_E_Si_M45_Z19_MM1				false
 pData_SI_mdE_E_Si_M45_Z19_MM2				false
 pData_SI_mdE_E_Si_M45_Z19_MM3				false
 pData_SI_mdE_E_Si_M45_Z19_MM4				false
-pData_SI_mE_TOF_M45_Z19_MM1				false
-pData_SI_mE_TOF_M45_Z19_MM2				false
-pData_SI_mE_TOF_M45_Z19_MM3				false
-pData_SI_mE_TOF_M45_Z19_MM4				false
-pData_SI_mE_TOF_M45_Z19_MG1				false
-pData_SI_mE_TOF_M45_Z19_MG2				false
-pData_SI_mE_TOF_M45_Z19_MG3				false
-pData_SI_mE_TOF_M45_Z19_MG4				false
-pData_SI_mE_TOF_M45_Z19_MG5				false
-pData_SI_mE_TOF_M45_Z19_MG6				false
-pData_SI_mE_TOF_M45_Z19_MG7				false
-pData_SI_mE_TOF_M45_Z19_MG8				false
-pData_SI_mE_TOF_M45_Z19_MG9				false
-pData_SI_mE_TOF_M45_Z19_MG10				false
-pData_SI_mE_TOF_M45_Z19_MG11				false
-pData_SI_mE_TOF_MG_M45_Z19				false
+pData_SI_mE_TOF_M45_Z19_MM1				
+pData_SI_mE_TOF_M45_Z19_MM2				
+pData_SI_mE_TOF_M45_Z19_MM3				
+pData_SI_mE_TOF_M45_Z19_MM4				
+pData_SI_mE_TOF_M45_Z19_MG1				
+pData_SI_mE_TOF_M45_Z19_MG2				
+pData_SI_mE_TOF_M45_Z19_MG3				
+pData_SI_mE_TOF_M45_Z19_MG4				
+pData_SI_mE_TOF_M45_Z19_MG5				
+pData_SI_mE_TOF_M45_Z19_MG6				
+pData_SI_mE_TOF_M45_Z19_MG7				
+pData_SI_mE_TOF_M45_Z19_MG8				
+pData_SI_mE_TOF_M45_Z19_MG9				
+pData_SI_mE_TOF_M45_Z19_MG10			
+pData_SI_mE_TOF_M45_Z19_MG11			
+pData_SI_mE_TOF_MG_M45_Z19				
 pData_SI-hEx_M45_Z19_p				false
 pData_SI_mEx_TW_M45_Z19_p				false
 pData_SI_mECM_ThetaCM_M45_Z19_p				false
@@ -306,22 +306,22 @@ pData_SI_mdE_E_Si_M45_Z-1_MM1				false
 pData_SI_mdE_E_Si_M45_Z-1_MM2				false
 pData_SI_mdE_E_Si_M45_Z-1_MM3				false
 pData_SI_mdE_E_Si_M45_Z-1_MM4				false
-pData_SI_mE_TOF_M45_Z-1_MM1				false
-pData_SI_mE_TOF_M45_Z-1_MM2				false
-pData_SI_mE_TOF_M45_Z-1_MM3				false
-pData_SI_mE_TOF_M45_Z-1_MM4				false
-pData_SI_mE_TOF_M45_Z-1_MG1				false
-pData_SI_mE_TOF_M45_Z-1_MG2				false
-pData_SI_mE_TOF_M45_Z-1_MG3				false
-pData_SI_mE_TOF_M45_Z-1_MG4				false
-pData_SI_mE_TOF_M45_Z-1_MG5				false
-pData_SI_mE_TOF_M45_Z-1_MG6				false
-pData_SI_mE_TOF_M45_Z-1_MG7				false
-pData_SI_mE_TOF_M45_Z-1_MG8				false
-pData_SI_mE_TOF_M45_Z-1_MG9				false
-pData_SI_mE_TOF_M45_Z-1_MG10				false
-pData_SI_mE_TOF_M45_Z-1_MG11				false
-pData_SI_mE_TOF_MG_M45_Z-1				false
+pData_SI_mE_TOF_M45_Z-1_MM1				
+pData_SI_mE_TOF_M45_Z-1_MM2				
+pData_SI_mE_TOF_M45_Z-1_MM3				
+pData_SI_mE_TOF_M45_Z-1_MM4				
+pData_SI_mE_TOF_M45_Z-1_MG1				
+pData_SI_mE_TOF_M45_Z-1_MG2				
+pData_SI_mE_TOF_M45_Z-1_MG3				
+pData_SI_mE_TOF_M45_Z-1_MG4				
+pData_SI_mE_TOF_M45_Z-1_MG5				
+pData_SI_mE_TOF_M45_Z-1_MG6				
+pData_SI_mE_TOF_M45_Z-1_MG7				
+pData_SI_mE_TOF_M45_Z-1_MG8				
+pData_SI_mE_TOF_M45_Z-1_MG9				
+pData_SI_mE_TOF_M45_Z-1_MG10			
+pData_SI_mE_TOF_M45_Z-1_MG11			
+pData_SI_mE_TOF_MG_M45_Z-1				
 pData_SI-hEx_M45_Z-1_p				false
 pData_SI_mEx_TW_M45_Z-1_p				false
 pData_SI_mECM_ThetaCM_M45_Z-1_p				false
@@ -341,22 +341,22 @@ pData_SI_mdE_E_Si_M46_Z18_MM1				false
 pData_SI_mdE_E_Si_M46_Z18_MM2				false
 pData_SI_mdE_E_Si_M46_Z18_MM3				false
 pData_SI_mdE_E_Si_M46_Z18_MM4				false
-pData_SI_mE_TOF_M46_Z18_MM1				false
-pData_SI_mE_TOF_M46_Z18_MM2				false
-pData_SI_mE_TOF_M46_Z18_MM3				false
-pData_SI_mE_TOF_M46_Z18_MM4				false
-pData_SI_mE_TOF_M46_Z18_MG1				false
-pData_SI_mE_TOF_M46_Z18_MG2				false
-pData_SI_mE_TOF_M46_Z18_MG3				false
-pData_SI_mE_TOF_M46_Z18_MG4				false
-pData_SI_mE_TOF_M46_Z18_MG5				false
-pData_SI_mE_TOF_M46_Z18_MG6				false
-pData_SI_mE_TOF_M46_Z18_MG7				false
-pData_SI_mE_TOF_M46_Z18_MG8				false
-pData_SI_mE_TOF_M46_Z18_MG9				false
-pData_SI_mE_TOF_M46_Z18_MG10				false
-pData_SI_mE_TOF_M46_Z18_MG11				false
-pData_SI_mE_TOF_MG_M46_Z18				false
+pData_SI_mE_TOF_M46_Z18_MM1				
+pData_SI_mE_TOF_M46_Z18_MM2				
+pData_SI_mE_TOF_M46_Z18_MM3				
+pData_SI_mE_TOF_M46_Z18_MM4				
+pData_SI_mE_TOF_M46_Z18_MG1				
+pData_SI_mE_TOF_M46_Z18_MG2				
+pData_SI_mE_TOF_M46_Z18_MG3				
+pData_SI_mE_TOF_M46_Z18_MG4				
+pData_SI_mE_TOF_M46_Z18_MG5				
+pData_SI_mE_TOF_M46_Z18_MG6				
+pData_SI_mE_TOF_M46_Z18_MG7				
+pData_SI_mE_TOF_M46_Z18_MG8				
+pData_SI_mE_TOF_M46_Z18_MG9				
+pData_SI_mE_TOF_M46_Z18_MG10			
+pData_SI_mE_TOF_M46_Z18_MG11			
+pData_SI_mE_TOF_MG_M46_Z18				
 pData_SI-hEx_M46_Z18_p				false
 pData_SI_mEx_TW_M46_Z18_p				false
 pData_SI_mECM_ThetaCM_M46_Z18_p				false
@@ -376,22 +376,22 @@ pData_SI_mdE_E_Si_M46_Z19_MM1				false
 pData_SI_mdE_E_Si_M46_Z19_MM2				false
 pData_SI_mdE_E_Si_M46_Z19_MM3				false
 pData_SI_mdE_E_Si_M46_Z19_MM4				false
-pData_SI_mE_TOF_M46_Z19_MM1				false
-pData_SI_mE_TOF_M46_Z19_MM2				false
-pData_SI_mE_TOF_M46_Z19_MM3				false
-pData_SI_mE_TOF_M46_Z19_MM4				false
-pData_SI_mE_TOF_M46_Z19_MG1				false
-pData_SI_mE_TOF_M46_Z19_MG2				false
-pData_SI_mE_TOF_M46_Z19_MG3				false
-pData_SI_mE_TOF_M46_Z19_MG4				false
-pData_SI_mE_TOF_M46_Z19_MG5				false
-pData_SI_mE_TOF_M46_Z19_MG6				false
-pData_SI_mE_TOF_M46_Z19_MG7				false
-pData_SI_mE_TOF_M46_Z19_MG8				false
-pData_SI_mE_TOF_M46_Z19_MG9				false
-pData_SI_mE_TOF_M46_Z19_MG10				false
-pData_SI_mE_TOF_M46_Z19_MG11				false
-pData_SI_mE_TOF_MG_M46_Z19				false
+pData_SI_mE_TOF_M46_Z19_MM1				
+pData_SI_mE_TOF_M46_Z19_MM2				
+pData_SI_mE_TOF_M46_Z19_MM3				
+pData_SI_mE_TOF_M46_Z19_MM4				
+pData_SI_mE_TOF_M46_Z19_MG1				
+pData_SI_mE_TOF_M46_Z19_MG2				
+pData_SI_mE_TOF_M46_Z19_MG3				
+pData_SI_mE_TOF_M46_Z19_MG4				
+pData_SI_mE_TOF_M46_Z19_MG5				
+pData_SI_mE_TOF_M46_Z19_MG6				
+pData_SI_mE_TOF_M46_Z19_MG7				
+pData_SI_mE_TOF_M46_Z19_MG8				
+pData_SI_mE_TOF_M46_Z19_MG9				
+pData_SI_mE_TOF_M46_Z19_MG10			
+pData_SI_mE_TOF_M46_Z19_MG11			
+pData_SI_mE_TOF_MG_M46_Z19				
 pData_SI-hEx_M46_Z19_p				false
 pData_SI_mEx_TW_M46_Z19_p				false
 pData_SI_mECM_ThetaCM_M46_Z19_p				false
@@ -411,22 +411,22 @@ pData_SI_mdE_E_Si_M46_Z-1_MM1				false
 pData_SI_mdE_E_Si_M46_Z-1_MM2				false
 pData_SI_mdE_E_Si_M46_Z-1_MM3				false
 pData_SI_mdE_E_Si_M46_Z-1_MM4				false
-pData_SI_mE_TOF_M46_Z-1_MM1				false
-pData_SI_mE_TOF_M46_Z-1_MM2				false
-pData_SI_mE_TOF_M46_Z-1_MM3				false
-pData_SI_mE_TOF_M46_Z-1_MM4				false
-pData_SI_mE_TOF_M46_Z-1_MG1				false
-pData_SI_mE_TOF_M46_Z-1_MG2				false
-pData_SI_mE_TOF_M46_Z-1_MG3				false
-pData_SI_mE_TOF_M46_Z-1_MG4				false
-pData_SI_mE_TOF_M46_Z-1_MG5				false
-pData_SI_mE_TOF_M46_Z-1_MG6				false
-pData_SI_mE_TOF_M46_Z-1_MG7				false
-pData_SI_mE_TOF_M46_Z-1_MG8				false
-pData_SI_mE_TOF_M46_Z-1_MG9				false
-pData_SI_mE_TOF_M46_Z-1_MG10				false
-pData_SI_mE_TOF_M46_Z-1_MG11				false
-pData_SI_mE_TOF_MG_M46_Z-1				false
+pData_SI_mE_TOF_M46_Z-1_MM1				
+pData_SI_mE_TOF_M46_Z-1_MM2				
+pData_SI_mE_TOF_M46_Z-1_MM3				
+pData_SI_mE_TOF_M46_Z-1_MM4				
+pData_SI_mE_TOF_M46_Z-1_MG1				
+pData_SI_mE_TOF_M46_Z-1_MG2				
+pData_SI_mE_TOF_M46_Z-1_MG3				
+pData_SI_mE_TOF_M46_Z-1_MG4				
+pData_SI_mE_TOF_M46_Z-1_MG5				
+pData_SI_mE_TOF_M46_Z-1_MG6				
+pData_SI_mE_TOF_M46_Z-1_MG7				
+pData_SI_mE_TOF_M46_Z-1_MG8				
+pData_SI_mE_TOF_M46_Z-1_MG9				
+pData_SI_mE_TOF_M46_Z-1_MG10			
+pData_SI_mE_TOF_M46_Z-1_MG11			
+pData_SI_mE_TOF_MG_M46_Z-1				
 pData_SI-hEx_M46_Z-1_p				false
 pData_SI_mEx_TW_M46_Z-1_p				false
 pData_SI_mECM_ThetaCM_M46_Z-1_p				false
@@ -446,22 +446,22 @@ pData_SI_mdE_E_Si_M47_Z18_MM1				false
 pData_SI_mdE_E_Si_M47_Z18_MM2				false
 pData_SI_mdE_E_Si_M47_Z18_MM3				false
 pData_SI_mdE_E_Si_M47_Z18_MM4				false
-pData_SI_mE_TOF_M47_Z18_MM1				false
-pData_SI_mE_TOF_M47_Z18_MM2				false
-pData_SI_mE_TOF_M47_Z18_MM3				false
-pData_SI_mE_TOF_M47_Z18_MM4				false
-pData_SI_mE_TOF_M47_Z18_MG1				false
-pData_SI_mE_TOF_M47_Z18_MG2				false
-pData_SI_mE_TOF_M47_Z18_MG3				false
-pData_SI_mE_TOF_M47_Z18_MG4				false
-pData_SI_mE_TOF_M47_Z18_MG5				false
-pData_SI_mE_TOF_M47_Z18_MG6				false
-pData_SI_mE_TOF_M47_Z18_MG7				false
-pData_SI_mE_TOF_M47_Z18_MG8				false
-pData_SI_mE_TOF_M47_Z18_MG9				false
-pData_SI_mE_TOF_M47_Z18_MG10				false
-pData_SI_mE_TOF_M47_Z18_MG11				false
-pData_SI_mE_TOF_MG_M47_Z18				false
+pData_SI_mE_TOF_M47_Z18_MM1				
+pData_SI_mE_TOF_M47_Z18_MM2				
+pData_SI_mE_TOF_M47_Z18_MM3				
+pData_SI_mE_TOF_M47_Z18_MM4				
+pData_SI_mE_TOF_M47_Z18_MG1				
+pData_SI_mE_TOF_M47_Z18_MG2				
+pData_SI_mE_TOF_M47_Z18_MG3				
+pData_SI_mE_TOF_M47_Z18_MG4				
+pData_SI_mE_TOF_M47_Z18_MG5				
+pData_SI_mE_TOF_M47_Z18_MG6				
+pData_SI_mE_TOF_M47_Z18_MG7				
+pData_SI_mE_TOF_M47_Z18_MG8				
+pData_SI_mE_TOF_M47_Z18_MG9				
+pData_SI_mE_TOF_M47_Z18_MG10			
+pData_SI_mE_TOF_M47_Z18_MG11			
+pData_SI_mE_TOF_MG_M47_Z18				
 pData_SI-hEx_M47_Z18_p				false
 pData_SI_mEx_TW_M47_Z18_p				false
 pData_SI_mECM_ThetaCM_M47_Z18_p				false
@@ -481,22 +481,22 @@ pData_SI_mdE_E_Si_M47_Z19_MM1				false
 pData_SI_mdE_E_Si_M47_Z19_MM2				false
 pData_SI_mdE_E_Si_M47_Z19_MM3				false
 pData_SI_mdE_E_Si_M47_Z19_MM4				false
-pData_SI_mE_TOF_M47_Z19_MM1				false
-pData_SI_mE_TOF_M47_Z19_MM2				false
-pData_SI_mE_TOF_M47_Z19_MM3				false
-pData_SI_mE_TOF_M47_Z19_MM4				false
-pData_SI_mE_TOF_M47_Z19_MG1				false
-pData_SI_mE_TOF_M47_Z19_MG2				false
-pData_SI_mE_TOF_M47_Z19_MG3				false
-pData_SI_mE_TOF_M47_Z19_MG4				false
-pData_SI_mE_TOF_M47_Z19_MG5				false
-pData_SI_mE_TOF_M47_Z19_MG6				false
-pData_SI_mE_TOF_M47_Z19_MG7				false
-pData_SI_mE_TOF_M47_Z19_MG8				false
-pData_SI_mE_TOF_M47_Z19_MG9				false
-pData_SI_mE_TOF_M47_Z19_MG10				false
-pData_SI_mE_TOF_M47_Z19_MG11				false
-pData_SI_mE_TOF_MG_M47_Z19				false
+pData_SI_mE_TOF_M47_Z19_MM1				
+pData_SI_mE_TOF_M47_Z19_MM2				
+pData_SI_mE_TOF_M47_Z19_MM3				
+pData_SI_mE_TOF_M47_Z19_MM4				
+pData_SI_mE_TOF_M47_Z19_MG1				
+pData_SI_mE_TOF_M47_Z19_MG2				
+pData_SI_mE_TOF_M47_Z19_MG3				
+pData_SI_mE_TOF_M47_Z19_MG4				
+pData_SI_mE_TOF_M47_Z19_MG5				
+pData_SI_mE_TOF_M47_Z19_MG6				
+pData_SI_mE_TOF_M47_Z19_MG7				
+pData_SI_mE_TOF_M47_Z19_MG8				
+pData_SI_mE_TOF_M47_Z19_MG9				
+pData_SI_mE_TOF_M47_Z19_MG10			
+pData_SI_mE_TOF_M47_Z19_MG11			
+pData_SI_mE_TOF_MG_M47_Z19				
 pData_SI-hEx_M47_Z19_p				false
 pData_SI_mEx_TW_M47_Z19_p				false
 pData_SI_mECM_ThetaCM_M47_Z19_p				false
@@ -516,22 +516,22 @@ pData_SI_mdE_E_Si_M47_Z-1_MM1				false
 pData_SI_mdE_E_Si_M47_Z-1_MM2				false
 pData_SI_mdE_E_Si_M47_Z-1_MM3				false
 pData_SI_mdE_E_Si_M47_Z-1_MM4				false
-pData_SI_mE_TOF_M47_Z-1_MM1				false
-pData_SI_mE_TOF_M47_Z-1_MM2				false
-pData_SI_mE_TOF_M47_Z-1_MM3				false
-pData_SI_mE_TOF_M47_Z-1_MM4				false
-pData_SI_mE_TOF_M47_Z-1_MG1				false
-pData_SI_mE_TOF_M47_Z-1_MG2				false
-pData_SI_mE_TOF_M47_Z-1_MG3				false
-pData_SI_mE_TOF_M47_Z-1_MG4				false
-pData_SI_mE_TOF_M47_Z-1_MG5				false
-pData_SI_mE_TOF_M47_Z-1_MG6				false
-pData_SI_mE_TOF_M47_Z-1_MG7				false
-pData_SI_mE_TOF_M47_Z-1_MG8				false
-pData_SI_mE_TOF_M47_Z-1_MG9				false
-pData_SI_mE_TOF_M47_Z-1_MG10				false
-pData_SI_mE_TOF_M47_Z-1_MG11				false
-pData_SI_mE_TOF_MG_M47_Z-1				false
+pData_SI_mE_TOF_M47_Z-1_MM1				
+pData_SI_mE_TOF_M47_Z-1_MM2				
+pData_SI_mE_TOF_M47_Z-1_MM3				
+pData_SI_mE_TOF_M47_Z-1_MM4				
+pData_SI_mE_TOF_M47_Z-1_MG1				
+pData_SI_mE_TOF_M47_Z-1_MG2				
+pData_SI_mE_TOF_M47_Z-1_MG3				
+pData_SI_mE_TOF_M47_Z-1_MG4				
+pData_SI_mE_TOF_M47_Z-1_MG5				
+pData_SI_mE_TOF_M47_Z-1_MG6				
+pData_SI_mE_TOF_M47_Z-1_MG7				
+pData_SI_mE_TOF_M47_Z-1_MG8				
+pData_SI_mE_TOF_M47_Z-1_MG9				
+pData_SI_mE_TOF_M47_Z-1_MG10			
+pData_SI_mE_TOF_M47_Z-1_MG11			
+pData_SI_mE_TOF_MG_M47_Z-1				
 pData_SI-hEx_M47_Z-1_p				false
 pData_SI_mEx_TW_M47_Z-1_p				false
 pData_SI_mECM_ThetaCM_M47_Z-1_p				false
@@ -551,22 +551,22 @@ pData_SI_mdE_E_Si_M-2_Z18_MM1				false
 pData_SI_mdE_E_Si_M-2_Z18_MM2				false
 pData_SI_mdE_E_Si_M-2_Z18_MM3				false
 pData_SI_mdE_E_Si_M-2_Z18_MM4				false
-pData_SI_mE_TOF_M-2_Z18_MM1				false
-pData_SI_mE_TOF_M-2_Z18_MM2				false
-pData_SI_mE_TOF_M-2_Z18_MM3				false
-pData_SI_mE_TOF_M-2_Z18_MM4				false
-pData_SI_mE_TOF_M-2_Z18_MG1				false
-pData_SI_mE_TOF_M-2_Z18_MG2				false
-pData_SI_mE_TOF_M-2_Z18_MG3				false
-pData_SI_mE_TOF_M-2_Z18_MG4				false
-pData_SI_mE_TOF_M-2_Z18_MG5				false
-pData_SI_mE_TOF_M-2_Z18_MG6				false
-pData_SI_mE_TOF_M-2_Z18_MG7				false
-pData_SI_mE_TOF_M-2_Z18_MG8				false
-pData_SI_mE_TOF_M-2_Z18_MG9				false
-pData_SI_mE_TOF_M-2_Z18_MG10				false
-pData_SI_mE_TOF_M-2_Z18_MG11				false
-pData_SI_mE_TOF_MG_M-2_Z18				false
+pData_SI_mE_TOF_M-2_Z18_MM1				
+pData_SI_mE_TOF_M-2_Z18_MM2				
+pData_SI_mE_TOF_M-2_Z18_MM3				
+pData_SI_mE_TOF_M-2_Z18_MM4				
+pData_SI_mE_TOF_M-2_Z18_MG1				
+pData_SI_mE_TOF_M-2_Z18_MG2				
+pData_SI_mE_TOF_M-2_Z18_MG3				
+pData_SI_mE_TOF_M-2_Z18_MG4				
+pData_SI_mE_TOF_M-2_Z18_MG5				
+pData_SI_mE_TOF_M-2_Z18_MG6				
+pData_SI_mE_TOF_M-2_Z18_MG7				
+pData_SI_mE_TOF_M-2_Z18_MG8				
+pData_SI_mE_TOF_M-2_Z18_MG9				
+pData_SI_mE_TOF_M-2_Z18_MG10			
+pData_SI_mE_TOF_M-2_Z18_MG11			
+pData_SI_mE_TOF_MG_M-2_Z18				
 pData_SI-hEx_M-2_Z18_p				false
 pData_SI_mEx_TW_M-2_Z18_p				false
 pData_SI_mECM_ThetaCM_M-2_Z18_p				false
@@ -586,22 +586,22 @@ pData_SI_mdE_E_Si_M-2_Z19_MM1				false
 pData_SI_mdE_E_Si_M-2_Z19_MM2				false
 pData_SI_mdE_E_Si_M-2_Z19_MM3				false
 pData_SI_mdE_E_Si_M-2_Z19_MM4				false
-pData_SI_mE_TOF_M-2_Z19_MM1				false
-pData_SI_mE_TOF_M-2_Z19_MM2				false
-pData_SI_mE_TOF_M-2_Z19_MM3				false
-pData_SI_mE_TOF_M-2_Z19_MM4				false
-pData_SI_mE_TOF_M-2_Z19_MG1				false
-pData_SI_mE_TOF_M-2_Z19_MG2				false
-pData_SI_mE_TOF_M-2_Z19_MG3				false
-pData_SI_mE_TOF_M-2_Z19_MG4				false
-pData_SI_mE_TOF_M-2_Z19_MG5				false
-pData_SI_mE_TOF_M-2_Z19_MG6				false
-pData_SI_mE_TOF_M-2_Z19_MG7				false
-pData_SI_mE_TOF_M-2_Z19_MG8				false
-pData_SI_mE_TOF_M-2_Z19_MG9				false
-pData_SI_mE_TOF_M-2_Z19_MG10				false
-pData_SI_mE_TOF_M-2_Z19_MG11				false
-pData_SI_mE_TOF_MG_M-2_Z19				false
+pData_SI_mE_TOF_M-2_Z19_MM1				
+pData_SI_mE_TOF_M-2_Z19_MM2				
+pData_SI_mE_TOF_M-2_Z19_MM3				
+pData_SI_mE_TOF_M-2_Z19_MM4				
+pData_SI_mE_TOF_M-2_Z19_MG1				
+pData_SI_mE_TOF_M-2_Z19_MG2				
+pData_SI_mE_TOF_M-2_Z19_MG3				
+pData_SI_mE_TOF_M-2_Z19_MG4				
+pData_SI_mE_TOF_M-2_Z19_MG5				
+pData_SI_mE_TOF_M-2_Z19_MG6				
+pData_SI_mE_TOF_M-2_Z19_MG7				
+pData_SI_mE_TOF_M-2_Z19_MG8				
+pData_SI_mE_TOF_M-2_Z19_MG9				
+pData_SI_mE_TOF_M-2_Z19_MG10			
+pData_SI_mE_TOF_M-2_Z19_MG11			
+pData_SI_mE_TOF_MG_M-2_Z19				
 pData_SI-hEx_M-2_Z19_p				false
 pData_SI_mEx_TW_M-2_Z19_p				false
 pData_SI_mECM_ThetaCM_M-2_Z19_p				false
@@ -621,22 +621,22 @@ pData_SI_mdE_E_Si_M-2_Z-1_MM1				false
 pData_SI_mdE_E_Si_M-2_Z-1_MM2				false
 pData_SI_mdE_E_Si_M-2_Z-1_MM3				false
 pData_SI_mdE_E_Si_M-2_Z-1_MM4				false
-pData_SI_mE_TOF_M-2_Z-1_MM1				false
-pData_SI_mE_TOF_M-2_Z-1_MM2				false
-pData_SI_mE_TOF_M-2_Z-1_MM3				false
-pData_SI_mE_TOF_M-2_Z-1_MM4				false
-pData_SI_mE_TOF_M-2_Z-1_MG1				false
-pData_SI_mE_TOF_M-2_Z-1_MG2				false
-pData_SI_mE_TOF_M-2_Z-1_MG3				false
-pData_SI_mE_TOF_M-2_Z-1_MG4				false
-pData_SI_mE_TOF_M-2_Z-1_MG5				false
-pData_SI_mE_TOF_M-2_Z-1_MG6				false
-pData_SI_mE_TOF_M-2_Z-1_MG7				false
-pData_SI_mE_TOF_M-2_Z-1_MG8				false
-pData_SI_mE_TOF_M-2_Z-1_MG9				false
-pData_SI_mE_TOF_M-2_Z-1_MG10				false
-pData_SI_mE_TOF_M-2_Z-1_MG11				false
-pData_SI_mE_TOF_MG_M-2_Z-1				false
+pData_SI_mE_TOF_M-2_Z-1_MM1				
+pData_SI_mE_TOF_M-2_Z-1_MM2				
+pData_SI_mE_TOF_M-2_Z-1_MM3				
+pData_SI_mE_TOF_M-2_Z-1_MM4				
+pData_SI_mE_TOF_M-2_Z-1_MG1				
+pData_SI_mE_TOF_M-2_Z-1_MG2				
+pData_SI_mE_TOF_M-2_Z-1_MG3				
+pData_SI_mE_TOF_M-2_Z-1_MG4				
+pData_SI_mE_TOF_M-2_Z-1_MG5				
+pData_SI_mE_TOF_M-2_Z-1_MG6				
+pData_SI_mE_TOF_M-2_Z-1_MG7				
+pData_SI_mE_TOF_M-2_Z-1_MG8				
+pData_SI_mE_TOF_M-2_Z-1_MG9				
+pData_SI_mE_TOF_M-2_Z-1_MG10			
+pData_SI_mE_TOF_M-2_Z-1_MG11			
+pData_SI_mE_TOF_MG_M-2_Z-1				
 pData_SI-hEx_M-2_Z-1_p				false
 pData_SI_mEx_TW_M-2_Z-1_p				false
 pData_SI_mECM_ThetaCM_M-2_Z-1_p				false

@@ -48,9 +48,8 @@ class VamosIdentification : public Identification {
     std::array<int, 4> cuts_M;
     std::array<int, 8> cuts_Q;
 
-    std::unordered_map<int, std::unordered_map<int, double>> mass;
-
    private:
+    std::unordered_map<int, std::unordered_map<int, double>> mass;
     const Double_t AMU_TO_MEV{931.4936148};
     void ReadFPTimeShifts();
     std::vector<std::pair<double, double>> TimeShifts;  //Xf-max, shift
@@ -140,14 +139,14 @@ class VamosIdentification : public Identification {
         fragment->D_En      = ((*data->IC)[0] > IC_threashold) * ((*data->IC)[0] + ((*data->IC)[1] > IC_threashold) * ((*data->IC)[1]));
         fragment->D_En2     = (*data->IC)[0] * ((*data->IC)[1] > IC_threashold);
 
+        //Computing the basic identifiaction
         fragment->T         = GetFPTime();
         fragment->Path      = **data->Path + 5;
-        //Computing the basic identifiaction
         fragment->V         = fragment->Path / fragment->T;
         fragment->Beta      = fragment->V / 29.9792;
         fragment->Gamma     = 1. / sqrt(1.0 - fragment->Beta * fragment->Beta);
         fragment->M         = (fragment->En) / 931.5016 / (fragment->Gamma - 1.);
-        //mM2 = 18./20.8*(mE2)/931.5016/(mGamma2-1.);
+        //mM2               = 18./20.8*(mE2)/931.5016/(mGamma2-1.);
         fragment->M_Q       = **data->Brho / 3.105 / fragment->Beta / fragment->Gamma;
         fragment->Charge    = fragment->M / fragment->M_Q;
 
@@ -203,7 +202,9 @@ class VamosIdentification : public Identification {
     }
 
     inline double GetFPTime() {
-        return 540.5 * (**data->AGAVA_VAMOSTS < 104753375647998) + 537.9 * (**data->AGAVA_VAMOSTS >= 104753375647998) - 2. * **data->T_FPMW_CATS2_C + GetShift();
+        return 540.5 * (**data->AGAVA_VAMOSTS < 104753375647998) 
+        + 537.9 * (**data->AGAVA_VAMOSTS >= 104753375647998) 
+        - 2. * **data->T_FPMW_CATS2_C + GetShift();
     }
 };
 
