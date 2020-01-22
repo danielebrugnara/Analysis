@@ -183,6 +183,7 @@ class VamosIdentification : public Identification {
         TVector3 v4(0, 0, fragment->Beta);
         v4.SetMagThetaPhi(fragment->Beta, **data->ThetaL, **data->PhiL);
         fragment->p4.Boost(v4);
+
         return fragment->Identified = true;
     }
 

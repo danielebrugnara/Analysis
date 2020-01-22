@@ -2,7 +2,8 @@
 
 MugastIdentification::MugastIdentification() : cuts_MG({1, 3, 4, 5, 7, 11}),
                                                cuts_M({1, 2, 4}),
-                                               cuts_Z({1, 2}) {}
+                                               cuts_Z({1, 2}),
+                                               cuts_particles({"m1_z1", "m2_z1", "m4_z2"}) {}
 
 MugastIdentification::~MugastIdentification() {
     delete gas_thickness;
@@ -50,12 +51,6 @@ bool MugastIdentification::Initialize() {
     }
 
     cut_type["E_TOF"] = *tmp;
-
-    for (const auto &cut_type_it : cut_type) {
-        for (const auto &cut_it : cut_type_it) {
-            cut_detector[std::stoi(cut_it.first.substr(cut_it.first.find_last_of("_") + 3))] = cut_it.second;
-        }
-    }
 
     return true;
 }

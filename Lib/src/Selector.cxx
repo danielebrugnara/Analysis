@@ -57,7 +57,7 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     for (const auto &Z_it : vamos_fragment.cuts_Z) {
         Istantiate(pConf.VAMOS.mQ_MQ[Z_it],
                     new TH2D(Form("pConf_VAMOS_mQ_MQ_Z%i", Z_it), 
-                                Form("M/Q vs Q with Z%i selection", Z_it), 
+                               Form("M/Q vs Q with Z%i selection", Z_it), 
                                1000, 2, 4, 1000, 3, 24));
 
         Istantiate(pConf.VAMOS.Xf_MQ[Z_it],
@@ -125,7 +125,8 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     for (const auto &it_M : vamos_fragment.cuts_M) {
         for (const auto &it_Z : vamos_fragment.cuts_Z) {
             Istantiate(pData.VAMOS.mTW_Brho[it_M][it_Z], 
-                        new TH2D(Form("pData-VAMOS-mTW_Brho-%i-%i", it_M, it_Z), Form("Time vs Brho with %i %i in VAMOS", it_M, it_Z), 
+                        new TH2D(Form("pData-VAMOS-mTW_Brho-%i-%i", it_M, it_Z), 
+                                    Form("Time vs Brho with %i %i in VAMOS", it_M, it_Z), 
                                     5000, 242, 328, 1000, 0.5, 1.5));
         }
     }
@@ -176,8 +177,8 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
             for (const auto &MM : siliconsMM) {
                 Istantiate(pData.SI.mdE_E_Si[it_M][it_Z][MM],
                             new TH2D(Form("pData_SI_mdE_E_Si_M%i_Z%i_%s", it_M, it_Z, MM.c_str()), 
-                            Form("dE E of %s with M%i Z%i", MM.c_str(), it_M, it_Z), 
-                            1000, 0, 28, 1000, 0, 28));
+                                        Form("dE E of %s with M%i Z%i", MM.c_str(), it_M, it_Z), 
+                                        1000, 0, 28, 1000, 0, 28));
             }
             for (const auto &SI : silicons) {
                 Istantiate(pData.SI.mE_TOF[it_M][it_Z][SI],
@@ -208,8 +209,8 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
                 for (const auto &gamma : gammas) {
                     Istantiate(pData.SI.mELab_ThetaLab[it_M][it_Z][particle][gamma],
                                 new TH2D(Form("pData_SI_mELab_ThetaLab_M%i_Z%i_%s_%s", it_M, it_Z, particle.c_str(), gamma.c_str()), 
-                                Form("ELab vs Theta Lab with M%i Z%i in VAMOS and %s in MUGAST and %s in AGATA", it_M, it_Z, particle.c_str(), gamma.c_str()), 
-                                1000, 0, 180, 1000, 0, 60));
+                                            Form("ELab vs Theta Lab with M%i Z%i in VAMOS and %s in MUGAST and %s in AGATA", it_M, it_Z, particle.c_str(), gamma.c_str()), 
+                                            1000, 0, 180, 1000, 0, 60));
                 }
             }
         }
@@ -217,8 +218,8 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     for (const auto &particle : particles) {
         Istantiate(pData.SI.mELab_ThetaLab[0][0][particle]["ANY"],
                     new TH2D(Form("pData-SI-mELab_ThetaLab-%s-%s-%s", "ANY", "ANY", particle.c_str()), 
-                    Form("E Lab vs Theta Lab with %s %s in VAMOS and %s in MUGAST", "ANY", "ANY", particle.c_str()), 
-                    1000, 0, 180, 1000, 0, 60));
+                                Form("E Lab vs Theta Lab with %s %s in VAMOS and %s in MUGAST", "ANY", "ANY", particle.c_str()), 
+                                1000, 0, 180, 1000, 0, 60));
      }
 
     if (new_graph_file!=nullptr) {
@@ -230,23 +231,21 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     std::cout << "------------>finished: SI initialization\n";
 #endif
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    ///Loading things from TFiles/////////////////////////////////////////////////////////////
-
-    std::string VAMOS_cuts_file = "./Configs/Cuts/VAMOS.root";
-    std::string MUGAST_cuts_file = "./Configs/Cuts/MUGAST.root";
+    ///Loading Identification classes/////////////////////////////////////////////////////////////
 
     //TODO: use constructor to initialize this!!!
+    std::string VAMOS_cuts_file = "./Configs/Cuts/VAMOS.root";
     vamos_fragment.LoadCuts(VAMOS_cuts_file);
     vamos_fragment.Initialize();
 
+    std::string MUGAST_cuts_file = "./Configs/Cuts/MUGAST.root";
     mugast_fragment.LoadCuts(MUGAST_cuts_file);
     mugast_fragment.Initialize();
+
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>finished: vamos_fragment initialization\n";
 #endif
 
-    //////////////////////////////////////////////////////////////////////////////////////////////////
     ///Temporary histogram///////////////////////////////////////////////////////////////////////////
     general_histo_ptr = new TH2D("test", "test", 1000, -400, 400, 1000, 0, 100);
     fOutput->Add(general_histo_ptr);
@@ -328,6 +327,7 @@ Bool_t Selector::Process(Long64_t entry) {
 
 //MUGAST//////////////////////////////////////////////////////////////////////////////////////////////////////
 mugast_label:  //Label of goto previous to VAMOS
+    mugast_fragment.Identify();
 
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>Finished: Vamos identification, negative exit\n";

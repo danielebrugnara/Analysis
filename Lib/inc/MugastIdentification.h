@@ -24,6 +24,7 @@ class MugastIdentification : public Identification {
     std::array<int, 6> cuts_MG;
     std::array<int, 3> cuts_M;
     std::array<int, 2> cuts_Z;
+    std::array<std::string, 3> cuts_particles;
 
    private:
     struct Fragment {
@@ -36,8 +37,8 @@ class MugastIdentification : public Identification {
         std::vector<double> T;
         std::vector<double> T2;
         std::vector<double> MG;
-        std::vector<double> M;
-        std::vector<double> Z;
+        std::vector<int> M;
+        std::vector<int> Z;
         std::vector<double> Ex;
         Fragment(const unsigned int multiplicity) : multiplicity(multiplicity) {
             Pos.resize(multiplicity);
@@ -52,13 +53,13 @@ class MugastIdentification : public Identification {
             Z.resize(multiplicity);
         };
     };
-    Data const *data;
-    Fragment *fragment;
+    Data const  *data;
+    Fragment    *fragment;
 
     Interpolation *gas_thickness;
     Interpolation *havar_angle;
-    std::unordered_map<int, std::unordered_map<int, double>> mass;
     const Double_t AMU_TO_MEV{931.4936148};
+    std::unordered_map<int, std::unordered_map<int, double>> mass;
 
    public:
     inline void SetData(Data const *data) {
@@ -69,7 +70,8 @@ class MugastIdentification : public Identification {
 
         this->data = data;
         fragment = new Fragment((**(data->Mugast)).DSSD_E.size());
-    }
+    };
+
     inline bool Identify() {
         for (unsigned int ii = 0; ii < fragment->multiplicity; ++ii) {
             fragment->Pos[ii] = TVector3((**(data->Mugast)).PosX[ii],
@@ -82,24 +84,36 @@ class MugastIdentification : public Identification {
             fragment->MG[ii]    = (**(data->Mugast)).TelescopeNumber[ii];
         }
         for (unsigned int ii = 0; ii < fragment->multiplicity; ++ii) {
-            if (cut_detector[fragment->MG[ii]]["E_TOF"]
-                    ->IsInside(fragment->SI_E[ii], fragment->T[ii])) {
-                
-                fragment->Z = 
+            bool already_id_z = false;
+            bool already_id_m = false;
+            for (const auto & cut_it : cuts_particles){
+                if (cut_type["E_TOF"]["E_TOF_"+cut_it+"_MG"+std::to_string(fragment->MG[ii])]
+                        ->IsInside(fragment->SI_E[ii], fragment->T[ii])){
+                            if (already_id_m) throw std::runtime_error("Overlapping m gates");
+                            if (already_id_z) throw std::runtime_error("Overlapping z gates");
+
+                            fragment->M[ii] = std::stoi(cut_it.substr(cut_it.find_first_of("m")+1, 
+                                                            cut_it.find_first_of("_")-cut_it.find_first_of("m")-1));
+
+                            fragment->Z[ii] = std::stoi(cut_it.substr(cut_it.find_first_of("z")+1, 
+                                                            cut_it.find_first_of("_")-cut_it.find_first_of("z")-1));
+                  
+                        }
             }
-        }
+            return true;
+        };
         //TODO: reconstruct E here
 
         //TODO: compute Ex here
     }
 
-    inline int Get_Mult() { return fragment->multiplicity; };
-    inline TVector3 *Get_Pos(const int &i) { return &(fragment->Pos[i]); };
-    inline double Get_E(const int &i) { return fragment->E[i]; };
-    inline double Get_T(const int &i) { return fragment->T[i]; };
-    inline double Get_MG(const int &i) { return fragment->MG[i]; };
-    inline double Get_M(const int &i) { return fragment->M[i]; };
-    inline double Get_Z(const int &i) { return fragment->Z[i]; };
+    inline int      Get_Mult()              { return fragment->multiplicity; };
+    inline TVector3 *Get_Pos(const int &i)  { return &(fragment->Pos[i]); };
+    inline double   Get_E(const int &i)     { return fragment->E[i]; };
+    inline double   Get_T(const int &i)     { return fragment->T[i]; };
+    inline double   Get_MG(const int &i)    { return fragment->MG[i]; };
+    inline double   Get_M(const int &i)     { return fragment->M[i]; };
+    inline double   Get_Z(const int &i)     { return fragment->Z[i]; };
 };
 
 #endif
