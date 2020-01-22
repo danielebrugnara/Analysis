@@ -3,7 +3,10 @@
 MugastIdentification::MugastIdentification() : cuts_MG({1, 3, 4, 5, 7, 11}),
                                                cuts_M({1, 2, 4}),
                                                cuts_Z({1, 2}),
-                                               cuts_particles({"m1_z1", "m2_z1", "m4_z2"}) {}
+                                               cuts_particles({"m1_z1", "m2_z1", "m4_z2"}),
+                                               data(nullptr),
+                                               fragment(nullptr),
+                                               with_cuts(true) {}
 
 MugastIdentification::~MugastIdentification() {
     delete gas_thickness;
@@ -30,24 +33,27 @@ bool MugastIdentification::Initialize() {
     std::unordered_map<std::string, TCutG *> *tmp 
         = new std::unordered_map<std::string, TCutG *>();
 
-    try {
-        //Protons
-        (*tmp)["E_TOF_m1_z1_MG1"]   = cuts.at("E_TOF_m1_z1_MG1");
-        (*tmp)["E_TOF_m1_z1_MG3"]   = cuts.at("E_TOF_m1_z1_MG3");
-        (*tmp)["E_TOF_m1_z1_MG4"]   = cuts.at("E_TOF_m1_z1_MG4");
-        (*tmp)["E_TOF_m1_z1_MG5"]   = cuts.at("E_TOF_m1_z1_MG5");
-        (*tmp)["E_TOF_m1_z1_MG7"]   = cuts.at("E_TOF_m1_z1_MG7");
-        (*tmp)["E_TOF_m1_z1_MG11"]  = cuts.at("E_TOF_m1_z1_MG11");
-        //Deuterons
-        (*tmp)["E_TOF_m2_z1_MG1"]   = cuts.at("E_TOF_m2_z1_MG1");
-        (*tmp)["E_TOF_m2_z1_MG3"]   = cuts.at("E_TOF_m2_z1_MG3");
-        (*tmp)["E_TOF_m2_z1_MG4"]   = cuts.at("E_TOF_m2_z1_MG4");
-        (*tmp)["E_TOF_m2_z1_MG5"]   = cuts.at("E_TOF_m2_z1_MG5");
-        (*tmp)["E_TOF_m2_z1_MG7"]   = cuts.at("E_TOF_m2_z1_MG7");
-        (*tmp)["E_TOF_m2_z1_MG11"]  = cuts.at("E_TOF_m2_z1_MG11");
-    } catch (const std::out_of_range &err) {
-        std::cerr << err.what() << std::endl;
-        throw std::runtime_error("Unable to find one of the E_TOF cuts\n");
+    std::vector<std::string> tmp_cut_names;
+    tmp_cut_names.push_back("E_TOF_m1_z1_MG1");
+    tmp_cut_names.push_back("E_TOF_m1_z1_MG3");
+    tmp_cut_names.push_back("E_TOF_m1_z1_MG4");
+    tmp_cut_names.push_back("E_TOF_m1_z1_MG5");
+    tmp_cut_names.push_back("E_TOF_m1_z1_MG7");
+    tmp_cut_names.push_back("E_TOF_m1_z1_MG11");
+                            
+    tmp_cut_names.push_back("E_TOF_m2_z1_MG1");
+    tmp_cut_names.push_back("E_TOF_m2_z1_MG3");
+    tmp_cut_names.push_back("E_TOF_m2_z1_MG4");
+    tmp_cut_names.push_back("E_TOF_m2_z1_MG5");
+    tmp_cut_names.push_back("E_TOF_m2_z1_MG7");
+    tmp_cut_names.push_back("E_TOF_m2_z1_MG11");
+
+    for (const auto & cut_name : tmp_cut_names){
+        try{
+            (*tmp)[cut_name] = cuts.at(cut_name);
+        }catch (const std::out_of_range &err) {
+            std::cerr << "Unable to find one of the E_TOF cuts : "<< cut_name << "\n";
+        }
     }
 
     cut_type["E_TOF"] = *tmp;
