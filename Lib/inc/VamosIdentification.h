@@ -156,7 +156,7 @@ class VamosIdentification : public Identification {
             if (z_search.second->IsInside(fragment->En, fragment->D_En2)) {
                 //Z format dE2_E_Z18
                 if (fragment->id_Z == 0)
-                    fragment->id_Z = stoi(
+                    fragment->id_Z = std::stoi(
                         z_search.first.substr(z_search.first.find_last_of("_Z") + 1));
                 else
                     throw std::runtime_error("Overlapping Z gates\n");
@@ -168,8 +168,8 @@ class VamosIdentification : public Identification {
         for (const auto &mq_search : cut_type.at("MQ_Q")) {
             if (mq_search.second->IsInside(fragment->M_Q, fragment->Charge)) {
                 if (fragment->id_M == 0 && fragment->id_Q == 0) {
-                    fragment->id_M = stoi(mq_search.first.substr(mq_search.first.find_last_of("M") + 1, 2));
-                    fragment->id_Q = stoi(mq_search.first.substr(mq_search.first.find_last_of("_") + 2));
+                    fragment->id_M = std::stoi(mq_search.first.substr(mq_search.first.find_last_of("M") + 1, 2));
+                    fragment->id_Q = std::stoi(mq_search.first.substr(mq_search.first.find_last_of("_") + 2));
                 } else
                     throw std::runtime_error("Overlapping M_Q gates :  " + mq_search.first +
                                              "  and  M" + std::to_string(fragment->id_M) +

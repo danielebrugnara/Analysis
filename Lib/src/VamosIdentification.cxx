@@ -107,7 +107,7 @@ void VamosIdentification::ReadFPTimeShifts() {
         std::stringstream str;
         str << line;
         str >> min >> max >> shift;
-        TimeShifts.push_back(std::pair<double, double>(stod(max), stod(shift)));
+        TimeShifts.push_back(std::pair<double, double>(std::stod(max), std::stod(shift)));
     }
     double tmp = -1E6;
 #ifdef VERBOSE_DEBUG

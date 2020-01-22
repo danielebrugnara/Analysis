@@ -21,6 +21,7 @@ class Identification {
     //TODO: use templates to include SetData here
     std::unordered_map<std::string, TCutG*> cuts;
     std::unordered_map<std::string, std::unordered_map<std::string, TCutG*>> cut_type;
+    std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, TCutG*>>> cut_detector;
 };
 
 #endif

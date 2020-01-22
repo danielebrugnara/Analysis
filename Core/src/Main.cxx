@@ -7,7 +7,7 @@ int main(int argc, char* argv[]) {
 
     int n_threads {1};
     if (argc == 2) {
-        n_threads = stoi(argv[1]);
+        n_threads = std::stoi(argv[1]);
         std::cout << "Number of threads : " << n_threads << std::endl;
     }
     try {

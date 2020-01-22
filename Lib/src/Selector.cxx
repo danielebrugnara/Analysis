@@ -183,13 +183,12 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
                 Istantiate(pData.SI.mE_TOF[it_M][it_Z][SI],
                             new TH2D(Form("pData_SI_mE_TOF_M%i_Z%i_%s", it_M, it_Z, SI.c_str()), 
                                         Form("E vs TOF of %s with M%i Z%i", SI.c_str(), it_M, it_Z), 
-                                        1000, 0, 28, 1000, 260, 380));
+                                        5000, 0, 28, 5000, 260, 380));
             }
             Istantiate(pData.SI.mE_TOF[it_M][it_Z]["MG"],
                         new TH2D(Form("pData_SI_mE_TOF_MG_M%i_Z%i", it_M, it_Z), 
                                     Form("E vs TOF of all MG with M%i Z%i", it_M, it_Z),  
-                                    1000, 0, 28, 1000, 260, 380));
-
+                                    5000, 0, 28, 5000, 260, 380));
             for (const auto &particle : particles) {
                 Istantiate(pData.SI.hEx[it_M][it_Z][particle],             
                             new TH1D(Form("pData_SI-hEx_M%i_Z%i_%s", it_M, it_Z, particle.c_str()), 
@@ -334,24 +333,12 @@ mugast_label:  //Label of goto previous to VAMOS
     std::cout << "------------>Finished: Vamos identification, negative exit\n";
 #endif
 
-    FillMugastConfHistograms();
+    //FillMugastConfHistograms();
+    PlotMugastGraphs();
 
     //SI data loops
     try {
         //E-TOF plots
-        if (vamos_fragment.Identified()) {
-            for (long unsigned int ii = 0; ii < (*Mugast).DSSD_E.size(); ii++) {
-                //TVector3 hitPos((*Mugast).PosX[ii], (*Mugast).PosY[ii], (*Mugast).PosZ[ii]);
-                //Fill(pData.SI.mE_TOF[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][Form("MG%i", (*Mugast).TelescopeNumber[ii])], (*Mugast).DSSD_E[ii], AlignT((*Mugast).TelescopeNumber[ii], (*Mugast).DSSD_Y[ii], (*Mugast).DSSD_T[ii]));
-
-                Fill(pData.SI.mE_TOF[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][Form("MG%i", (*Mugast).TelescopeNumber[ii])], 
-                        (*Mugast).DSSD_E[ii], (*Mugast).DSSD_T[ii]);
-
-                Fill(pData.SI.mE_TOF[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["MG"], 
-                        (*Mugast).DSSD_E[ii], AlignPunch((*Mugast).TelescopeNumber[ii], 
-                        (*Mugast).DSSD_T[ii]));
-            }
-        }
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>Finished: E TOF histos filled\n";
 #endif
@@ -508,6 +495,23 @@ inline void Selector::PlotVamosGraphs() {
     if (!vamos_fragment.Identified()) return;
     Fill(pData.VAMOS.mTW_Brho[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()], 
             *TW, *Brho);
+}
+
+inline void Selector::PlotMugastGraphs() {
+
+        if (vamos_fragment.Identified()) {
+            for (long unsigned int ii = 0; ii < (*Mugast).DSSD_E.size(); ii++) {
+                //TVector3 hitPos((*Mugast).PosX[ii], (*Mugast).PosY[ii], (*Mugast).PosZ[ii]);
+                //Fill(pData.SI.mE_TOF[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][Form("MG%i", (*Mugast).TelescopeNumber[ii])], (*Mugast).DSSD_E[ii], AlignT((*Mugast).TelescopeNumber[ii], (*Mugast).DSSD_Y[ii], (*Mugast).DSSD_T[ii]));
+
+                Fill(pData.SI.mE_TOF[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][Form("MG%i", (*Mugast).TelescopeNumber[ii])], 
+                        (*Mugast).DSSD_E[ii], (*Mugast).DSSD_T[ii]);
+
+                Fill(pData.SI.mE_TOF[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["MG"], 
+                        (*Mugast).DSSD_E[ii], AlignPunch((*Mugast).TelescopeNumber[ii], 
+                        (*Mugast).DSSD_T[ii]));
+            }
+        }
 }
 
 inline void Selector::FillMugastConfHistograms() {
