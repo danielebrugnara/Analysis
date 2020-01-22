@@ -183,12 +183,12 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
                 Istantiate(pData.SI.mE_TOF[it_M][it_Z][SI],
                             new TH2D(Form("pData_SI_mE_TOF_M%i_Z%i_%s", it_M, it_Z, SI.c_str()), 
                                         Form("E vs TOF of %s with M%i Z%i", SI.c_str(), it_M, it_Z), 
-                                        5000, 0, 28, 5000, 260, 380));
+                                        1000, 0, 28, 1000, 260, 380));
             }
             Istantiate(pData.SI.mE_TOF[it_M][it_Z]["MG"],
                         new TH2D(Form("pData_SI_mE_TOF_MG_M%i_Z%i", it_M, it_Z), 
                                     Form("E vs TOF of all MG with M%i Z%i", it_M, it_Z),  
-                                    5000, 0, 28, 5000, 260, 380));
+                                    1000, 0, 28, 1000, 260, 380));
             for (const auto &particle : particles) {
                 Istantiate(pData.SI.hEx[it_M][it_Z][particle],             
                             new TH1D(Form("pData_SI-hEx_M%i_Z%i_%s", it_M, it_Z, particle.c_str()), 
