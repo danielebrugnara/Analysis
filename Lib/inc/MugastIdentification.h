@@ -123,6 +123,7 @@ class MugastIdentification : public Identification {
     inline double Get_E(const int &i) { return fragment->E[i]; };
     inline double Get_SI_E(const int &i) { return fragment->SI_E[i]; };
     inline double Get_T(const int &i) { return fragment->T[i]; };
+    inline double Get_T2(const int &i) { return fragment->T[i]; };
     inline double Get_MG(const int &i) { return fragment->MG[i]; };
     inline double Get_M(const int &i) { return fragment->M[i]; };
     inline double Get_Z(const int &i) { return fragment->Z[i]; };

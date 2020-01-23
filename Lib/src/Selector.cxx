@@ -173,11 +173,21 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
                     new TH2D(Form("pConf-MG-mE_TOF-MG%i", it_MG), 
                                 Form("E vs TOF of MG%i", it_MG),          
                                 1000, 0, 28, 1000, 260, 380));
+
+        Istantiate(pConf.MG.mE_TOF2[it_MG],
+                    new TH2D(Form("pConf-MG-mE_TOF2-MG%i", it_MG), 
+                                Form("E vs TOF2 of MG%i", it_MG),          
+                                1000, 0, 28, 1000, 260, 380));
         for (const auto &it_M : vamos_fragment.cuts_M) {
             for (const auto &it_Z : vamos_fragment.cuts_Z) {
                 Istantiate(pData.MG.mE_TOF[it_M][it_Z][it_MG],
                             new TH2D(Form("pData_MG_mE_TOF_M%i_Z%i_MG%i", it_M, it_Z, it_MG), 
                                         Form("E vs TOF of MG%i with M%i Z%i", it_MG, it_M, it_Z), 
+                                        1000, 0, 28, 1000, 260, 380));
+
+                Istantiate(pData.MG.mE_TOF2[it_M][it_Z][it_MG],
+                            new TH2D(Form("pData_MG_mE_TOF2_M%i_Z%i_MG%i", it_M, it_Z, it_MG), 
+                                        Form("E vs TOF2 of MG%i with M%i Z%i", it_MG, it_M, it_Z), 
                                         1000, 0, 28, 1000, 260, 380));
             }
         }
@@ -534,10 +544,18 @@ inline void Selector::PlotMugastGraphs() {
         Fill(pConf.MG.mE_TOF[mugast_fragment.Get_MG(ii)], 
                 mugast_fragment.Get_SI_E(ii),
                 mugast_fragment.Get_T(ii));
+
+        Fill(pConf.MG.mE_TOF2[mugast_fragment.Get_MG(ii)], 
+                mugast_fragment.Get_SI_E(ii),
+                mugast_fragment.Get_T2(ii));
         if (vamos_fragment.Identified()){
             Fill(pData.MG.mE_TOF[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][mugast_fragment.Get_MG(ii)],
                 mugast_fragment.Get_SI_E(ii),
                 mugast_fragment.Get_T(ii));
+
+            Fill(pData.MG.mE_TOF2[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][mugast_fragment.Get_MG(ii)],
+                mugast_fragment.Get_SI_E(ii),
+                mugast_fragment.Get_T2(ii));
         }
     }   
 

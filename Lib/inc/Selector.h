@@ -235,12 +235,14 @@ class Selector : public TSelector {
 
     struct MGConf {
         std::unordered_map<int, TH2D *>                                     mE_TOF;                                     //[M*#]
+        std::unordered_map<int, TH2D *>                                     mE_TOF2;                                     //[M*#]
         std::unordered_map<int, std::unordered_map<std::string, TH2D *>>    mStrip_E;  //[M*#][X\Y]
         std::unordered_map<int, std::unordered_map<std::string, TH2D *>>    mStrip_T;  //[M*#][X\Y]
     };
 
     struct MGData {                                                                                          //
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<int, TH2D *>>> mE_TOF;    //[Mass][Nucl][M*#]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<int, TH2D *>>> mE_TOF2;    //[Mass][Nucl][M*#]
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH1D *>>> hEx;       //[Mass][Nucl][Parcle]
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mEx_TW;    //[Mass][Nucl][Parcle]
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mECM_ThetaCM;
