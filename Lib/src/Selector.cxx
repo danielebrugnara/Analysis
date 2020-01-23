@@ -556,6 +556,8 @@ inline void Selector::PlotMugastGraphs() {
     std::cout << "------------>Selector::PlotMugastGraphs()\n";
 #endif
     for (int ii = 0; ii < mugast_fragment.Get_Mult(); ++ii) {
+
+        //E TOF
         Fill(pConf.MG.mE_TOF[mugast_fragment.Get_MG(ii)],
                 mugast_fragment.Get_SI_E(ii),
                 mugast_fragment.Get_T(ii));
@@ -563,7 +565,8 @@ inline void Selector::PlotMugastGraphs() {
         Fill(pConf.MG.mE_TOF2[mugast_fragment.Get_MG(ii)],
                 mugast_fragment.Get_SI_E(ii),
                 mugast_fragment.Get_T2(ii));
-
+        //Strip
+        //E
         Fill(pConf.MG.mStrip_E[mugast_fragment.Get_MG(ii)]["X"],
                 mugast_fragment.Get_SI_X(ii),
                 mugast_fragment.Get_SI_E(ii));
@@ -571,18 +574,18 @@ inline void Selector::PlotMugastGraphs() {
         Fill(pConf.MG.mStrip_E[mugast_fragment.Get_MG(ii)]["Y"],
                 mugast_fragment.Get_SI_Y(ii),
                 mugast_fragment.Get_SI_E(ii));
-
+        //T
         Fill(pConf.MG.mStrip_T[mugast_fragment.Get_MG(ii)]["X"],
                 mugast_fragment.Get_SI_X(ii),
                 mugast_fragment.Get_T(ii));
 
-        Fill(pConf.MG.mStrip_T2[mugast_fragment.Get_MG(ii)]["Y"],
+        Fill(pConf.MG.mStrip_T[mugast_fragment.Get_MG(ii)]["Y"],
                 mugast_fragment.Get_SI_Y(ii),
-                mugast_fragment.Get_T2(ii));
-
-        Fill(pConf.MG.mStrip_T[mugast_fragment.Get_MG(ii)]["X"],
-                mugast_fragment.Get_SI_X(ii),
                 mugast_fragment.Get_T(ii));
+        //T2
+        Fill(pConf.MG.mStrip_T2[mugast_fragment.Get_MG(ii)]["X"],
+                mugast_fragment.Get_SI_X(ii),
+                mugast_fragment.Get_T2(ii));
 
         Fill(pConf.MG.mStrip_T2[mugast_fragment.Get_MG(ii)]["Y"],
                 mugast_fragment.Get_SI_Y(ii),
