@@ -238,6 +238,7 @@ class Selector : public TSelector {
         std::unordered_map<int, TH2D *>                                     mE_TOF2;                                     //[M*#]
         std::unordered_map<int, std::unordered_map<std::string, TH2D *>>    mStrip_E;  //[M*#][X\Y]
         std::unordered_map<int, std::unordered_map<std::string, TH2D *>>    mStrip_T;  //[M*#][X\Y]
+        std::unordered_map<int, std::unordered_map<std::string, TH2D *>>    mStrip_T2;  //[M*#][X\Y]
     };
 
     struct MGData {                                                                                          //

@@ -24,12 +24,15 @@ class MugastIdentification : public Identification {
     std::array<int, 6> cuts_MG;
     std::array<int, 3> cuts_M;
     std::array<int, 2> cuts_Z;
-    std::array<std::string, 3> cuts_particles;
+    std::array<std::string, 3> particles;
+    std::array<std::string, 2> strips;
 
    private:
     struct Fragment {
         const unsigned int multiplicity;
         std::vector<TVector3> Pos;
+        std::vector<int> SI_X;
+        std::vector<int> SI_Y;
         std::vector<double> SI_E;
         std::vector<double> SI_E2;
         std::vector<double> E;
@@ -42,6 +45,8 @@ class MugastIdentification : public Identification {
         std::vector<double> Ex;
         Fragment(const unsigned int multiplicity) : multiplicity(multiplicity) {
             Pos.resize(multiplicity);
+            SI_X.resize(multiplicity);
+            SI_Y.resize(multiplicity);
             SI_E.resize(multiplicity);
             SI_E2.resize(multiplicity);
             E.resize(multiplicity);
@@ -83,6 +88,8 @@ class MugastIdentification : public Identification {
                                          (**(data->Mugast)).PosZ[ii]);
             fragment->SI_E[ii] = (**(data->Mugast)).DSSD_E[ii];
             fragment->SI_E2[ii] = (**(data->Mugast)).SecondLayer_E[ii];
+            fragment->SI_X[ii] = (**(data->Mugast)).DSSD_X[ii];
+            fragment->SI_Y[ii] = (**(data->Mugast)).DSSD_Y[ii];
             fragment->T[ii] = (**(data->Mugast)).DSSD_T[ii];
             fragment->T2[ii] = (**(data->Mugast)).SecondLayer_T[ii];
             fragment->MG[ii] = (**(data->Mugast)).TelescopeNumber[ii];
@@ -90,7 +97,7 @@ class MugastIdentification : public Identification {
         try {
             for (unsigned int ii = 0; ii < fragment->multiplicity; ++ii) {
                 bool already_id = false;
-                for (const auto &cut_it : cuts_particles) {
+                for (const auto &cut_it : particles) {
                     if (with_cuts && cut_type["E_TOF"].at("E_TOF_" + cut_it + "_MG" + std::to_string(fragment->MG[ii]))->IsInside(fragment->SI_E[ii], fragment->T[ii])) {
                         if (already_id) throw std::runtime_error("Overlapping MUGAST E TOF gates");
 
@@ -118,15 +125,17 @@ class MugastIdentification : public Identification {
         //TODO: compute Ex here
     }
 
-    inline int Get_Mult() { return fragment->multiplicity; };
-    inline TVector3 *Get_Pos(const int &i) { return &(fragment->Pos[i]); };
-    inline double Get_E(const int &i) { return fragment->E[i]; };
-    inline double Get_SI_E(const int &i) { return fragment->SI_E[i]; };
-    inline double Get_T(const int &i) { return fragment->T[i]; };
-    inline double Get_T2(const int &i) { return fragment->T2[i]; };
-    inline double Get_MG(const int &i) { return fragment->MG[i]; };
-    inline double Get_M(const int &i) { return fragment->M[i]; };
-    inline double Get_Z(const int &i) { return fragment->Z[i]; };
+    inline int          Get_Mult()              { return fragment->multiplicity; };
+    inline TVector3 *   Get_Pos(const int &i)   { return &(fragment->Pos[i]); };
+    inline int          Get_SI_X(const int &i)  { return fragment->SI_X[i]; };
+    inline int          Get_SI_Y(const int &i)  { return fragment->SI_Y[i]; };
+    inline double       Get_E(const int &i)     { return fragment->E[i]; };
+    inline double       Get_SI_E(const int &i)  { return fragment->SI_E[i]; };
+    inline double       Get_T(const int &i)     { return fragment->T[i]; };
+    inline double       Get_T2(const int &i)    { return fragment->T2[i]; };
+    inline double       Get_MG(const int &i)    { return fragment->MG[i]; };
+    inline double       Get_M(const int &i)     { return fragment->M[i]; };
+    inline double       Get_Z(const int &i)     { return fragment->Z[i]; };
 };
 
 #endif

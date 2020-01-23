@@ -3,7 +3,8 @@
 MugastIdentification::MugastIdentification() : cuts_MG({1, 3, 4, 5, 7, 11}),
                                                cuts_M({1, 2, 4}),
                                                cuts_Z({1, 2}),
-                                               cuts_particles({"m1_z1", "m2_z1", "m4_z2"}),
+                                               particles({"m1_z1", "m2_z1", "m4_z2"}),
+                                               strips({"X", "Y"}),
                                                data(nullptr),
                                                fragment(nullptr),
                                                with_cuts(true) {}
