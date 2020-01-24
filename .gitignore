@@ -4,4 +4,5 @@ Data/
 Out/
 *.swp
 .vscode/
-*_old.root
+*.root
+
