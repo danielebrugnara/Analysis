@@ -18,7 +18,7 @@ Calibration::Calibration(std::string file_name,
     std::ifstream calibration_file(file_name);
     if (!calibration_file.is_open()) calibration_is_present = false;
     std::string line;
-    int channel;
+    unsigned int channel;
     double coeff;
     while (std::getline(calibration_file, line)){
         std::istringstream str (line);

@@ -15,7 +15,7 @@ class Calibration {
 
     inline double Evaluate(const double & value, const int & channel){
         double result = 0;
-        for (int ii=0; ii<coefficients[channel].size(); ++ii){
+        for (long unsigned int ii=0; ii<coefficients[channel].size(); ++ii){
             result = result + coefficients[channel][ii] * pow(value, ii);
         }
         return result;
@@ -24,7 +24,7 @@ class Calibration {
    private:
     bool calibration_is_present;
     const int n_parameters;
-    const int n_channels;
+    const unsigned int n_channels;
     std::vector<std::vector<double>> coefficients; 
 };
 
