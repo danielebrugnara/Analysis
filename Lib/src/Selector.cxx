@@ -184,18 +184,18 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
             Istantiate(pConf.MG.mStrip_E[it_MG][strip],
                        new TH2D(Form("pConf_SI_mStrip_E_MG%i_%s", it_MG, strip.c_str()),
                                 Form("Strip vs E of MG%i %s", it_MG, strip.c_str()),
-                                128, 0, 128, 1000, 0, 30));
+                                129, 0, 121, 1000, 0, 30));
 
             //Strip T////////////////////////////////////////
             Istantiate(pConf.MG.mStrip_T[it_MG][strip],
                        new TH2D(Form("pConf_SI_mStrip_T_MG%i_%s", it_MG, strip.c_str()),
                                 Form("Strip vs T of MG%i %s", it_MG, strip.c_str()),
-                                128, 0, 128, 1000, 0, 1500));
+                                129, 0, 129, 1000, 0, 1500));
 
             Istantiate(pConf.MG.mStrip_T2[it_MG][strip],
                        new TH2D(Form("pConf_SI_mStrip_T2_MG%i_%s", it_MG, strip.c_str()),
                                 Form("Strip vs T2 of MG%i %s", it_MG, strip.c_str()),
-                                128, 0, 128, 1000, 0, 1500));
+                                129, 0, 129, 1000, 0, 1500));
         }
 
         for (const auto &it_M : vamos_fragment.cuts_M) {
