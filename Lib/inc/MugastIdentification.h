@@ -145,7 +145,7 @@ class MugastIdentification : public Identification {
 
     inline double       Get_T(const int &i)     { if (calibrations_TY[fragment->MG[i]]==nullptr) 
                                                     return fragment->T[i]; 
-                                                  else 
+                                                  else
                                                     return calibrations_TY[fragment->MG[i]]
                                                             ->Evaluate(fragment->T[i], fragment->SI_Y[i]);};
 };
