@@ -9,6 +9,7 @@
 
 #include "Identification.h"
 #include "Interpolation.h"
+#include "Calibration.h"
 #include "TMugastPhysics.h"
 
 class MugastIdentification : public Identification {
@@ -17,11 +18,14 @@ class MugastIdentification : public Identification {
     ~MugastIdentification();
     bool Initialize();
 
+    static constexpr int n_detectors = 6;
+    static constexpr int n_strips = 128;
+
     struct Data {
         TTreeReaderValue<TMugastPhysics> *Mugast;
         Data(TTreeReaderValue<TMugastPhysics> *Mugast) : Mugast(Mugast){};
     };
-    std::array<int, 6> cuts_MG;
+    std::array<int, n_detectors> cuts_MG;
     std::array<int, 3> cuts_M;
     std::array<int, 2> cuts_Z;
     std::array<std::string, 3> particles;
@@ -63,6 +67,10 @@ class MugastIdentification : public Identification {
 
     Interpolation *gas_thickness;
     Interpolation *havar_angle;
+
+    //std::array<Calibration *, n_detectors> calibrations_T;
+    std::unordered_map<int, Calibration *> calibrations_T;
+
     const Double_t AMU_TO_MEV{931.4936148};
     std::unordered_map<int, std::unordered_map<int, double>> mass;
 
@@ -131,11 +139,16 @@ class MugastIdentification : public Identification {
     inline int          Get_SI_Y(const int &i)  { return fragment->SI_Y[i]; };
     inline double       Get_E(const int &i)     { return fragment->E[i]; };
     inline double       Get_SI_E(const int &i)  { return fragment->SI_E[i]; };
-    inline double       Get_T(const int &i)     { return fragment->T[i]; };
     inline double       Get_T2(const int &i)    { return fragment->T2[i]; };
     inline double       Get_MG(const int &i)    { return fragment->MG[i]; };
     inline double       Get_M(const int &i)     { return fragment->M[i]; };
     inline double       Get_Z(const int &i)     { return fragment->Z[i]; };
+
+    inline double       Get_T(const int &i)     { if (calibrations_T[fragment->MG[i]]==nullptr) 
+                                                    return fragment->T[i]; 
+                                                  else 
+                                                    return calibrations_T[fragment->MG[i]]
+                                                            ->Evaluate(fragment->T[i], fragment->SI_X[i]);};
 };
 
 #endif

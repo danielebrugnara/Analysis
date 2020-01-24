@@ -662,10 +662,10 @@ bool Selector::GetSettings() {
     std::string config_file = "./Configs/GraphsEnabled.txt";
     std::ifstream ifile(config_file);
     if (ifile) {
-        std::ifstream file(config_file);
-        std::string Line;
-        while (std::getline(file, Line)) {
-            std::istringstream str(Line);
+ //       std::ifstream file(config_file);
+        std::string line;
+        while (std::getline(ifile, line)) {
+            std::istringstream str(line);
             std::string Graph;
             str >> Graph;
             std::string enabled;

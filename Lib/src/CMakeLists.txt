@@ -8,6 +8,9 @@ link_directories($ENV{NPTOOL}/NPLib/lib)
 ROOT_GENERATE_DICTIONARY(G__Interpolation Interpolation.h LINKDEF ${analysis_SOURCE_DIR}/Lib/inc/InterpolationLinkDef.h)
 add_library(Interpolation SHARED Interpolation.cxx G__Interpolation.cxx)
 
+ROOT_GENERATE_DICTIONARY(G__Calibration Calibration.h LINKDEF ${analysis_SOURCE_DIR}/Lib/inc/CalibrationLinkDef.h)
+add_library(Calibration SHARED Calibration.cxx G__Calibration.cxx)
+
 ROOT_GENERATE_DICTIONARY(G__Identification Identification.h LINKDEF ${analysis_SOURCE_DIR}/Lib/inc/IdentificationLinkDef.h)
 
 ROOT_GENERATE_DICTIONARY(G__VamosIdentification VamosIdentification.h LINKDEF ${analysis_SOURCE_DIR}/Lib/inc/VamosIdentificationLinkDef.h)
@@ -27,11 +30,13 @@ set_target_properties(Selector PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/L
 set_target_properties(VamosIdentification PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
 set_target_properties(MugastIdentification PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
 set_target_properties(Interpolation PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
+set_target_properties(Calibration PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
 set_target_properties(Analysis PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
 
 #Linking to needed dynamic libraries
 target_link_libraries(Interpolation ${ROOT_LIBRARIES})
+target_link_libraries(Calibration ${ROOT_LIBRARIES})
 target_link_libraries(VamosIdentification ${ROOT_LIBRARIES} Interpolation)
-target_link_libraries(MugastIdentification ${ROOT_LIBRARIES} Interpolation NPMugast)
+target_link_libraries(MugastIdentification ${ROOT_LIBRARIES} Interpolation NPMugast Calibration)
 target_link_libraries(Selector ${ROOT_LIBRARIES}  NPMugast NPMUST2 NPCATS Interpolation VamosIdentification MugastIdentification)
 target_link_libraries(Analysis ${ROOT_LIBRARIES} Selector)
