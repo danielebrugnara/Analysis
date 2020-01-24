@@ -5,7 +5,7 @@ Calibration::Calibration(std::string file_name,
                             unsigned int channels): 
                                 n_parameters(n_parameters),
                                 n_channels(channels){
-    if (channels<1 || n_parameters<2) throw std::runtime_error("Calibration parameters incorrect");
+    if (channels<1 || n_parameters<1) throw std::runtime_error("Calibration parameters incorrect\n");
 
     coefficients.resize(n_channels);
     for(unsigned int ii = 0; ii<n_channels; ++ii ){

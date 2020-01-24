@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
 #include <fstream>
 #include <sstream>
 
@@ -14,7 +15,7 @@ class Calibration {
     ~Calibration();
 
     inline double Evaluate(const double & value, const int & channel){
-        double result = 0;
+        double result = value;
         for (long unsigned int ii=0; ii<coefficients[channel].size(); ++ii){
             result = result + coefficients[channel][ii] * pow(value, ii);
         }

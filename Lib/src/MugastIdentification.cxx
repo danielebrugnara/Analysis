@@ -68,6 +68,7 @@ bool MugastIdentification::Initialize() {
             calibrations_TY[MG]=nullptr;
             continue;
         }
+        std::cout << "Calibration :"+file_name+" found\n";
         calibrations_TY[MG] = new Calibration(file_name, 1, n_strips);
 
     }
