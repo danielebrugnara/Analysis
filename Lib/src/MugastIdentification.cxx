@@ -59,16 +59,16 @@ bool MugastIdentification::Initialize() {
 
     cut_type["E_TOF"] = *tmp;
 
-    for (int ii=0; ii<n_detectors; ++ii){
-        std::string file_name = "./Configs/Calibrations/T_MG"
-                                    +to_string(cuts_MG[ii])
+    for (const auto & MG: cuts_MG){
+        std::string file_name = "./Configs/Calibrations/TY_MG"
+                                    +to_string(MG)
                                     +".cal";
         ifstream file(file_name);
         if (!file) {
-            calibrations_T[ii]=nullptr;
+            calibrations_TY[MG]=nullptr;
             continue;
         }
-        calibrations_T[ii] = new Calibration(file_name, 1, n_strips);
+        calibrations_TY[MG] = new Calibration(file_name, 1, n_strips);
 
     }
 

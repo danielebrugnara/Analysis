@@ -68,8 +68,7 @@ class MugastIdentification : public Identification {
     Interpolation *gas_thickness;
     Interpolation *havar_angle;
 
-    //std::array<Calibration *, n_detectors> calibrations_T;
-    std::unordered_map<int, Calibration *> calibrations_T;
+    std::unordered_map<int, Calibration *> calibrations_TY;
 
     const Double_t AMU_TO_MEV{931.4936148};
     std::unordered_map<int, std::unordered_map<int, double>> mass;
@@ -144,11 +143,11 @@ class MugastIdentification : public Identification {
     inline double       Get_M(const int &i)     { return fragment->M[i]; };
     inline double       Get_Z(const int &i)     { return fragment->Z[i]; };
 
-    inline double       Get_T(const int &i)     { if (calibrations_T[fragment->MG[i]]==nullptr) 
+    inline double       Get_T(const int &i)     { if (calibrations_TY[fragment->MG[i]]==nullptr) 
                                                     return fragment->T[i]; 
                                                   else 
-                                                    return calibrations_T[fragment->MG[i]]
-                                                            ->Evaluate(fragment->T[i], fragment->SI_X[i]);};
+                                                    return calibrations_TY[fragment->MG[i]]
+                                                            ->Evaluate(fragment->T[i], fragment->SI_Y[i]);};
 };
 
 #endif
