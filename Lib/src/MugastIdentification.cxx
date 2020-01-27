@@ -158,7 +158,7 @@ bool MugastIdentification::InitializeELoss() {
 
     for (const auto &layer : layers) {
         energy_loss["beam"][layer] =
-            new NPL::EnergyLoss("46Ar_" + layer_names[layer] + "G4table",
+            new NPL::EnergyLoss("Ar46_" + layer_names[layer] +".G4table",
                                 "G4Table",
                                 1000);
     }

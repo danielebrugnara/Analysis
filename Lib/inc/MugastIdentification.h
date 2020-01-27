@@ -7,9 +7,9 @@
 
 #include <array>
 
+#include "Calibration.h"
 #include "Identification.h"
 #include "Interpolation.h"
-#include "Calibration.h"
 #include "TMugastPhysics.h"
 
 //TODO: generate internal library for the following headers
@@ -19,8 +19,7 @@ class MugastIdentification : public Identification {
    public:
     MugastIdentification();
     ~MugastIdentification();
-    bool Initialize(const double &, const TVector3 &); //Beam energy in MeV
-
+    bool Initialize(const double &, const TVector3 &);  //Beam energy in MeV
 
     static constexpr int n_detectors = 6;
     static constexpr int n_strips = 128;
@@ -36,8 +35,8 @@ class MugastIdentification : public Identification {
     std::array<std::string, 2> strips;
 
    private:
-   double beam_energy;
-   TVector3 target_pos;
+    double beam_energy;
+    TVector3 target_pos;
     struct Fragment {
         const unsigned int multiplicity;
         std::vector<TVector3> Pos;
@@ -54,6 +53,7 @@ class MugastIdentification : public Identification {
         std::vector<int> M;
         std::vector<int> Z;
         std::vector<double> Ex;
+        std::vector<bool> Indentified;
         Fragment(const unsigned int multiplicity) : multiplicity(multiplicity) {
             Pos.resize(multiplicity);
             SI_X.resize(multiplicity);
@@ -68,6 +68,7 @@ class MugastIdentification : public Identification {
             MG.resize(multiplicity);
             M.resize(multiplicity);
             Z.resize(multiplicity);
+            Indentified.resize(multiplicity);
         };
     };
     Data const *data;
@@ -85,7 +86,7 @@ class MugastIdentification : public Identification {
     std::unordered_map<int, std::unordered_map<int, double>> mass;
 
     //Energy Loss
-    std::unordered_map<std::string,std::unordered_map<std::string, NPL::EnergyLoss *>> energy_loss;
+    std::unordered_map<std::string, std::unordered_map<std::string, NPL::EnergyLoss *>> energy_loss;
 
     bool with_cuts;
 
@@ -109,6 +110,7 @@ class MugastIdentification : public Identification {
 #endif
         //Initialization of basic structure
         for (unsigned int ii = 0; ii < fragment->multiplicity; ++ii) {
+            fragment->Indentified[ii] = false;
             fragment->Pos[ii] = TVector3((**(data->Mugast)).PosX[ii],
                                          (**(data->Mugast)).PosY[ii],
                                          (**(data->Mugast)).PosZ[ii]);
@@ -120,24 +122,35 @@ class MugastIdentification : public Identification {
             fragment->T2[ii] = (**(data->Mugast)).SecondLayer_T[ii];
             fragment->MG[ii] = (**(data->Mugast)).TelescopeNumber[ii];
         }
+#ifdef VERBOSE_DEBUG
+        std::cout << "------------>finished:setting up fragment\n";
+#endif
 
         //Applying (time) re-calibrations
         for (unsigned int ii = 0; ii < fragment->multiplicity; ++ii) {
-            if (calibrations_TY[fragment->MG[ii]]==nullptr) 
-                fragment->T[ii] = fragment->SI_T[ii]; 
+            if (calibrations_TY[fragment->MG[ii]] == nullptr)
+                fragment->T[ii] = fragment->SI_T[ii];
             else
                 fragment->T[ii] = calibrations_TY[fragment->MG[ii]]
-                                    ->Evaluate(fragment->T[ii], fragment->SI_Y[ii]);
+                                      ->Evaluate(fragment->T[ii], fragment->SI_Y[ii]);
         };
+#ifdef VERBOSE_DEBUG
+        std::cout << "------------>finished: calibrations\n";
+#endif
 
         //Identification with E TOF
         try {
             for (unsigned int ii = 0; ii < fragment->multiplicity; ++ii) {
-                bool already_id = false;
                 for (const auto &cut_it : particles) {
-                    if (with_cuts && cut_type["E_TOF"].at("E_TOF_" + cut_it + "_MG" + std::to_string(fragment->MG[ii]))
-                            ->IsInside(fragment->SI_E[ii], fragment->T[ii])) {
-                        if (already_id) throw std::runtime_error("Overlapping MUGAST E TOF gates");
+                    if (with_cuts && 
+                            cut_type["E_TOF"].at("E_TOF_" +
+                                                    cut_it + 
+                                                    "_MG" + 
+                                                    std::to_string(fragment->MG[ii]))
+                                                        ->IsInside(fragment->SI_E[ii], fragment->T[ii])) {
+
+                        if (fragment->Indentified[ii]) 
+                            throw std::runtime_error("Overlapping MUGAST E TOF gates");
 
                         fragment->M[ii] = std::stoi(cut_it.substr(cut_it.find_first_of("m") + 1,
                                                                   cut_it.find_first_of("_") - cut_it.find_first_of("m") - 1));
@@ -145,10 +158,10 @@ class MugastIdentification : public Identification {
                         fragment->Z[ii] = std::stoi(cut_it.substr(cut_it.find_first_of("z") + 1,
                                                                   cut_it.find_first_of("_") - cut_it.find_first_of("z") - 1));
 
-                        already_id = true;
+                        fragment->Indentified[ii] = true;
                     }
                 }
-                if (!already_id) {
+                if (!fragment->Indentified[ii]) {
                     fragment->M[ii] = 0;
                     fragment->Z[ii] = 0;
                 }
@@ -161,33 +174,38 @@ class MugastIdentification : public Identification {
         //Energy reconstruction
         std::unordered_map<std::string, NPL::EnergyLoss *> *ptr_tmp;
         for (unsigned int ii = 0; ii < fragment->multiplicity; ++ii) {
+            if (!fragment->Indentified[ii]) {
+                fragment->E[ii] = fragment->SI_E[ii];
+                continue;
+            }
             double tmp_en = 0;
 
-            ptr_tmp = &energy_loss["m"+
-                                    std::to_string(fragment->M[ii])+
-                                    "_z"+
-                                    std::to_string(fragment->Z[ii])];
+            ptr_tmp = &energy_loss["m" +
+                                   std::to_string(fragment->M[ii]) +
+                                   "_z" +
+                                   std::to_string(fragment->Z[ii])];
 
             TVector3 hit_direction = fragment->Pos[ii] - target_pos;
             double theta = hit_direction.Angle(TVector3(0, 0, -1));
+
             //Passivation layer
             tmp_en = (*ptr_tmp)["al_front"]
-                        ->EvaluateInitialEnergy(fragment->SI_E[ii], 
-                                                    0.4E-3, //Units in mm!
-                                                    hit_direction.Angle((**(data->Mugast)).GetTelescopeNormal(ii)));
+                         ->EvaluateInitialEnergy(fragment->SI_E[ii],
+                                                 0.4E-3,  //Units in mm!
+                                                 hit_direction.Angle((**(data->Mugast)).GetTelescopeNormal(ii)));
             tmp_en = (*ptr_tmp)["ice_front"]
-                        ->EvaluateInitialEnergy(tmp_en,
-                                                    15E-3, //Units mm!
-                                                    fragment->Pos[ii].Angle(TVector3(0, 0, -1)));
+                         ->EvaluateInitialEnergy(tmp_en,
+                                                 15E-3,  //Units mm!
+                                                 fragment->Pos[ii].Angle(TVector3(0, 0, -1)));
             tmp_en = (*ptr_tmp)["havar_front"]
-                        ->EvaluateInitialEnergy(tmp_en,
-                                                    3.8E-3,
-                                                    havar_angle->Evaluate(theta));
+                         ->EvaluateInitialEnergy(tmp_en,
+                                                 3.8E-3,
+                                                 havar_angle->Evaluate(theta));
             tmp_en = (*ptr_tmp)["he3_front"]
-                        ->EvaluateInitialEnergy(tmp_en,
-                                                    gas_thickness->Evaluate(theta),
-                                                    0.);
-                                
+                         ->EvaluateInitialEnergy(tmp_en,
+                                                 gas_thickness->Evaluate(theta),
+                                                 0.);
+
             fragment->E[ii] = tmp_en;
         }
 
@@ -195,17 +213,17 @@ class MugastIdentification : public Identification {
         return true;
     }
 
-    inline int          Get_Mult()              { return fragment->multiplicity; };
-    inline TVector3 *   Get_Pos(const int &i)   { return &(fragment->Pos[i]); };
-    inline int          Get_SI_X(const int &i)  { return fragment->SI_X[i]; };
-    inline int          Get_SI_Y(const int &i)  { return fragment->SI_Y[i]; };
-    inline double       Get_SI_E(const int &i)  { return fragment->SI_E[i]; };
-    inline double       Get_T2(const int &i)    { return fragment->T2[i]; };
-    inline double       Get_MG(const int &i)    { return fragment->MG[i]; };
-    inline double       Get_M(const int &i)     { return fragment->M[i]; };
-    inline double       Get_Z(const int &i)     { return fragment->Z[i]; };
-    inline double       Get_E(const int &i)     { return fragment->E[i]; };
-    inline double       Get_T(const int &i)     { return fragment->T[i];}
+    inline int Get_Mult() { return fragment->multiplicity; };
+    inline TVector3 *Get_Pos(const int &i) { return &(fragment->Pos[i]); };
+    inline int Get_SI_X(const int &i) { return fragment->SI_X[i]; };
+    inline int Get_SI_Y(const int &i) { return fragment->SI_Y[i]; };
+    inline double Get_SI_E(const int &i) { return fragment->SI_E[i]; };
+    inline double Get_T2(const int &i) { return fragment->T2[i]; };
+    inline double Get_MG(const int &i) { return fragment->MG[i]; };
+    inline double Get_M(const int &i) { return fragment->M[i]; };
+    inline double Get_Z(const int &i) { return fragment->Z[i]; };
+    inline double Get_E(const int &i) { return fragment->E[i]; };
+    inline double Get_T(const int &i) { return fragment->T[i]; }
 };
 
 #endif

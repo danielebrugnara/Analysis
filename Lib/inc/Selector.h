@@ -161,7 +161,6 @@ class Selector : public TSelector {
 
     inline void PlotVamosGraphs();
     inline void PlotMugastGraphs();
-    inline void FillMugastConfHistograms();
 
     //Constants
     const Long64_t TS_TO_S = 1E8;
@@ -328,7 +327,6 @@ class Selector : public TSelector {
 
    private:
     inline double CorrectDoppler(const TLorentzVector &, const Double_t &, const Double_t &, const Double_t &, const Double_t &);
-    inline double CorrectTOF(const Double_t &, const TVector3 &, const Double_t &, const std::string &);
     const double agata_Zshift = -4;
 
     std::unordered_map<std::string, bool> enabled_histograms;

@@ -382,12 +382,10 @@ Bool_t Selector::Process(Long64_t entry) {
 //MUGAST//////////////////////////////////////////////////////////////////////////////////////////////////////
 mugast_label:  //Label of goto previous to VAMOS
     mugast_fragment.Identify();
-
 #ifdef VERBOSE_DEBUG
-    std::cout << "------------>Finished: Vamos identification, negative exit\n";
+    std::cout << "------------>Finished: Mugast identification, negative exit\n";
 #endif
 
-    //FillMugastConfHistograms();
     PlotMugastGraphs();
 
     //SI data loops
@@ -619,29 +617,6 @@ inline void Selector::PlotMugastGraphs() {
     //        }
 }
 
-inline void Selector::FillMugastConfHistograms() {
-    for (long unsigned int ii = 0; ii < (*Mugast).DSSD_E.size(); ii++) {
-        //(XE)
-        //        Fill(pConf.SI.mStrip_E[Form("MG%i", (*Mugast).TelescopeNumber[ii])]["X"],
-        //                (*Mugast).DSSD_X[ii], (*Mugast).DSSD_E[ii]);
-        //        //(YE)
-        //        Fill(pConf.SI.mStrip_E[Form("MG%i", (*Mugast).TelescopeNumber[ii])]["Y"],
-        //                (*Mugast).DSSD_Y[ii], (*Mugast).DSSD_E[ii]);
-        //        //(E TOF)
-        //        Fill(pConf.SI.mE_TOF[Form("MG%i", (*Mugast).TelescopeNumber[ii])],
-        //                (*Mugast).DSSD_E[ii], (*Mugast).DSSD_T[ii]);
-        //        //Fill(pConf.SI.mE_TOF[Form("MG%i", (*Mugast).TelescopeNumber[ii])], (*Mugast).DSSD_E[ii], AlignT((*Mugast).TelescopeNumber[ii], (*Mugast).DSSD_Y[ii], (*Mugast).DSSD_T[ii]));
-    }
-    for (long unsigned int ii = 0; ii < (*Mugast).DSSD_T.size(); ii++) {
-        //(TE)
-        //        Fill(pConf.SI.mStrip_T[Form("MG%i", (*Mugast).TelescopeNumber[ii])]["X"],
-        //                (*Mugast).DSSD_X[ii], (*Mugast).DSSD_T[ii]);
-        //        //(TE)
-        //        Fill(pConf.SI.mStrip_T[Form("MG%i", (*Mugast).TelescopeNumber[ii])]["Y"],
-        //                (*Mugast).DSSD_Y[ii], (*Mugast).DSSD_T[ii]);
-    }
-}
-
 inline double Selector::CorrectDoppler(const TLorentzVector &p4, const double &Egamma,
                                          const double &X, const double &Y, const double &Z) {
     TLorentzVector pgamma(Egamma, 0, 0, Egamma);
@@ -651,13 +626,6 @@ inline double Selector::CorrectDoppler(const TLorentzVector &p4, const double &E
     pgamma.SetE(Egamma);
     pgamma.Boost(-p4.BoostVector());
     return pgamma.Energy();
-}
-
-inline double Selector::CorrectTOF(const double &tof, const TVector3 &pos,
-                                     const double &Ek, const std::string &coeff) {
-    //return ((tof)-2.99792* pos.Mag() *std::stof(coeff)*(Ek+mass["1H"])/(sqrt((Ek+mass["1H"])*(Ek+mass["1H"])-mass["1H"]*mass["1H"])));
-    return (tof - std::stof(coeff)) / pos.Mag();
-    //return tof - 3.*pos.Mag()*sqrt(mass["1H"]/(2*Ek));
 }
 
 bool Selector::GetSettings() {
