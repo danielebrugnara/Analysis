@@ -791,6 +791,9 @@ void E_TOF_cuts(){
     cut13->Write(); 
     cut14->Write(); 
     cut15->Write(); 
+    cut16->Write(); 
+    cut17->Write(); 
+    cut18->Write(); 
     ff.Write();
     ff.Close();
 }

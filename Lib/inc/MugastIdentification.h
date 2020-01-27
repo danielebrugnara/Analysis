@@ -12,6 +12,9 @@
 #include "Calibration.h"
 #include "TMugastPhysics.h"
 
+//TODO: generate internal library for the following headers
+#include "NPEnergyLoss.h"
+
 class MugastIdentification : public Identification {
    public:
     MugastIdentification();
@@ -65,15 +68,25 @@ class MugastIdentification : public Identification {
     Data const *data;
     Fragment *fragment;
 
+    //Interpolations
     Interpolation *gas_thickness;
     Interpolation *havar_angle;
 
+    //Calibrations
     std::unordered_map<int, Calibration *> calibrations_TY;
 
+    //Physics
     const Double_t AMU_TO_MEV{931.4936148};
     std::unordered_map<int, std::unordered_map<int, double>> mass;
 
+    //Energy Loss
+    std::unordered_map<std::string,std::map<std::string, NPL::EnergyLoss *>> energy_loss;
+
     bool with_cuts;
+
+    bool InitializeCuts();
+    bool InitializeCalibration();
+    bool InitializeELoss();
 
    public:
     inline void SetData(Data const *data) {
