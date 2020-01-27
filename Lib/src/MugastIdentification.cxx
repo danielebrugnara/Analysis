@@ -16,10 +16,13 @@ MugastIdentification::~MugastIdentification() {
     delete fragment;
 }
 
-bool MugastIdentification::Initialize() {
+bool MugastIdentification::Initialize(const double & beam_energy,
+                                        const TVector3 & target_pos) {
     gas_thickness = new Interpolation("./Configs/Interpolations/GasThickness.txt");
     havar_angle = new Interpolation("./Configs/Interpolations/EntranceAngleHavar.txt");
 
+    this->beam_energy = beam_energy;
+    this->target_pos = target_pos;
     //Cuts Initialization///////////////////////////////////
     InitializeCuts();
 

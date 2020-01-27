@@ -290,7 +290,9 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
 
     std::string MUGAST_cuts_file = "./Configs/Cuts/MUGAST.root";
     mugast_fragment.LoadCuts(MUGAST_cuts_file);
-    mugast_fragment.Initialize();
+
+    //Passing beam energy in MeV, target position mm
+    mugast_fragment.Initialize(432.0, TVector3(0, 0, 25.));
 
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>finished: vamos_fragment initialization\n";
