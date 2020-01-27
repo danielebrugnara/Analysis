@@ -64,6 +64,13 @@ bool MugastIdentification::InitializeCuts() {
     tmp_cut_names.push_back("E_TOF_m2_z1_MG7");
     tmp_cut_names.push_back("E_TOF_m2_z1_MG11");
 
+    tmp_cut_names.push_back("E_TOF_m4_z2_MG1");
+    tmp_cut_names.push_back("E_TOF_m4_z2_MG3");
+    tmp_cut_names.push_back("E_TOF_m4_z2_MG4");
+    tmp_cut_names.push_back("E_TOF_m4_z2_MG5");
+    tmp_cut_names.push_back("E_TOF_m4_z2_MG7");
+    tmp_cut_names.push_back("E_TOF_m4_z2_MG11");
+
     for (const auto &cut_name : tmp_cut_names) {
         try {
             (*tmp)[cut_name] = cuts.at(cut_name);

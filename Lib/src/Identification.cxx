@@ -25,9 +25,9 @@ void Identification::LoadCuts(std::string path) {
     while ((key = (TKey *)contents())) {
         obj = cuts_file->Get(key->GetName());
         if (obj->InheritsFrom("TCutG")) {
-#ifdef VERBOSE_DEBUG
+//#ifdef VERBOSE_DEBUG
             std::cout << key->GetName() << "\n";
-#endif
+//#endif
             TCutG *tmp = (TCutG *)obj;
             cuts[tmp->GetName()] = tmp;
         }

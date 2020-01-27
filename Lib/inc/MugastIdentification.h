@@ -139,16 +139,13 @@ class MugastIdentification : public Identification {
 #endif
 
         //Identification with E TOF
-        try {
+//        try {
+    TCutG *tmp_cut;
             for (unsigned int ii = 0; ii < fragment->multiplicity; ++ii) {
                 for (const auto &cut_it : particles) {
-                    if (with_cuts && 
-                            cut_type["E_TOF"].at("E_TOF_" +
-                                                    cut_it + 
-                                                    "_MG" + 
-                                                    std::to_string(fragment->MG[ii]))
-                                                        ->IsInside(fragment->SI_E[ii], fragment->T[ii])) {
-
+                    tmp_cut = cut_type["E_TOF"].at("E_TOF_" +cut_it +"_MG"+
+                                std::to_string(static_cast<int>(fragment->MG[ii])));
+                    if (with_cuts && tmp_cut->IsInside(fragment->SI_E[ii], fragment->T[ii])){
                         if (fragment->Indentified[ii]) 
                             throw std::runtime_error("Overlapping MUGAST E TOF gates");
 
@@ -166,15 +163,16 @@ class MugastIdentification : public Identification {
                     fragment->Z[ii] = 0;
                 }
             };
-        } catch (const std::out_of_range &err) {
-            std::cerr << "Mugast cuts not found\n";
-            with_cuts = false;
-        }
+//        } catch (const std::out_of_range &err) {
+//            std::cerr << "Mugast cuts not found\n";
+//            with_cuts = false;
+//        }
 
         //Energy reconstruction
         std::unordered_map<std::string, NPL::EnergyLoss *> *ptr_tmp;
         for (unsigned int ii = 0; ii < fragment->multiplicity; ++ii) {
-            if (!fragment->Indentified[ii]) {
+            //if (!fragment->Indentified[ii]) {
+            if (!fragment->Indentified[ii] || fragment->M[ii] == 4) { //TODO: fix to include alphas
                 fragment->E[ii] = fragment->SI_E[ii];
                 continue;
             }
