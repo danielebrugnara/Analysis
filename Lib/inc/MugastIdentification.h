@@ -14,6 +14,7 @@
 
 //TODO: generate internal library for the following headers
 #include "NPEnergyLoss.h"
+#include "NPReaction.h"
 
 class MugastIdentification : public Identification {
    public:
@@ -37,9 +38,13 @@ class MugastIdentification : public Identification {
    private:
     double beam_energy;
     TVector3 target_pos;
+    NPL::Reaction* reaction;
+    std::vector<std::string> layers;
+
     struct Fragment {
         const unsigned int multiplicity;
         std::vector<TVector3> Pos;
+        std::vector<TVector3> TelescopeNormal;
         std::vector<int> SI_X;
         std::vector<int> SI_Y;
         std::vector<double> SI_E;
@@ -56,6 +61,7 @@ class MugastIdentification : public Identification {
         std::vector<bool> Indentified;
         Fragment(const unsigned int multiplicity) : multiplicity(multiplicity) {
             Pos.resize(multiplicity);
+            TelescopeNormal.resize(multiplicity);
             SI_X.resize(multiplicity);
             SI_Y.resize(multiplicity);
             SI_E.resize(multiplicity);
@@ -114,6 +120,9 @@ class MugastIdentification : public Identification {
             fragment->Pos[ii] = TVector3((**(data->Mugast)).PosX[ii],
                                          (**(data->Mugast)).PosY[ii],
                                          (**(data->Mugast)).PosZ[ii]);
+            fragment->TelescopeNormal[ii] = TVector3((**(data->Mugast)).TelescopeNormalX[ii],
+                                                    (**(data->Mugast)).TelescopeNormalY[ii],
+                                                    (**(data->Mugast)).TelescopeNormalZ[ii]);
             fragment->SI_E[ii] = (**(data->Mugast)).DSSD_E[ii];
             fragment->SI_E2[ii] = (**(data->Mugast)).SecondLayer_E[ii];
             fragment->SI_X[ii] = (**(data->Mugast)).DSSD_X[ii];
@@ -139,14 +148,14 @@ class MugastIdentification : public Identification {
 #endif
 
         //Identification with E TOF
-//        try {
-    TCutG *tmp_cut;
+        try {
+            TCutG *tmp_cut;
             for (unsigned int ii = 0; ii < fragment->multiplicity; ++ii) {
                 for (const auto &cut_it : particles) {
-                    tmp_cut = cut_type["E_TOF"].at("E_TOF_" +cut_it +"_MG"+
-                                std::to_string(static_cast<int>(fragment->MG[ii])));
-                    if (with_cuts && tmp_cut->IsInside(fragment->SI_E[ii], fragment->T[ii])){
-                        if (fragment->Indentified[ii]) 
+                    tmp_cut = cut_type["E_TOF"].at("E_TOF_" + cut_it + "_MG" +
+                                                   std::to_string(static_cast<int>(fragment->MG[ii])));
+                    if (with_cuts && tmp_cut->IsInside(fragment->SI_E[ii], fragment->T[ii])) {
+                        if (fragment->Indentified[ii])
                             throw std::runtime_error("Overlapping MUGAST E TOF gates");
 
                         fragment->M[ii] = std::stoi(cut_it.substr(cut_it.find_first_of("m") + 1,
@@ -163,16 +172,20 @@ class MugastIdentification : public Identification {
                     fragment->Z[ii] = 0;
                 }
             };
-//        } catch (const std::out_of_range &err) {
-//            std::cerr << "Mugast cuts not found\n";
-//            with_cuts = false;
-//        }
+        } catch (const std::out_of_range &err) {
+            std::cerr << "Mugast cuts not found\n";
+            with_cuts = false;
+        }
+
+#ifdef VERBOSE_DEBUG
+        std::cout << "------------>finished: searching cuts\n";
+#endif
 
         //Energy reconstruction
         std::unordered_map<std::string, NPL::EnergyLoss *> *ptr_tmp;
         for (unsigned int ii = 0; ii < fragment->multiplicity; ++ii) {
             //if (!fragment->Indentified[ii]) {
-            if (!fragment->Indentified[ii] || fragment->M[ii] == 4) { //TODO: fix to include alphas
+            if (!fragment->Indentified[ii] || fragment->M[ii] == 4) {  //TODO: fix to include alphas
                 fragment->E[ii] = fragment->SI_E[ii];
                 continue;
             }
@@ -183,6 +196,7 @@ class MugastIdentification : public Identification {
                                    "_z" +
                                    std::to_string(fragment->Z[ii])];
 
+
             TVector3 hit_direction = fragment->Pos[ii] - target_pos;
             double theta = hit_direction.Angle(TVector3(0, 0, -1));
 
@@ -190,7 +204,7 @@ class MugastIdentification : public Identification {
             tmp_en = (*ptr_tmp)["al_front"]
                          ->EvaluateInitialEnergy(fragment->SI_E[ii],
                                                  0.4E-3,  //Units in mm!
-                                                 hit_direction.Angle((**(data->Mugast)).GetTelescopeNormal(ii)));
+                                                 hit_direction.Angle(fragment->TelescopeNormal[ii]));
             tmp_en = (*ptr_tmp)["ice_front"]
                          ->EvaluateInitialEnergy(tmp_en,
                                                  15E-3,  //Units mm!
@@ -206,6 +220,13 @@ class MugastIdentification : public Identification {
 
             fragment->E[ii] = tmp_en;
         }
+
+        //Ex
+
+
+#ifdef VERBOSE_DEBUG
+        std::cout << "------------>finished : eloss calculations\n";
+#endif
 
         //TODO: compute Ex here
         return true;

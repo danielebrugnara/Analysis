@@ -7,17 +7,40 @@ MugastIdentification::MugastIdentification() : cuts_MG({1, 3, 4, 5, 7, 11}),
                                                strips({"X", "Y"}),
                                                data(nullptr),
                                                fragment(nullptr),
-                                               with_cuts(true) {}
+                                               with_cuts(true),
+                                                   layers({"ice_front",
+                                                           "havar_front",
+                                                           "he3_front",
+                                                           "he3_back",
+                                                           "havar_back",
+                                                           "ice_back",
+                                                           "al_front"}) {
+}
 
 MugastIdentification::~MugastIdentification() {
     delete gas_thickness;
     delete havar_angle;
     delete data;
     delete fragment;
+    delete reaction;
+    for (const auto &MG : cuts_MG) {
+        delete calibrations_TY[MG];
+    }
+    for (const auto &particle : particles) {
+        if (particle == "m4_z2") continue;  //TODO: generate table
+        for (const auto &layer : layers) {
+            delete energy_loss[particle][layer];
+        }
+    }
+    for (const auto &layer : layers) {
+        delete energy_loss["beam"][layer];
+    }
 }
 
-bool MugastIdentification::Initialize(const double & beam_energy,
-                                        const TVector3 & target_pos) {
+bool MugastIdentification::Initialize(const double &beam_energy,
+                                      const TVector3 &target_pos) {
+    reaction = new NPL::Reaction("46Ar(3He,d)47K@" + std::to_string(beam_energy));
+
     gas_thickness = new Interpolation("./Configs/Interpolations/GasThickness.txt");
     havar_angle = new Interpolation("./Configs/Interpolations/EntranceAngleHavar.txt");
 
@@ -100,14 +123,6 @@ bool MugastIdentification::InitializeCalibration() {
 }
 
 bool MugastIdentification::InitializeELoss() {
-    std::vector<std::string> layers = {"ice_front",
-                                       "havar_front",
-                                       "he3_front",
-                                       "he3_back",
-                                       "havar_back",
-                                       "ice_back",
-                                       "al_front"};
-
     std::unordered_map<std::string, std::string> layer_names;
 
     layer_names["ice_front"] = "Ice";
@@ -165,7 +180,7 @@ bool MugastIdentification::InitializeELoss() {
 
     for (const auto &layer : layers) {
         energy_loss["beam"][layer] =
-            new NPL::EnergyLoss("Ar46_" + layer_names[layer] +".G4table",
+            new NPL::EnergyLoss("Ar46_" + layer_names[layer] + ".G4table",
                                 "G4Table",
                                 1000);
     }

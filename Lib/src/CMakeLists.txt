@@ -37,6 +37,6 @@ set_target_properties(Analysis PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/L
 target_link_libraries(Interpolation ${ROOT_LIBRARIES})
 target_link_libraries(Calibration ${ROOT_LIBRARIES})
 target_link_libraries(VamosIdentification ${ROOT_LIBRARIES} Interpolation)
-target_link_libraries(MugastIdentification ${ROOT_LIBRARIES} Interpolation NPMugast Calibration NPPhysics)
+target_link_libraries(MugastIdentification ${ROOT_LIBRARIES} Interpolation NPMugast Calibration NPPhysics NPReactionConditions)
 target_link_libraries(Selector ${ROOT_LIBRARIES}  NPMugast NPMUST2 NPCATS Interpolation VamosIdentification MugastIdentification)
 target_link_libraries(Analysis ${ROOT_LIBRARIES} Selector)
