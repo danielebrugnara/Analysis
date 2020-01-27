@@ -8,13 +8,13 @@ MugastIdentification::MugastIdentification() : cuts_MG({1, 3, 4, 5, 7, 11}),
                                                data(nullptr),
                                                fragment(nullptr),
                                                with_cuts(true),
-                                                   layers({"ice_front",
-                                                           "havar_front",
-                                                           "he3_front",
-                                                           "he3_back",
-                                                           "havar_back",
-                                                           "ice_back",
-                                                           "al_front"}) {
+                                               layers({"ice_front",
+                                                       "havar_front",
+                                                       "he3_front",
+                                                       "he3_back",
+                                                       "havar_back",
+                                                       "ice_back",
+                                                       "al_front"}) {
 }
 
 MugastIdentification::~MugastIdentification() {
@@ -22,7 +22,7 @@ MugastIdentification::~MugastIdentification() {
     delete havar_angle;
     delete data;
     delete fragment;
-    delete reaction;
+    //delete reaction;
     for (const auto &MG : cuts_MG) {
         delete calibrations_TY[MG];
     }

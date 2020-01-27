@@ -243,9 +243,9 @@ class Selector : public TSelector {
     struct MGData {                                                                                          //
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<int, TH2D *>>> mE_TOF;    //[Mass][Nucl][M*#]
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<int, TH2D *>>> mE_TOF2;    //[Mass][Nucl][M*#]
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH1D *>>> hEx;       //[Mass][Nucl][Parcle]
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mEx_TW;    //[Mass][Nucl][Parcle]
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mECM_ThetaCM;
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<int, TH1D *>>> hEx;       //[Mass][Nucl][Particle]
+        //std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mEx_TW;    //[Mass][Nucl][Parcle]
+        //std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mECM_ThetaCM;
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>>>> mELab_ThetaLab;
     };
 
