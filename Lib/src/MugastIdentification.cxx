@@ -4,6 +4,7 @@ MugastIdentification::MugastIdentification() : cuts_MG({1, 3, 4, 5, 7, 11}),
                                                cuts_M({1, 2, 4}),
                                                cuts_Z({1, 2}),
                                                particles({"m1_z1", "m2_z1", "m4_z2"}),
+                                               havar_thickness(3.8E-3),//in mm
                                                strips({"X", "Y"}),
                                                data(nullptr),
                                                fragment(nullptr),
@@ -43,6 +44,15 @@ bool MugastIdentification::Initialize(const double &beam_energy,
 
     gas_thickness = new Interpolation("./Configs/Interpolations/GasThickness.txt");
     havar_angle = new Interpolation("./Configs/Interpolations/EntranceAngleHavar.txt");
+
+    TFile *tmp_file = new TFile("./Configs/Interpolations/TW_Brho_M46_Z18.root");
+    if (tmp_file){
+        TW_Brho_M46_Z18 = new Interpolation(tmp_file);
+        tmp_file->Close();
+        delete tmp_file;
+    }else{
+        TW_Brho_M46_Z18 = nullptr;
+    }
 
     this->beam_energy = beam_energy;
     this->target_pos = target_pos;

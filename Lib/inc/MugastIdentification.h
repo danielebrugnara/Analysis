@@ -27,7 +27,10 @@ class MugastIdentification : public Identification {
 
     struct Data {
         TTreeReaderValue<TMugastPhysics> *Mugast;
-        Data(TTreeReaderValue<TMugastPhysics> *Mugast) : Mugast(Mugast){};
+        TTreeReaderValue<float> *TW;
+        Data(TTreeReaderValue<TMugastPhysics> *Mugast,
+                TTreeReaderValue<float> *TW) : Mugast(Mugast),
+                                                TW(TW){};
     };
     std::array<int, n_detectors> cuts_MG;
     std::array<int, 3> cuts_M;
@@ -85,18 +88,21 @@ class MugastIdentification : public Identification {
     //Interpolations
     Interpolation *gas_thickness;
     Interpolation *havar_angle;
+    Interpolation *TW_Brho_M46_Z18;
 
     //Calibrations
     std::unordered_map<int, Calibration *> calibrations_TY;
 
     //Physics
-    const Double_t AMU_TO_MEV{931.4936148};
+    const double AMU_TO_MEV{931.4936148};
     std::unordered_map<int, std::unordered_map<int, double>> mass;
 
     //Energy Loss
     std::unordered_map<std::string, std::unordered_map<std::string, NPL::EnergyLoss *>> energy_loss;
+    double current_ice_thickness;
 
     bool with_cuts;
+    double havar_thickness;
 
     bool InitializeCuts();
     bool InitializeCalibration();
@@ -191,6 +197,40 @@ class MugastIdentification : public Identification {
         std::cout << "------------>finished: searching cuts\n";
 #endif
 
+        //Evaluate Ice thickness
+        double brho = TW_Brho_M46_Z18->Evaluate(**(data->TW)); 
+        double beam_energy = 0;
+
+        beam_energy = 
+            energy_loss["beam"]["ice_back"]
+                ->EvaluateInitialEnergy(beam_energy,
+                                        current_ice_thickness,
+                                        0);
+
+        beam_energy = 
+            energy_loss["beam"]["havar_back"]
+                ->EvaluateInitialEnergy(beam_energy,
+                                        havar_thickness,
+                                        0);
+
+        beam_energy = 
+            energy_loss["beam"]["he3_front"]
+                ->EvaluateInitialEnergy(beam_energy,
+                                        2*gas_thickness->Evaluate(0.),
+                                        0);
+
+        beam_energy = 
+            energy_loss["beam"]["havar_back"]
+                ->EvaluateInitialEnergy(beam_energy,
+                                        havar_thickness,
+                                        0);
+
+        beam_energy = 
+            energy_loss["beam"]["ice_front"]
+                ->EvaluateInitialEnergy(beam_energy,
+                                        current_ice_thickness,
+                                        0);
+
         //Energy reconstruction
         std::unordered_map<std::string, NPL::EnergyLoss *> *ptr_tmp;
         for (unsigned int ii = 0; ii < fragment->multiplicity; ++ii) {
@@ -217,11 +257,13 @@ class MugastIdentification : public Identification {
                                                             .Angle(fragment->TelescopeNormal[ii]));
             tmp_en = (*ptr_tmp)["ice_front"]
                          ->EvaluateInitialEnergy(tmp_en,
-                                                 15E-3,  //Units mm!
-                                                 fragment->Pos[ii].Angle(TVector3(0, 0, -1)));
+                                                 //15E-3,  //Units mm!
+                                                 current_ice_thickness,
+                                                 havar_angle->Evaluate(theta));
             tmp_en = (*ptr_tmp)["havar_front"]
                          ->EvaluateInitialEnergy(tmp_en,
-                                                 3.8E-3,
+                                                 //3.8E-3,
+                                                 havar_thickness,
                                                  havar_angle->Evaluate(theta));
             tmp_en = (*ptr_tmp)["he3_front"]
                          ->EvaluateInitialEnergy(tmp_en,

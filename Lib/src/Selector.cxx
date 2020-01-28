@@ -121,8 +121,8 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     for (const auto &it_M : vamos_fragment.cuts_M) {
         for (const auto &it_Z : vamos_fragment.cuts_Z) {
             Istantiate(pData.VAMOS.mTW_Brho[it_M][it_Z],
-                       new TH2D(Form("pData-VAMOS-mTW_Brho-%i-%i", it_M, it_Z),
-                                Form("Time vs Brho with %i %i in VAMOS", it_M, it_Z),
+                       new TH2D(Form("pData_VAMOS_mTW_Brho_%i_%i", it_M, it_Z),
+                                Form("Time vs Brho with M%i Z%i in VAMOS", it_M, it_Z),
                                 5000, 242, 328, 1000, 0.5, 1.5));
         }
     }
@@ -528,7 +528,7 @@ inline void Selector::LoadVamosData() {
 }
 
 inline void Selector::LoadMugastData() {
-    mugast_fragment.SetData(new MugastIdentification::Data(&Mugast));
+    mugast_fragment.SetData(new MugastIdentification::Data(&Mugast, &TW));
 }
 
 inline void Selector::PlotVamosGraphs() {
