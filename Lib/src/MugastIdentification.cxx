@@ -60,6 +60,8 @@ bool MugastIdentification::Initialize(const double &beam_energy,
         TW_Brho_M46_Z18 = nullptr;
     }
 
+    ice_thickness_minimizer = new Minimizer();
+
     this->beam_energy = beam_energy;
     this->target_pos = target_pos;
     //Cuts Initialization///////////////////////////////////
@@ -85,6 +87,7 @@ bool MugastIdentification::InitializeCuts() {
     //More precise masses [M][Z]
     mass[2][1] = 2.01410177812 * AMU_TO_MEV;  //In MeV
     mass[1][1] = 1.00782503223 * AMU_TO_MEV;  //In MeV
+    mass[46][18] = 45.968082712 * AMU_TO_MEV;  //in MeV
 
     std::unordered_map<std::string, TCutG *> *tmp = new std::unordered_map<std::string, TCutG *>();
 

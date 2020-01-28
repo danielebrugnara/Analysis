@@ -9,6 +9,7 @@
 
 #include "Calibration.h"
 #include "Identification.h"
+#include "Minimizer.h"
 #include "Interpolation.h"
 #include "TMugastPhysics.h"
 
@@ -22,10 +23,12 @@ class MugastIdentification : public Identification {
     ~MugastIdentification();
     bool Initialize(const double &, const TVector3 &);  //Beam energy in MeV
 
-    static constexpr int n_detectors = 6;
-    static constexpr int n_strips = 128;
+    static constexpr int n_detectors	{6};
+    static constexpr int n_strips 	{128};
 
-    static constexpr double AMU_TO_MEV = 931.49436;
+    static constexpr double AMU_TO_MEV	{931.49436};
+
+    static constexpr int charge_state_interpolation{16};
 
     struct Data {
         TTreeReaderValue<TMugastPhysics> *Mugast;
@@ -99,9 +102,12 @@ class MugastIdentification : public Identification {
     Fragment *fragment;
 
     //Interpolations
-    Interpolation *gas_thickness;
-    Interpolation *havar_angle;
-    Interpolation *TW_Brho_M46_Z18;
+    Interpolation* gas_thickness;
+    Interpolation* havar_angle;
+    Interpolation* TW_Brho_M46_Z18;
+
+    //Minimizer for ice thickness estimation
+    Minimizer* ice_thickness_minimizer;
 
     //Calibrations
     std::unordered_map<int, Calibration *> calibrations_TY;
@@ -213,38 +219,10 @@ class MugastIdentification : public Identification {
 #endif
 
         //Evaluate Ice thickness
+	//
         double brho = TW_Brho_M46_Z18->Evaluate(**(data->TW));
-        double beam_energy = 0;
-
-        beam_energy =
-            energy_loss["beam"]["ice_back"]
-                ->EvaluateInitialEnergy(beam_energy,
-                                        current_ice_thickness,
-                                        0);
-
-        beam_energy =
-            energy_loss["beam"]["havar_back"]
-                ->EvaluateInitialEnergy(beam_energy,
-                                        havar_thickness,
-                                        0);
-
-        beam_energy =
-            energy_loss["beam"]["he3_front"]
-                ->EvaluateInitialEnergy(beam_energy,
-                                        2 * gas_thickness->Evaluate(0.),
-                                        0);
-
-        beam_energy =
-            energy_loss["beam"]["havar_back"]
-                ->EvaluateInitialEnergy(beam_energy,
-                                        havar_thickness,
-                                        0);
-
-        beam_energy =
-            energy_loss["beam"]["ice_front"]
-                ->EvaluateInitialEnergy(beam_energy,
-                                        current_ice_thickness,
-                                        0);
+        double final_beam_energy = sqrt(pow(brho/3.3356E-3*charge_state_interpolation,2)+pow(mass[46][18]*AMU_TO_MEV, 2))-(mass[46][18]*AMU_TO_MEV);
+	InitialBeamEnergy(final_beam_energy);
 
         //Energy reconstruction
         std::unordered_map<std::string, NPL::EnergyLoss *> *ptr_tmp;
@@ -309,6 +287,42 @@ class MugastIdentification : public Identification {
         //TODO: compute Ex here
         return true;
     }
+	private:
+	inline double InitialBeamEnergy(double beam_energy){
+        beam_energy =
+            energy_loss["beam"]["ice_back"]
+                ->EvaluateInitialEnergy(beam_energy,
+                                        current_ice_thickness,
+                                        0);
+
+        beam_energy =
+            energy_loss["beam"]["havar_back"]
+                ->EvaluateInitialEnergy(beam_energy,
+                                        havar_thickness,
+                                        0);
+
+        beam_energy =
+            energy_loss["beam"]["he3_front"]
+                ->EvaluateInitialEnergy(beam_energy,
+                                        2 * gas_thickness->Evaluate(0.),
+                                        0);
+
+        beam_energy =
+            energy_loss["beam"]["havar_back"]
+                ->EvaluateInitialEnergy(beam_energy,
+                                        havar_thickness,
+                                        0);
+
+        beam_energy =
+            energy_loss["beam"]["ice_front"]
+                ->EvaluateInitialEnergy(beam_energy,
+                                        current_ice_thickness,
+                                        0);
+	return beam_energy;
+	
+	}
+
+	public:
 
     inline int Get_Mult() { return fragment->multiplicity; };
     inline TVector3 *Get_Pos(const int &i) { return &(fragment->Pos[i]); };
