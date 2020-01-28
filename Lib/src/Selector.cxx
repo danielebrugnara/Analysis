@@ -31,13 +31,29 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     //////////////////////////////////////////////////////////////////////////////////////////////////
     ///Deciding which graphs to plot/////////////////////////////////////////////////////////////////
     GetSettings();  //Decides which histograms to fill
+    ///Loading Identification classes/////////////////////////////////////////////////////////////
+
+    //TODO: use constructor to initialize this!!!
+    std::string VAMOS_cuts_file = "./Configs/Cuts/VAMOS.root";
+    vamos_fragment.LoadCuts(VAMOS_cuts_file);
+    vamos_fragment.Initialize();
+
+    std::string MUGAST_cuts_file = "./Configs/Cuts/MUGAST.root";
+    mugast_fragment.LoadCuts(MUGAST_cuts_file);
+
+    //Passing beam energy in MeV, target position mm
+    mugast_fragment.Initialize(379.04, TVector3(0, 0, 25.));
+
+#ifdef VERBOSE_DEBUG
+    std::cout << "------------>finished: vamos_fragment initialization\n";
+#endif
 
     //Initializing Histograms
 
     //Configurations
     //Target
-    thickness_angle = new Interpolation("./Configs/Interpolations/GasThickness.txt");
-    angle_angle = new Interpolation("./Configs/Interpolations/EntranceAngleHavar.txt");
+    //thickness_angle = new Interpolation("./Configs/Interpolations/GasThickness.txt");
+    //angle_angle = new Interpolation("./Configs/Interpolations/EntranceAngleHavar.txt");
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
     ///Histogram pointer initialization//////////////////////////////////////////////////////////////
@@ -212,7 +228,26 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
             }
         }
     }
-
+    for (const auto &it_M : vamos_fragment.cuts_M) {
+        for (const auto &it_Z : vamos_fragment.cuts_Z) {
+            for (const auto &particle : mugast_fragment.particles) {
+                Istantiate(pData.MG.hEx[it_M][it_Z][particle],
+                           new TH1D(Form("pData_SI_hEx_M%i_Z%i_%s", it_M, it_Z, particle.c_str()),
+                                    Form("Excitation energy with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, particle.c_str()),
+                                    1000, -60, 60));
+                for (const auto &it_gamma : gammas) {
+                    Istantiate(pData.MG.mELab_ThetaLab[it_M][it_Z][particle][it_gamma],
+                               new TH2D(Form("pData_SI_mELab_ThetaLab_M%i_Z%i_%s_%s", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
+                                        Form("ELab vs Theta Lab with M%i Z%i in VAMOS and %s in MUGAST and %s in AGATA", it_M, it_Z, it_gamma.c_str(), it_gamma.c_str()),
+                                        1000, 0, 180, 1000, 0, 60));
+                }
+            }
+            Istantiate(pData.MG.hEx[it_M][it_Z]["NONE"],
+                       new TH1D(Form("pData_SI_hEx_M%i_Z%i_%s", it_M, it_Z, "NONE"),
+                                Form("Excitation energy with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, "NONE"),
+                                1000, -60, 60));
+        }
+    }
     //TODO: Must2
     //for (const auto &it_MM : must2_fragment.cuts_MM) {
     //    Istantiate(pConf.MM.mE_TOF[it_MM],
@@ -279,23 +314,6 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
 
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>finished: SI initialization\n";
-#endif
-
-    ///Loading Identification classes/////////////////////////////////////////////////////////////
-
-    //TODO: use constructor to initialize this!!!
-    std::string VAMOS_cuts_file = "./Configs/Cuts/VAMOS.root";
-    vamos_fragment.LoadCuts(VAMOS_cuts_file);
-    vamos_fragment.Initialize();
-
-    std::string MUGAST_cuts_file = "./Configs/Cuts/MUGAST.root";
-    mugast_fragment.LoadCuts(MUGAST_cuts_file);
-
-    //Passing beam energy in MeV, target position mm
-    mugast_fragment.Initialize(379.04, TVector3(0, 0, 25.));
-
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>finished: vamos_fragment initialization\n";
 #endif
 
     ///Temporary histogram///////////////////////////////////////////////////////////////////////////
@@ -556,40 +574,53 @@ inline void Selector::PlotMugastGraphs() {
     std::cout << "------------>Selector::PlotMugastGraphs()\n";
 #endif
     for (int ii = 0; ii < mugast_fragment.Get_Mult(); ++ii) {
+        //Ex
+        Fill(pData.MG.hEx[vamos_fragment.Get_id_M()]
+                         [vamos_fragment.Get_id_Z()]
+                         [mugast_fragment.Get_Particle(ii)],
+             mugast_fragment.Get_E(ii));
+
+        //ELab Theta Lab
+        Fill(pData.MG.mELab_ThetaLab[vamos_fragment.Get_id_M()]
+                                    [vamos_fragment.Get_id_Z()]
+                                    [mugast_fragment.Get_Particle(ii)]
+                                    ["NO CONDITION"],
+             mugast_fragment.Get_E(ii),
+             mugast_fragment.Get_ThetaLab(ii));
 
         //E TOF
         Fill(pConf.MG.mE_TOF[mugast_fragment.Get_MG(ii)],
-                mugast_fragment.Get_SI_E(ii),
-                mugast_fragment.Get_T(ii));
+             mugast_fragment.Get_SI_E(ii),
+             mugast_fragment.Get_T(ii));
 
         Fill(pConf.MG.mE_TOF2[mugast_fragment.Get_MG(ii)],
-                mugast_fragment.Get_SI_E(ii),
-                mugast_fragment.Get_T2(ii));
+             mugast_fragment.Get_SI_E(ii),
+             mugast_fragment.Get_T2(ii));
         //Strip
         //E
         Fill(pConf.MG.mStrip_E[mugast_fragment.Get_MG(ii)]["X"],
-                mugast_fragment.Get_SI_X(ii),
-                mugast_fragment.Get_SI_E(ii));
+             mugast_fragment.Get_SI_X(ii),
+             mugast_fragment.Get_SI_E(ii));
 
         Fill(pConf.MG.mStrip_E[mugast_fragment.Get_MG(ii)]["Y"],
-                mugast_fragment.Get_SI_Y(ii),
-                mugast_fragment.Get_SI_E(ii));
+             mugast_fragment.Get_SI_Y(ii),
+             mugast_fragment.Get_SI_E(ii));
         //T
         Fill(pConf.MG.mStrip_T[mugast_fragment.Get_MG(ii)]["X"],
-                mugast_fragment.Get_SI_X(ii),
-                mugast_fragment.Get_T(ii));
+             mugast_fragment.Get_SI_X(ii),
+             mugast_fragment.Get_T(ii));
 
         Fill(pConf.MG.mStrip_T[mugast_fragment.Get_MG(ii)]["Y"],
-                mugast_fragment.Get_SI_Y(ii),
-                mugast_fragment.Get_T(ii));
+             mugast_fragment.Get_SI_Y(ii),
+             mugast_fragment.Get_T(ii));
         //T2
         Fill(pConf.MG.mStrip_T2[mugast_fragment.Get_MG(ii)]["X"],
-                mugast_fragment.Get_SI_X(ii),
-                mugast_fragment.Get_T2(ii));
+             mugast_fragment.Get_SI_X(ii),
+             mugast_fragment.Get_T2(ii));
 
         Fill(pConf.MG.mStrip_T2[mugast_fragment.Get_MG(ii)]["Y"],
-                mugast_fragment.Get_SI_Y(ii),
-                mugast_fragment.Get_T2(ii));
+             mugast_fragment.Get_SI_Y(ii),
+             mugast_fragment.Get_T2(ii));
 
         if (vamos_fragment.Identified()) {
             Fill(pData.MG.mE_TOF[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][mugast_fragment.Get_MG(ii)],
@@ -618,7 +649,7 @@ inline void Selector::PlotMugastGraphs() {
 }
 
 inline double Selector::CorrectDoppler(const TLorentzVector &p4, const double &Egamma,
-                                         const double &X, const double &Y, const double &Z) {
+                                       const double &X, const double &Y, const double &Z) {
     TLorentzVector pgamma(Egamma, 0, 0, Egamma);
     TVector3 PosGamma(X, Y, Z + agata_Zshift);
     pgamma.SetPhi(PosGamma.Phi());
@@ -632,7 +663,7 @@ bool Selector::GetSettings() {
     std::string config_file = "./Configs/GraphsEnabled.txt";
     std::ifstream ifile(config_file);
     if (ifile) {
- //       std::ifstream file(config_file);
+        //       std::ifstream file(config_file);
         std::string line;
         while (std::getline(ifile, line)) {
             std::istringstream str(line);
