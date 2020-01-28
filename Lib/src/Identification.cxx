@@ -32,4 +32,8 @@ void Identification::LoadCuts(std::string path) {
             cuts[tmp->GetName()] = tmp;
         }
     }
+#ifdef VERBOSE_DEBUG
+    std::cout << "Finished looking for cuts\n";
+#endif
+    return;
 }

@@ -30,10 +30,17 @@ class MugastIdentification : public Identification {
     struct Data {
         TTreeReaderValue<TMugastPhysics> *Mugast;
         TTreeReaderValue<float> *TW;
+        int VAMOS_id_M;
+        int VAMOS_id_Z;
         Data(TTreeReaderValue<TMugastPhysics> *Mugast,
-                TTreeReaderValue<float> *TW) : Mugast(Mugast),
-                                                TW(TW){};
+             TTreeReaderValue<float> *TW,
+             int VAMOS_id_M,
+             int VAMOS_id_Z) : Mugast(Mugast),
+                                TW(TW),
+                                VAMOS_id_M(VAMOS_id_M),
+                                VAMOS_id_Z(VAMOS_id_Z){};
     };
+
     std::array<int, n_detectors> cuts_MG;
     std::array<int, 3> cuts_M;
     std::array<int, 2> cuts_Z;
@@ -43,7 +50,8 @@ class MugastIdentification : public Identification {
    private:
     double beam_energy;
     TVector3 target_pos;
-    NPL::Reaction *reaction;
+    std::unordered_map<std::string, NPL::Reaction *> reaction;
+    std::unordered_map<std::string, NPL::Reaction *>::iterator reaction_it;
     std::vector<std::string> layers;
 
     struct Fragment {
@@ -56,6 +64,7 @@ class MugastIdentification : public Identification {
         std::vector<double> SI_E;
         std::vector<double> SI_E2;
         std::vector<double> E;
+        std::vector<double> Ex;
         std::vector<double> E2;
         std::vector<double> SI_T;
         std::vector<double> T;
@@ -63,7 +72,6 @@ class MugastIdentification : public Identification {
         std::vector<double> MG;
         std::vector<int> M;
         std::vector<int> Z;
-        std::vector<double> Ex;
         std::vector<bool> Indentified;
         std::vector<std::string> Particle;
         Fragment(const unsigned int multiplicity) : multiplicity(multiplicity) {
@@ -75,6 +83,7 @@ class MugastIdentification : public Identification {
             SI_E.resize(multiplicity);
             SI_E2.resize(multiplicity);
             E.resize(multiplicity);
+            Ex.resize(multiplicity);
             E2.resize(multiplicity);
             SI_T.resize(multiplicity);
             T.resize(multiplicity);
@@ -166,12 +175,12 @@ class MugastIdentification : public Identification {
                 if (with_cuts) {
                     try {
                         tmp_cut = cut_type["E_TOF"].at("E_TOF_" + cut_it + "_MG" +
-                                                        std::to_string(static_cast<int>(fragment->MG[ii])));
+                                                       std::to_string(static_cast<int>(fragment->MG[ii])));
                     } catch (const std::out_of_range &err) {
                         std::cerr << "Mugast cuts not found : "
-                                  <<"E_TOF_" + cut_it + "_MG"
-                                  <<std::to_string(static_cast<int>(fragment->MG[ii]))
-                                  <<std::endl;
+                                  << "E_TOF_" + cut_it + "_MG"
+                                  << std::to_string(static_cast<int>(fragment->MG[ii]))
+                                  << std::endl;
                         with_cuts = false;
                         continue;
                     }
@@ -204,34 +213,34 @@ class MugastIdentification : public Identification {
 #endif
 
         //Evaluate Ice thickness
-        double brho = TW_Brho_M46_Z18->Evaluate(**(data->TW)); 
+        double brho = TW_Brho_M46_Z18->Evaluate(**(data->TW));
         double beam_energy = 0;
 
-        beam_energy = 
+        beam_energy =
             energy_loss["beam"]["ice_back"]
                 ->EvaluateInitialEnergy(beam_energy,
                                         current_ice_thickness,
                                         0);
 
-        beam_energy = 
+        beam_energy =
             energy_loss["beam"]["havar_back"]
                 ->EvaluateInitialEnergy(beam_energy,
                                         havar_thickness,
                                         0);
 
-        beam_energy = 
+        beam_energy =
             energy_loss["beam"]["he3_front"]
                 ->EvaluateInitialEnergy(beam_energy,
-                                        2*gas_thickness->Evaluate(0.),
+                                        2 * gas_thickness->Evaluate(0.),
                                         0);
 
-        beam_energy = 
+        beam_energy =
             energy_loss["beam"]["havar_back"]
                 ->EvaluateInitialEnergy(beam_energy,
                                         havar_thickness,
                                         0);
 
-        beam_energy = 
+        beam_energy =
             energy_loss["beam"]["ice_front"]
                 ->EvaluateInitialEnergy(beam_energy,
                                         current_ice_thickness,
@@ -244,6 +253,7 @@ class MugastIdentification : public Identification {
             fragment->EmissionDirection[ii] = fragment->Pos[ii] - target_pos;
             if (!fragment->Indentified[ii] || fragment->M[ii] == 4) {  //TODO: fix to include alphas
                 fragment->E[ii] = fragment->SI_E[ii];
+                fragment->Ex[ii] = 0;
                 continue;
             }
             double tmp_en = 0;
@@ -260,7 +270,7 @@ class MugastIdentification : public Identification {
                          ->EvaluateInitialEnergy(fragment->SI_E[ii],
                                                  0.4E-3,  //Units in mm!
                                                  fragment->EmissionDirection[ii]
-                                                            .Angle(fragment->TelescopeNormal[ii]));
+                                                     .Angle(fragment->TelescopeNormal[ii]));
             tmp_en = (*ptr_tmp)["ice_front"]
                          ->EvaluateInitialEnergy(tmp_en,
                                                  15E-3,  //Units mm!
@@ -277,6 +287,17 @@ class MugastIdentification : public Identification {
                                                  0.);
 
             fragment->E[ii] = tmp_en;
+
+            if ((reaction_it = reaction.find("M" + std::to_string(data->VAMOS_id_M) +
+                                            "_Z" + std::to_string(data->VAMOS_id_Z) +
+                                            fragment->Particle[ii])) != reaction.end()) {
+                fragment->Ex[ii] = reaction_it->second
+                                                ->ReconstructRelativistic(fragment->E[ii],
+                                                                            Get_ThetaLab(ii));
+
+            } else {
+                fragment->Ex[ii] = 0;
+            }
         }
 
         //Ex
@@ -300,10 +321,11 @@ class MugastIdentification : public Identification {
     inline double Get_M(const int &i) { return fragment->M[i]; };
     inline double Get_Z(const int &i) { return fragment->Z[i]; };
     inline double Get_E(const int &i) { return fragment->E[i]; };
+    inline double Get_Ex(const int &i) { return fragment->Ex[i]; };
     inline double Get_T(const int &i) { return fragment->T[i]; }
     inline std::string Get_Particle(const int &i) { return fragment->Particle[i]; }
-    inline double Get_ThetaLab(const int &i) { 
-        return fragment->EmissionDirection[i].Angle(TVector3(0, 0, 1)); 
+    inline double Get_ThetaLab(const int &i) {
+        return fragment->EmissionDirection[i].Angle(TVector3(0, 0, 1));
     }
 };
 

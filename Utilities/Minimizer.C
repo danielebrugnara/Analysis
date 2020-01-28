@@ -1,5 +1,5 @@
 #include "Minimizer.h"
-#include <array>
+//#include <array>
 
 Minimizer::Minimizer(double start_value, bool verbose = false, double start_coeff = 0.,  
                     double start_step = 0.1, double learning_rate = 1.5, 

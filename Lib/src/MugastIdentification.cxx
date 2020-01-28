@@ -40,7 +40,13 @@ MugastIdentification::~MugastIdentification() {
 
 bool MugastIdentification::Initialize(const double &beam_energy,
                                       const TVector3 &target_pos) {
-    reaction = new NPL::Reaction("46Ar(3He,d)47K@" + std::to_string(beam_energy));
+#ifdef VERBOSE_DEBUG
+    std::cout << "------------>MugastIdentification::Initialize()\n";
+#endif
+    reaction["M47_Z19_m1_z1"] = new NPL::Reaction("46Ar(3He,p)48K@" + std::to_string(beam_energy));
+    reaction["M47_Z19_m2_z1"] = new NPL::Reaction("46Ar(3He,d)47K@" + std::to_string(beam_energy));
+    reaction["M47_Z19_m4_z2"] = new NPL::Reaction("46Ar(3He,4He)45Ar@" + std::to_string(beam_energy));
+
 
     gas_thickness = new Interpolation("./Configs/Interpolations/GasThickness.txt");
     havar_angle = new Interpolation("./Configs/Interpolations/EntranceAngleHavar.txt");

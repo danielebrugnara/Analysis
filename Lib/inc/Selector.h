@@ -229,7 +229,7 @@ class Selector : public TSelector {
     //std::vector<std::string> siliconsMG = {"MG1", "MG2", "MG3", "MG4", "MG5", "MG6", "MG7", "MG8", "MG9", "MG10", "MG11"};
     std::vector<std::string> alpha_correction = {"70", "80", "90", "100", "110", "120", "130", "140", "150", "160", "170"};
     std::vector<std::string> particles = {"p", "d", "ANY"};
-    std::vector<std::string> gammas = {"360keV", "ANY", "NO CONDITION"};
+    std::vector<std::string> gammas = {"360keV", "ANY", "NOCONDITION"};
     std::vector<std::string> strips;
 
     struct MGConf {

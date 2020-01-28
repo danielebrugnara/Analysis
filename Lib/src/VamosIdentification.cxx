@@ -9,6 +9,9 @@ VamosIdentification::VamosIdentification() : cuts_Z({18, 19, -1}),
                                              fragment(nullptr){}
 
 bool VamosIdentification::Initialize() {
+#ifdef VERBOSE_DEBUG
+        std::cout << "------------>VamosIdentification::Initialize()\n";
+#endif
 
     //Focal plane aligments
     ReadFPTimeShifts();

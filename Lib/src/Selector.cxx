@@ -232,12 +232,12 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
         for (const auto &it_Z : vamos_fragment.cuts_Z) {
             for (const auto &particle : mugast_fragment.particles) {
                 Istantiate(pData.MG.hEx[it_M][it_Z][particle],
-                           new TH1D(Form("pData_SI_hEx_M%i_Z%i_%s", it_M, it_Z, particle.c_str()),
+                           new TH1D(Form("pData_MG_hEx_M%i_Z%i_%s", it_M, it_Z, particle.c_str()),
                                     Form("Excitation energy with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, particle.c_str()),
                                     1000, -60, 60));
                 for (const auto &it_gamma : gammas) {
                     Istantiate(pData.MG.mELab_ThetaLab[it_M][it_Z][particle][it_gamma],
-                               new TH2D(Form("pData_SI_mELab_ThetaLab_M%i_Z%i_%s_%s", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
+                               new TH2D(Form("pData_MG_mELab_ThetaLab_M%i_Z%i_%s_%s", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
                                         Form("ELab vs Theta Lab with M%i Z%i in VAMOS and %s in MUGAST and %s in AGATA", it_M, it_Z, it_gamma.c_str(), it_gamma.c_str()),
                                         1000, 0, 180, 1000, 0, 60));
                 }
@@ -546,7 +546,10 @@ inline void Selector::LoadVamosData() {
 }
 
 inline void Selector::LoadMugastData() {
-    mugast_fragment.SetData(new MugastIdentification::Data(&Mugast, &TW));
+    mugast_fragment.SetData(new MugastIdentification::Data(&Mugast, 
+                                                            &TW,
+                                                            vamos_fragment.Get_id_M(),
+                                                            vamos_fragment.Get_id_Z()));
 }
 
 inline void Selector::PlotVamosGraphs() {
@@ -578,7 +581,7 @@ inline void Selector::PlotMugastGraphs() {
         Fill(pData.MG.hEx[vamos_fragment.Get_id_M()]
                          [vamos_fragment.Get_id_Z()]
                          [mugast_fragment.Get_Particle(ii)],
-             mugast_fragment.Get_E(ii));
+             mugast_fragment.Get_Ex(ii));
 
         //ELab Theta Lab
         Fill(pData.MG.mELab_ThetaLab[vamos_fragment.Get_id_M()]
