@@ -60,8 +60,6 @@ bool MugastIdentification::Initialize(const double &beam_energy,
         TW_Brho_M46_Z18 = nullptr;
     }
 
-    ice_thickness_minimizer = nullptr;
-
     this->beam_energy = beam_energy;
     this->target_pos = target_pos;
     //Cuts Initialization///////////////////////////////////
@@ -203,5 +201,8 @@ bool MugastIdentification::InitializeELoss() {
                                 "G4Table",
                                 1000);
     }
+
+    current_ice_thickness = 10E-3;
+    beam_energy_match_threashold = 0.3; //In MeV
     return true;
 }

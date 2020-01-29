@@ -52,6 +52,10 @@ class MugastIdentification : public Identification {
 
    private:
     double beam_energy;
+    double initial_beam_energy;
+    double final_beam_energy;
+    double beam_energy_match_threashold;
+    double brho;
     TVector3 target_pos;
     std::unordered_map<std::string, NPL::Reaction *> reaction;
     std::unordered_map<std::string, NPL::Reaction *>::iterator reaction_it;
@@ -220,9 +224,35 @@ class MugastIdentification : public Identification {
 
         //Evaluate Ice thickness
 	//
-        double brho = TW_Brho_M46_Z18->Evaluate(**(data->TW));
-        double final_beam_energy = sqrt(pow(brho/3.3356E-3*charge_state_interpolation,2)+pow(mass[46][18]*AMU_TO_MEV, 2))-(mass[46][18]*AMU_TO_MEV);
-	InitialBeamEnergy(final_beam_energy);
+        brho = TW_Brho_M46_Z18->Evaluate(**(data->TW));
+        final_beam_energy = sqrt(pow(brho/3.3356E-3*charge_state_interpolation,2)+pow(mass[46][18], 2))-(mass[46][18]);
+	    initial_beam_energy = InitialBeamEnergy(final_beam_energy);
+
+    //    current_ice_thickness = energy_loss["beam"]["ice_back"]->EvaluateMaterialThickness(final_beam_energy,
+    //                                                                initial_beam_energy,
+    //                                                                30,
+    //                                                                1E-4);
+    //    current_ice_thickness = current_ice_thickness/2; 
+    //    std::cout << "current ice thickness : " << current_ice_thickness << std::endl;
+    //    std::cout << "initial energy : " << initial_beam_energy << std::endl;
+    //    std::cout << "brho : " << brho << std::endl;
+    //    std::cout << "final energy : " << final_beam_energy << std::endl;
+        //delete ice_thickness_minimizer; //TODO : understand why this causes segfault
+        if (abs(beam_energy-initial_beam_energy)>beam_energy_match_threashold){
+            ice_thickness_minimizer = new Minimizer(beam_energy-initial_beam_energy,
+                                                    current_ice_thickness,
+                                                    1E-3,
+                                                    0.005,
+                                                    beam_energy_match_threashold , 
+                                                    200, 
+                                                    1);
+            for (int ii=0; ii<100;++ii){
+                current_ice_thickness = 
+                    ice_thickness_minimizer
+                        ->PerformStep(beam_energy - InitialBeamEnergy(final_beam_energy));
+            }
+            std::cout << "Ice thickness : " <<current_ice_thickness << std::endl;
+        }
 
         //Energy reconstruction
         std::unordered_map<std::string, NPL::EnergyLoss *> *ptr_tmp;
