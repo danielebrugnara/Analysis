@@ -166,6 +166,9 @@ class MugastIdentification : public Identification {
         std::cout << "------------>finished:setting up fragment\n";
 #endif
 
+        //Evaluate Ice thickness
+        IdentifyIceThickness();
+
         //Applying (time) re-calibrations
         for (unsigned int ii = 0; ii < fragment->multiplicity; ++ii) {
             if (calibrations_TY[fragment->MG[ii]] == nullptr)
@@ -221,38 +224,6 @@ class MugastIdentification : public Identification {
 #ifdef VERBOSE_DEBUG
         std::cout << "------------>finished: searching cuts\n";
 #endif
-
-        //Evaluate Ice thickness
-	//
-        brho = TW_Brho_M46_Z18->Evaluate(**(data->TW));
-        final_beam_energy = sqrt(pow(brho/3.3356E-3*charge_state_interpolation,2)+pow(mass[46][18], 2))-(mass[46][18]);
-	    initial_beam_energy = InitialBeamEnergy(final_beam_energy);
-
-    //    current_ice_thickness = energy_loss["beam"]["ice_back"]->EvaluateMaterialThickness(final_beam_energy,
-    //                                                                initial_beam_energy,
-    //                                                                30,
-    //                                                                1E-4);
-    //    current_ice_thickness = current_ice_thickness/2; 
-    //    std::cout << "current ice thickness : " << current_ice_thickness << std::endl;
-    //    std::cout << "initial energy : " << initial_beam_energy << std::endl;
-    //    std::cout << "brho : " << brho << std::endl;
-    //    std::cout << "final energy : " << final_beam_energy << std::endl;
-        //delete ice_thickness_minimizer; //TODO : understand why this causes segfault
-        if (abs(beam_energy-initial_beam_energy)>beam_energy_match_threashold){
-            ice_thickness_minimizer = new Minimizer(beam_energy-initial_beam_energy,
-                                                    current_ice_thickness,
-                                                    1E-3,
-                                                    0.005,
-                                                    beam_energy_match_threashold , 
-                                                    200, 
-                                                    1);
-            for (int ii=0; ii<100;++ii){
-                current_ice_thickness = 
-                    ice_thickness_minimizer
-                        ->PerformStep(beam_energy - InitialBeamEnergy(final_beam_energy));
-            }
-            //std::cout << "Ice thickness : " <<current_ice_thickness << std::endl;
-        }
 
         //Energy reconstruction
         std::unordered_map<std::string, NPL::EnergyLoss *> *ptr_tmp;
@@ -318,6 +289,41 @@ class MugastIdentification : public Identification {
         return true;
     }
 	private:
+    inline void IdentifyIceThickness(){
+        brho = TW_Brho_M46_Z18->Evaluate(**(data->TW));
+        final_beam_energy = sqrt(pow(brho/3.3356E-3*charge_state_interpolation,2)+pow(mass[46][18], 2))-(mass[46][18]);
+	    initial_beam_energy = InitialBeamEnergy(final_beam_energy);
+
+    //    current_ice_thickness = energy_loss["beam"]["ice_back"]->EvaluateMaterialThickness(final_beam_energy,
+    //                                                                initial_beam_energy,
+    //                                                                30,
+    //                                                                1E-4);
+    //    current_ice_thickness = current_ice_thickness/2; 
+    //    std::cout << "current ice thickness : " << current_ice_thickness << std::endl;
+    //    std::cout << "initial energy : " << initial_beam_energy << std::endl;
+    //    std::cout << "brho : " << brho << std::endl;
+    //    std::cout << "final energy : " << final_beam_energy << std::endl;
+        //delete ice_thickness_minimizer; //TODO : understand why this causes segfault
+        if (abs(beam_energy-initial_beam_energy)>beam_energy_match_threashold){
+            ice_thickness_minimizer = new Minimizer(beam_energy-initial_beam_energy,
+                                                    current_ice_thickness,
+                                                    1E-3,
+                                                    0.005,
+                                                    beam_energy_match_threashold , 
+                                                    200, 
+                                                    1);
+            for (int ii=0; ii<100;++ii){
+                current_ice_thickness = 
+                    ice_thickness_minimizer
+                        ->PerformStep(beam_energy - InitialBeamEnergy(final_beam_energy));
+            }
+            for (const auto & it: reaction){
+                it.second->SetBeamEnergy(MiddleTargetBeamEnergy(final_beam_energy));
+            }
+            //std::cout << "Ice thickness : " <<current_ice_thickness << std::endl;
+        }
+    }
+
 	inline double InitialBeamEnergy(double beam_energy){
         beam_energy =
             energy_loss["beam"]["ice_back"]
@@ -338,7 +344,7 @@ class MugastIdentification : public Identification {
                                         0);
 
         beam_energy =
-            energy_loss["beam"]["havar_back"]
+            energy_loss["beam"]["havar_front"]
                 ->EvaluateInitialEnergy(beam_energy,
                                         havar_thickness,
                                         0);
@@ -348,8 +354,28 @@ class MugastIdentification : public Identification {
                 ->EvaluateInitialEnergy(beam_energy,
                                         current_ice_thickness,
                                         0);
-	return beam_energy;
-	
+	    return beam_energy;
+	}
+
+	inline double MiddleTargetBeamEnergy(double beam_energy){
+        beam_energy =
+            energy_loss["beam"]["ice_back"]
+                ->EvaluateInitialEnergy(beam_energy,
+                                        current_ice_thickness,
+                                        0);
+
+        beam_energy =
+            energy_loss["beam"]["havar_back"]
+                ->EvaluateInitialEnergy(beam_energy,
+                                        havar_thickness,
+                                        0);
+
+        beam_energy =
+            energy_loss["beam"]["he3_front"]
+                ->EvaluateInitialEnergy(beam_energy,
+                                        gas_thickness->Evaluate(0.),
+                                        0);
+	    return beam_energy;
 	}
 
 	public:
