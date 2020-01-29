@@ -14,13 +14,13 @@ class Minimizer{
         std::array < long double, 2> Derivative;
         std::array <long double, 2> Step;
         std::array <long double, 2> Rate;
-        int     NSteps;
-        bool    Verbose;
         double  StartingRate;
         double  Coefficient;
         double  Threshold;
-        double  Quenching;
         double  MaxSteps;
+        double  Quenching;
+        int     NSteps;
+        bool    Verbose;
 
 };
 

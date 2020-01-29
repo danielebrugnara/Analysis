@@ -4,18 +4,18 @@ MugastIdentification::MugastIdentification() : cuts_MG({1, 3, 4, 5, 7, 11}),
                                                cuts_M({1, 2, 4}),
                                                cuts_Z({1, 2}),
                                                particles({"m1_z1", "m2_z1", "m4_z2"}),
-                                               havar_thickness(3.8E-3),//in mm
                                                strips({"X", "Y"}),
-                                               data(nullptr),
-                                               fragment(nullptr),
-                                               with_cuts(true),
                                                layers({"ice_front",
                                                        "havar_front",
                                                        "he3_front",
                                                        "he3_back",
                                                        "havar_back",
                                                        "ice_back",
-                                                       "al_front"}) {
+                                                       "al_front"}), 
+                                               data(nullptr),
+                                               fragment(nullptr),
+                                               with_cuts(true),
+                                               havar_thickness(3.8E-3){//in mm
 }
 
 MugastIdentification::~MugastIdentification() {
@@ -60,7 +60,7 @@ bool MugastIdentification::Initialize(const double &beam_energy,
         TW_Brho_M46_Z18 = nullptr;
     }
 
-    ice_thickness_minimizer = new Minimizer();
+    ice_thickness_minimizer = nullptr;
 
     this->beam_energy = beam_energy;
     this->target_pos = target_pos;
