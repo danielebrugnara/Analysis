@@ -251,7 +251,7 @@ class MugastIdentification : public Identification {
                     ice_thickness_minimizer
                         ->PerformStep(beam_energy - InitialBeamEnergy(final_beam_energy));
             }
-            std::cout << "Ice thickness : " <<current_ice_thickness << std::endl;
+            //std::cout << "Ice thickness : " <<current_ice_thickness << std::endl;
         }
 
         //Energy reconstruction
