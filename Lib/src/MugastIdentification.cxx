@@ -190,7 +190,7 @@ bool MugastIdentification::InitializeELoss() {
                              layer_names[layer] +
                              ".G4table";
                 energy_loss[particle][layer] =
-                    new NPL::EnergyLoss(tmp_string, "G4Table", 1000);
+                    new NPL::EnergyLoss(tmp_string, "G4Table", 100);
             }
         }
     }
@@ -201,15 +201,15 @@ bool MugastIdentification::InitializeELoss() {
                                     layer_names[layer] + 
                                     ".G4table",
                                 "G4Table",
-                                1000);
+                                50);
     }
 
     energy_loss["beam"]["ice_front"] =
         //new NPL::EnergyLoss("/home/daniele/Projects/Analysis/Configs/ELossTables/Argon_in_ice.txt", "SRIM", 1000);
-        new NPL::EnergyLoss("./Configs/ELossTables/Argon_in_ice.txt", "SRIM", 1000);
+        new NPL::EnergyLoss("./Configs/ELossTables/Argon_in_ice.txt", "SRIM", 50);
     energy_loss["beam"]["ice_back"] =
         //new NPL::EnergyLoss("/home/daniele/Projects/Analysis/Configs/ELossTables/Argon_in_ice.txt", "SRIM", 1000);
-        new NPL::EnergyLoss("./Configs/ELossTables/Argon_in_ice.txt", "SRIM", 1000);
+        new NPL::EnergyLoss("./Configs/ELossTables/Argon_in_ice.txt", "SRIM", 50);
 
     current_ice_thickness = 10E-3;
     beam_energy_match_threashold = 0.3; //In MeV

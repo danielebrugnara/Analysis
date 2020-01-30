@@ -267,13 +267,19 @@ class MugastIdentification : public Identification {
                                                  0.);
 
             fragment->E[ii] = tmp_en;
+         //   std::string computed_reaction = "M" + std::to_string(data->VAMOS_id_M) +
+         //                                   "_Z" + std::to_string(data->VAMOS_id_Z) +
+         //                                   fragment->Particle[ii];
+         //   std::cout << "reaccc shouòd be : " << computed_reaction << std::endl;
 
             if ((reaction_it = reaction.find("M" + std::to_string(data->VAMOS_id_M) +
                                             "_Z" + std::to_string(data->VAMOS_id_Z) +
+                                            "_" +
                                             fragment->Particle[ii])) != reaction.end()) {
                 fragment->Ex[ii] = reaction_it->second
                                                 ->ReconstructRelativistic(fragment->E[ii],
                                                                             Get_ThetaLab(ii));
+                std::cout << fragment->Ex[ii] << "\n";
 
             } else {
                 fragment->Ex[ii] = 0;
@@ -313,10 +319,13 @@ class MugastIdentification : public Identification {
                                                     beam_energy_match_threashold/gradient_descent_normalization , 
                                                     200, 
                                                     1);
+            double energy_difference;
             for (int ii=0; ii<100;++ii){
+                energy_difference = beam_energy - InitialBeamEnergy(final_beam_energy);
+                if (abs(energy_difference)<beam_energy_match_threashold) break;
                 current_ice_thickness = 
                     ice_thickness_minimizer
-                        ->PerformStep((beam_energy - InitialBeamEnergy(final_beam_energy))/gradient_descent_normalization);
+                        ->PerformStep(energy_difference/gradient_descent_normalization);
             }
             for (const auto & it: reaction){
                 it.second->SetBeamEnergy(MiddleTargetBeamEnergy(final_beam_energy));

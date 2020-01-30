@@ -24,6 +24,7 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>Selector::SlaveBegin()\n";
 #endif
+    total_entries = fReader.GetEntries(false);
 
     TString option = GetOption();
     file_name = "./Out/" + option;
@@ -328,6 +329,7 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
 
 Bool_t Selector::Process(Long64_t entry) {
     fReader.SetLocalEntry(entry);
+   if (entry%5000 == 0) std::cout << "Processed entries : " <<entry <<" of  "<<total_entries<<"\n"; 
 
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>Selector::Process()\n";
@@ -342,10 +344,6 @@ Bool_t Selector::Process(Long64_t entry) {
     LoadVamosData();
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>Finished: Loading Vamos data\n";
-#endif
-    LoadMugastData();
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Finished: Loading Mugast data\n";
 #endif
     vamos_fragment.Identify();
 #ifdef VERBOSE_DEBUG
@@ -400,6 +398,10 @@ Bool_t Selector::Process(Long64_t entry) {
 
 //MUGAST//////////////////////////////////////////////////////////////////////////////////////////////////////
 mugast_label:  //Label of goto previous to VAMOS
+    LoadMugastData();
+#ifdef VERBOSE_DEBUG
+    std::cout << "------------>Finished: Loading Mugast data\n";
+#endif
     mugast_fragment.Identify();
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>Finished: Mugast identification, negative exit\n";
