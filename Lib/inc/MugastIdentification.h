@@ -305,77 +305,86 @@ class MugastIdentification : public Identification {
     //    std::cout << "final energy : " << final_beam_energy << std::endl;
         //delete ice_thickness_minimizer; //TODO : understand why this causes segfault
         if (abs(beam_energy-initial_beam_energy)>beam_energy_match_threashold){
-            ice_thickness_minimizer = new Minimizer(beam_energy-initial_beam_energy,
+            ice_thickness_minimizer = new Minimizer((beam_energy-initial_beam_energy)/1.E3,
                                                     current_ice_thickness,
-                                                    1E-3,
-                                                    0.005,
-                                                    beam_energy_match_threashold , 
+                                                    7E-7,
+                                                    0.002,
+                                                    beam_energy_match_threashold/1.E3 , 
                                                     200, 
                                                     1);
             for (int ii=0; ii<100;++ii){
                 current_ice_thickness = 
                     ice_thickness_minimizer
-                        ->PerformStep(beam_energy - InitialBeamEnergy(final_beam_energy));
+                        ->PerformStep((beam_energy - InitialBeamEnergy(final_beam_energy))/1.E3);
             }
             for (const auto & it: reaction){
                 it.second->SetBeamEnergy(MiddleTargetBeamEnergy(final_beam_energy));
+//                std::cout << "Beam Energy : " << MiddleTargetBeamEnergy(final_beam_energy)<< std::endl;
+//                std::cout << "Ice thickness : " << current_ice_thickness << std::endl;
             }
             //std::cout << "Ice thickness : " <<current_ice_thickness << std::endl;
         }
     }
 
-	inline double InitialBeamEnergy(double beam_energy){
-        beam_energy =
+	inline double InitialBeamEnergy(double beam_energy_from_brho){
+//        std::cout << "final energy: " << beam_energy_from_brho << std::endl;
+        beam_energy_from_brho =
             energy_loss["beam"]["ice_back"]
-                ->EvaluateInitialEnergy(beam_energy,
+                ->EvaluateInitialEnergy(beam_energy_from_brho,
                                         current_ice_thickness,
                                         0);
+//        std::cout << "before ice: " << beam_energy_from_brho << std::endl;
 
-        beam_energy =
+        beam_energy_from_brho =
             energy_loss["beam"]["havar_back"]
-                ->EvaluateInitialEnergy(beam_energy,
+                ->EvaluateInitialEnergy(beam_energy_from_brho,
                                         havar_thickness,
                                         0);
+//        std::cout << "before havar: " << beam_energy_from_brho << std::endl;
 
-        beam_energy =
+        beam_energy_from_brho =
             energy_loss["beam"]["he3_front"]
-                ->EvaluateInitialEnergy(beam_energy,
+                ->EvaluateInitialEnergy(beam_energy_from_brho,
                                         2 * gas_thickness->Evaluate(0.),
                                         0);
+//        std::cout << "before he("<<2* gas_thickness->Evaluate(0.)<<") : " << beam_energy_from_brho << std::endl;
 
-        beam_energy =
+        beam_energy_from_brho =
             energy_loss["beam"]["havar_front"]
-                ->EvaluateInitialEnergy(beam_energy,
+                ->EvaluateInitialEnergy(beam_energy_from_brho,
                                         havar_thickness,
                                         0);
+//        std::cout << "before havar: " << beam_energy_from_brho << std::endl;
 
-        beam_energy =
+        beam_energy_from_brho =
             energy_loss["beam"]["ice_front"]
-                ->EvaluateInitialEnergy(beam_energy,
+                ->EvaluateInitialEnergy(beam_energy_from_brho,
                                         current_ice_thickness,
                                         0);
-	    return beam_energy;
+//        std::cout << "before ice ("<<current_ice_thickness<<"): " << beam_energy_from_brho << std::endl;
+//        std::cout << "-------->Actual beam energy should be: "<< beam_energy <<std::endl;
+	    return beam_energy_from_brho;
 	}
 
-	inline double MiddleTargetBeamEnergy(double beam_energy){
-        beam_energy =
+	inline double MiddleTargetBeamEnergy(double beam_energy_from_brho){
+        beam_energy_from_brho =
             energy_loss["beam"]["ice_back"]
-                ->EvaluateInitialEnergy(beam_energy,
+                ->EvaluateInitialEnergy(beam_energy_from_brho,
                                         current_ice_thickness,
                                         0);
 
-        beam_energy =
+        beam_energy_from_brho =
             energy_loss["beam"]["havar_back"]
-                ->EvaluateInitialEnergy(beam_energy,
+                ->EvaluateInitialEnergy(beam_energy_from_brho,
                                         havar_thickness,
                                         0);
 
-        beam_energy =
+        beam_energy_from_brho =
             energy_loss["beam"]["he3_front"]
-                ->EvaluateInitialEnergy(beam_energy,
+                ->EvaluateInitialEnergy(beam_energy_from_brho,
                                         gas_thickness->Evaluate(0.),
                                         0);
-	    return beam_energy;
+	    return beam_energy_from_brho;
 	}
 
 	public:

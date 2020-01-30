@@ -3,6 +3,7 @@
 
 #include <array>
 #include <iostream>
+#include <math.h>
 
 class Minimizer{
     public:
@@ -26,7 +27,7 @@ class Minimizer{
         int     n_steps;
     public:
         inline double PerformStep(double new_value){
-          new_value = abs(new_value);
+          new_value = pow(new_value, 2);
           if (new_value == 0)
             return x[0];
           if (abs(new_value) < threshold){//Already ok
@@ -58,6 +59,10 @@ class Minimizer{
             //    step[1] = ((step[1] > 0) - (step[1] < 0)) * step[0] * 2;
             //std::cout << step[1] <<std::endl;
             quenching *= quenching;
+          };
+          n_steps++;
+          x[0] = x[1];
+          x[1] = x[0] + step[1];
         #ifdef VERBOSE_DEBUG
               std::cout << n_steps
                         << "------> Derivative : " << derivative[1]
@@ -69,10 +74,6 @@ class Minimizer{
                         << std::endl;
               if (rate[0]!=rate[1]) std::cout <<"Changed rate from :" <<rate[0] << " To : " << rate[1] <<std::endl;
         #endif
-          };
-          n_steps++;
-          x[0] = x[1];
-          x[1] = x[0] + step[1];
           return x[1];
         }
 
