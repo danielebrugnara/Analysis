@@ -241,7 +241,7 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
                     Istantiate(pData.MG.mELab_ThetaLab[it_M][it_Z][particle][it_gamma],
                                new TH2D(Form("pData_MG_mELab_ThetaLab_M%i_Z%i_%s_%s", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
                                         Form("ELab vs Theta Lab with M%i Z%i in VAMOS and %s in MUGAST and %s in AGATA", it_M, it_Z, it_gamma.c_str(), it_gamma.c_str()),
-                                        1000, 0, 180, 1000, 0, 60));
+                                        1000, 0, 3.1416, 1000, 0, 20));
                 }
             }
             Istantiate(pData.MG.hEx[it_M][it_Z]["NONE"],
@@ -591,8 +591,8 @@ inline void Selector::PlotMugastGraphs() {
                                     [vamos_fragment.Get_id_Z()]
                                     [mugast_fragment.Get_Particle(ii)]
                                     ["NO CONDITION"],
-             mugast_fragment.Get_E(ii),
-             mugast_fragment.Get_ThetaLab(ii));
+             mugast_fragment.Get_ThetaLab(ii),
+             mugast_fragment.Get_E(ii));
 
         //E TOF
         Fill(pConf.MG.mE_TOF[mugast_fragment.Get_MG(ii)],
