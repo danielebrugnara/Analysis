@@ -29,6 +29,7 @@ class MugastIdentification : public Identification {
     static constexpr double AMU_TO_MEV	{931.49436};
 
     static constexpr int charge_state_interpolation{16};
+    static constexpr double gradient_descent_normalization	{1.E3};
 
     struct Data {
         TTreeReaderValue<TMugastPhysics> *Mugast;
@@ -305,17 +306,17 @@ class MugastIdentification : public Identification {
     //    std::cout << "final energy : " << final_beam_energy << std::endl;
         //delete ice_thickness_minimizer; //TODO : understand why this causes segfault
         if (abs(beam_energy-initial_beam_energy)>beam_energy_match_threashold){
-            ice_thickness_minimizer = new Minimizer((beam_energy-initial_beam_energy)/1.E3,
+            ice_thickness_minimizer = new Minimizer((beam_energy-initial_beam_energy)/gradient_descent_normalization,
                                                     current_ice_thickness,
                                                     7E-7,
                                                     0.002,
-                                                    beam_energy_match_threashold/1.E3 , 
+                                                    beam_energy_match_threashold/gradient_descent_normalization , 
                                                     200, 
                                                     1);
             for (int ii=0; ii<100;++ii){
                 current_ice_thickness = 
                     ice_thickness_minimizer
-                        ->PerformStep((beam_energy - InitialBeamEnergy(final_beam_energy))/1.E3);
+                        ->PerformStep((beam_energy - InitialBeamEnergy(final_beam_energy))/gradient_descent_normalization);
             }
             for (const auto & it: reaction){
                 it.second->SetBeamEnergy(MiddleTargetBeamEnergy(final_beam_energy));
