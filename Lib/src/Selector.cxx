@@ -240,7 +240,7 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
                 for (const auto &it_gamma : gammas) {
                     Istantiate(pData.MG.mELab_ThetaLab[it_M][it_Z][particle][it_gamma],
                                new TH2D(Form("pData_MG_mELab_ThetaLab_M%i_Z%i_%s_%s", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
-                                        Form("ELab vs Theta Lab with M%i Z%i in VAMOS and %s in MUGAST and %s in AGATA", it_M, it_Z, it_gamma.c_str(), it_gamma.c_str()),
+                                        Form("ELab vs Theta Lab with M%i Z%i in VAMOS and %s in MUGAST and %s in AGATA", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
                                         1000, 0, 3.1416, 1000, 0, 20));
                 }
             }
@@ -590,7 +590,7 @@ inline void Selector::PlotMugastGraphs() {
         Fill(pData.MG.mELab_ThetaLab[vamos_fragment.Get_id_M()]
                                     [vamos_fragment.Get_id_Z()]
                                     [mugast_fragment.Get_Particle(ii)]
-                                    ["NO CONDITION"],
+                                    ["NOCONDITION"],
              mugast_fragment.Get_ThetaLab(ii),
              mugast_fragment.Get_E(ii));
 

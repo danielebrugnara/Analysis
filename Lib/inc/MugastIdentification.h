@@ -279,8 +279,6 @@ class MugastIdentification : public Identification {
                 fragment->Ex[ii] = reaction_it->second
                                                 ->ReconstructRelativistic(fragment->E[ii],
                                                                             Get_ThetaLab(ii));
-                std::cout << fragment->Ex[ii] << "\n";
-
             } else {
                 fragment->Ex[ii] = 0;
             }
@@ -334,6 +332,11 @@ class MugastIdentification : public Identification {
             }
             //std::cout << "Ice thickness : " <<current_ice_thickness << std::endl;
         }
+        //if(abs(beam_energy-initial_beam_energy)>beam_energy_match_threashold){
+        //    std::cout << "!!!!!!!!!!!!!!!!!!!!!!Unable to converge in finding ice thickness!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+        //    std::cout << "beam energy : "<<beam_energy << std::endl;
+        //    std::cout << "initial beam energy : "<<initial_beam_energy << std::endl;
+        //}
     }
 
 	inline double InitialBeamEnergy(double beam_energy_from_brho){
