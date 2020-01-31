@@ -519,6 +519,8 @@ mugast_label:  //Label of goto previous to VAMOS
     for (int ii = 0; ii < *nbAdd; ii++) {
         Fill(pConf.AGATA.mmAGATA3D, AddX[ii], AddY[ii], AddZ[ii]);
     }
+
+   if (entry%50000 == 0) mugast_fragment.StoreTWvsIce(); 
     return kTRUE;
 }
 
@@ -686,6 +688,10 @@ bool Selector::GetSettings() {
         new_graph_file = new std::ofstream(config_file);
     }
     return true;
+}
+
+std::vector<std::pair<double, double>> Selector::GetTWvsIce() {
+    return mugast_fragment.GetTWvsIce();
 }
 
 inline bool Selector::Fill(TH1 *histo, const double &data1) {

@@ -110,9 +110,14 @@ class MugastIdentification : public Identification {
     Interpolation* gas_thickness;
     Interpolation* havar_angle;
     Interpolation* TW_Brho_M46_Z18;
+    Interpolation* ice_thickness;
+    Interpolation* TW_vs_ice_thickness;
+    std::vector<std::pair<double, double>> TW_vs_ice;
 
+    
     //Minimizer for ice thickness estimation
-    Minimizer* ice_thickness_minimizer;
+    Minimizer *ice_thickness_minimizer;
+
 
     //Calibrations
     std::unordered_map<int, Calibration *> calibrations_TY;
@@ -133,6 +138,14 @@ class MugastIdentification : public Identification {
     bool InitializeELoss();
 
    public:
+    std::vector<std::pair<double, double>> GetTWvsIce();
+    inline void StoreTWvsIce(){
+        if (TW_vs_ice_thickness == nullptr){
+            TW_vs_ice.push_back(std::pair<double, double>(**(data->TW),
+                                                            current_ice_thickness));
+        }
+    };
+
     inline void SetData(Data const *data) {
         if (this->data != nullptr)
             delete this->data;
@@ -168,7 +181,12 @@ class MugastIdentification : public Identification {
 #endif
 
         //Evaluate Ice thickness
-        IdentifyIceThickness();
+        if (TW_vs_ice_thickness == nullptr){
+            IdentifyIceThickness();
+        }
+        else{
+            current_ice_thickness = ice_thickness->Evaluate(**(data->TW));
+        }
 
         //Applying (time) re-calibrations
         for (unsigned int ii = 0; ii < fragment->multiplicity; ++ii) {
@@ -176,7 +194,7 @@ class MugastIdentification : public Identification {
                 fragment->T[ii] = fragment->SI_T[ii];
             else
                 fragment->T[ii] = calibrations_TY[fragment->MG[ii]]
-                                      ->Evaluate(fragment->T[ii], fragment->SI_Y[ii]);
+                                      ->Evaluate(fragment->SI_T[ii], fragment->SI_Y[ii]);
         };
 #ifdef VERBOSE_DEBUG
         std::cout << "------------>finished: calibrations\n";

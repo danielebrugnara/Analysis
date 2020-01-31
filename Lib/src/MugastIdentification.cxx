@@ -60,6 +60,18 @@ bool MugastIdentification::Initialize(const double &beam_energy,
         TW_Brho_M46_Z18 = nullptr;
     }
 
+    std::string tmp_file_path = "./Configs/Interpolations/IceThickness.root";
+    std::ifstream test_file(tmp_file_path);
+    if (test_file){
+        test_file.close();
+        TFile* tmp_file = new TFile(tmp_file_path.c_str());
+        ice_thickness = new Interpolation(tmp_file);
+        tmp_file->Close();
+        delete tmp_file;
+    }else{
+        ice_thickness = nullptr;
+    }
+
     this->beam_energy = beam_energy;
     this->target_pos = target_pos;
     //Cuts Initialization///////////////////////////////////
@@ -204,14 +216,33 @@ bool MugastIdentification::InitializeELoss() {
                                 50);
     }
 
+
+    //SRIM tables
+    energy_loss["m2_z1"]["ice_front"] = 
+        new NPL::EnergyLoss("./Configs/ELossTables/Deuteron_in_ice.txt", "SRIM", 100);
+
     energy_loss["beam"]["ice_front"] =
-        //new NPL::EnergyLoss("/home/daniele/Projects/Analysis/Configs/ELossTables/Argon_in_ice.txt", "SRIM", 1000);
         new NPL::EnergyLoss("./Configs/ELossTables/Argon_in_ice.txt", "SRIM", 50);
     energy_loss["beam"]["ice_back"] =
-        //new NPL::EnergyLoss("/home/daniele/Projects/Analysis/Configs/ELossTables/Argon_in_ice.txt", "SRIM", 1000);
         new NPL::EnergyLoss("./Configs/ELossTables/Argon_in_ice.txt", "SRIM", 50);
 
     current_ice_thickness = 10E-3;
     beam_energy_match_threashold = 0.3; //In MeV
+    
+    std::string path_TW_vs_ice = "./Configs/Interpolations/TW_Ice_Thickness.root";
+    std::ifstream tmp_file(path_TW_vs_ice);
+    if (tmp_file){
+        tmp_file.close();
+        TFile *tmp_root_file = new TFile(path_TW_vs_ice.c_str());
+        TW_vs_ice_thickness = new Interpolation(tmp_root_file);
+        tmp_root_file->Close();
+    }else{
+        TW_vs_ice_thickness = nullptr;
+        TW_vs_ice.reserve(100);
+    }
     return true;
+}
+
+std::vector<std::pair<double, double>> MugastIdentification::GetTWvsIce(){
+    return TW_vs_ice;
 }

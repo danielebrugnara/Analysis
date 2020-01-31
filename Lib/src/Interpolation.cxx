@@ -25,7 +25,9 @@ Interpolation::Interpolation(TFile *file):
             return;
         }
     }
-    if (!spline) throw std::runtime_error("Interpolation not found in TFile\n");
+    if (!spline) throw std::runtime_error(std::string("Interpolation not found in TFile: ")+
+                                            file->GetName()+
+                                            "\n");
 }
 
 Interpolation::~Interpolation() {

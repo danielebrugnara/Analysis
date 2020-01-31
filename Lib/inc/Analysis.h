@@ -29,9 +29,15 @@ class Analysis {
     std::stack<std::string> file_names;
     std::stack<std::string> processed_files;
     std::vector<std::thread> threads;
+    bool generate_TW_ice_interpolation;
     std::mutex mtx;
+    std::mutex mtx_data;
     std::string GetRun();
     bool Job();
+
+    struct Data{
+        std::vector<std::pair<double, double>> TW_vs_ice;
+    } data;
     //ClassDef(Analysis, 1);
 };
 

@@ -3,10 +3,10 @@
 //ClassImp(Analysis);
 
 Analysis::Analysis(int n_threads) : n_threads(n_threads) {
-    std::string     file_with_runs = "./Configs/Runs.txt";
-    std::ifstream   file(file_with_runs);
+    std::string file_with_runs = "./Configs/Runs.txt";
+    std::ifstream file(file_with_runs);
     if (!file.is_open()) throw std::runtime_error(std::string("Unable to read :") + std::string(file_with_runs));
-    std::string     line;
+    std::string line;
 
     while (std::getline(file, line)) {
         std::ifstream file_check(line);
@@ -14,13 +14,15 @@ Analysis::Analysis(int n_threads) : n_threads(n_threads) {
         if (file_check.fail()) throw std::runtime_error(std::string("File not present :") + line);
         file_names.push(line);
     }
+
+    std::ifstream file_test("./Configs/Interpolations/TW_Ice_Thickness.root");
+    generate_TW_ice_interpolation = file_test ? false : true;
 }
 
 Analysis::~Analysis() {
 }
 
 bool Analysis::RunAnalysis() {
-
     //Removing previous data
     system("rm -rf ./Out");
     system("mkdir ./Out");
@@ -40,13 +42,31 @@ bool Analysis::RunAnalysis() {
     //Adding all data in unique file
     system("hadd -f ./Out/sum.root ./Out/*");
 
+    if (generate_TW_ice_interpolation) {
+        std::sort(data.TW_vs_ice.begin(), data.TW_vs_ice.end());
+        TFile *root_file = new TFile("./Configs/Interpolations/TW_Ice_Thickness.root",
+                                     "recreate");
+
+        double X[data.TW_vs_ice.size()];
+        double Y[data.TW_vs_ice.size()];
+        for (int ii = 0; data.TW_vs_ice.size(); ++ii) {
+            X[ii] = data.TW_vs_ice[ii].first;
+            Y[ii] = data.TW_vs_ice[ii].second;
+        }
+        TGraph *gr = new TGraph(data.TW_vs_ice.size(),
+                                X, Y);
+        gr->Write();
+        root_file->Write();
+        root_file->Close();
+    }
+
     return true;
 }
 
 //This job will be assigned to a thread
 bool Analysis::Job() {
     try {
-        while (1) {//Repeat while there are jobs
+        while (1) {  //Repeat while there are jobs
             std::string current_run = GetRun();
             std::cout << "Run : " << current_run << " assigned to thread\n";
             pid_t pid;
@@ -72,6 +92,11 @@ bool Analysis::RunSelector(std::string run) {
     std::cout << "---------->Starting selector for run : " << run << "<----------\n";
     Selector *selector = new Selector();
     tree->Process(selector, ("analyzed_" + run.substr(run.find_last_of("/") + 1)).c_str());
+    if (generate_TW_ice_interpolation) {
+        data.TW_vs_ice.insert(data.TW_vs_ice.end(),
+                              selector->GetTWvsIce().begin(),
+                              selector->GetTWvsIce().end());
+    }
     delete selector;
     return true;
 }

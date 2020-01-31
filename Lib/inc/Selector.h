@@ -155,6 +155,8 @@ class Selector : public TSelector {
     virtual TList *GetOutputList() const { return fOutput; }
     virtual void SlaveTerminate();
     virtual void Terminate();
+    
+    std::vector<std::pair<double, double>> GetTWvsIce();
 
     //My methods
     inline void LoadVamosData();
