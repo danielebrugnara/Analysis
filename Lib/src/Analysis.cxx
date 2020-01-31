@@ -53,9 +53,9 @@ bool Analysis::RunAnalysis() {
             X[ii] = data.TW_vs_ice[ii].first;
             Y[ii] = data.TW_vs_ice[ii].second;
         }
-        TGraph *gr = new TGraph(data.TW_vs_ice.size(),
-                                X, Y);
-        gr->Write();
+        TGraph *gr = new TGraph(data.TW_vs_ice.size(),X, Y);
+        TSpline3 *spl = new TSpline3("TW_vs_ice_thickness", gr);
+        spl->Write();
         root_file->Write();
         root_file->Close();
     }
