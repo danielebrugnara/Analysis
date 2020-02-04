@@ -41,6 +41,7 @@ bool Analysis::RunAnalysis() {
 
     //Adding all data in unique file
     system("hadd -f ./Out/sum.root ./Out/*");
+    std::ofstream output_file("./Configs/Interpolations/TW_Ice_Thickness.txt");
 
     if (generate_TW_ice_interpolation) {
         std::sort(data.TW_vs_ice.begin(), data.TW_vs_ice.end());
@@ -52,7 +53,9 @@ bool Analysis::RunAnalysis() {
         for (int ii = 0; data.TW_vs_ice.size(); ++ii) {
             X[ii] = data.TW_vs_ice[ii].first;
             Y[ii] = data.TW_vs_ice[ii].second;
+            output_file << X[ii] << "\t" << Y[ii] << "\n";
         }
+        output_file.close();
         TGraph *gr = new TGraph(data.TW_vs_ice.size(),X, Y);
         TSpline3 *spl = new TSpline3("TW_vs_ice_thickness", gr);
         spl->Write();
@@ -93,9 +96,12 @@ bool Analysis::RunSelector(std::string run) {
     Selector *selector = new Selector();
     tree->Process(selector, ("analyzed_" + run.substr(run.find_last_of("/") + 1)).c_str());
     if (generate_TW_ice_interpolation) {
+        std::vector<std::pair<double, double>> tmp_vec = selector->GetTWvsIce(); 
+        mtx_data.lock();
         data.TW_vs_ice.insert(data.TW_vs_ice.end(),
-                              selector->GetTWvsIce().begin(),
-                              selector->GetTWvsIce().end());
+                              tmp_vec.begin(),
+                              tmp_vec.end());
+        mtx_data.unlock();
     }
     delete selector;
     return true;
