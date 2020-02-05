@@ -238,7 +238,8 @@ bool MugastIdentification::InitializeELoss() {
     energy_loss["beam"]["he3_back"] =
         new NPL::EnergyLoss("./Configs/ELossTables/Argon_in_Helium.txt", "SRIM", 50);
 
-    current_ice_thickness = 10E-3;
+    current_ice_thickness.first = 10E-3;
+    current_ice_thickness.second = current_ice_thickness.first * ice_percentage_second;
     beam_energy_match_threashold = 0.3; //In MeV
     
     std::string path_TW_vs_ice = "./Configs/Interpolations/TW_Ice_Thickness.root";
