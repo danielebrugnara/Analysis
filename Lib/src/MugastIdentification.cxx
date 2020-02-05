@@ -220,11 +220,23 @@ bool MugastIdentification::InitializeELoss() {
     //SRIM tables
     energy_loss["m2_z1"]["ice_front"] = 
         new NPL::EnergyLoss("./Configs/ELossTables/Deuteron_in_ice.txt", "SRIM", 100);
+    energy_loss["m2_z1"]["ice_back"] = 
+        new NPL::EnergyLoss("./Configs/ELossTables/Deuteron_in_ice.txt", "SRIM", 100);
+
+    energy_loss["m2_z1"]["he3_front"] = 
+        new NPL::EnergyLoss("./Configs/ELossTables/Deuteron_in_Helium.txt", "SRIM", 100);
+    energy_loss["m2_z1"]["he3_back"] = 
+        new NPL::EnergyLoss("./Configs/ELossTables/Deuteron_in_Helium.txt", "SRIM", 100);
 
     energy_loss["beam"]["ice_front"] =
         new NPL::EnergyLoss("./Configs/ELossTables/Argon_in_ice.txt", "SRIM", 50);
     energy_loss["beam"]["ice_back"] =
         new NPL::EnergyLoss("./Configs/ELossTables/Argon_in_ice.txt", "SRIM", 50);
+
+    energy_loss["beam"]["he3_front"] =
+        new NPL::EnergyLoss("./Configs/ELossTables/Argon_in_Helium.txt", "SRIM", 50);
+    energy_loss["beam"]["he3_back"] =
+        new NPL::EnergyLoss("./Configs/ELossTables/Argon_in_Helium.txt", "SRIM", 50);
 
     current_ice_thickness = 10E-3;
     beam_energy_match_threashold = 0.3; //In MeV

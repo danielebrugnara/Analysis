@@ -376,7 +376,7 @@ class MugastIdentification : public Identification {
         beam_energy_from_brho =
             energy_loss["beam"]["he3_front"]
                 ->EvaluateInitialEnergy(beam_energy_from_brho,
-                                        2 * gas_thickness->Evaluate(0.),
+                                        1.8 * gas_thickness->Evaluate(0.),//1.8 since max is at the center
                                         0);
 //        std::cout << "before he("<<2* gas_thickness->Evaluate(0.)<<") : " << beam_energy_from_brho << std::endl;
 
