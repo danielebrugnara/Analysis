@@ -44,7 +44,7 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
 
     //Passing beam energy in MeV, target position mm
     //mugast_fragment.Initialize(379.04, TVector3(0, 0, 25.));
-    mugast_fragment.Initialize(455.00, TVector3(0, 0, 25.));
+    mugast_fragment.Initialize(450.00, TVector3(0, 0, 25.));
 
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>finished: vamos_fragment initialization\n";
@@ -237,6 +237,10 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
                            new TH1D(Form("pData_MG_hEx_M%i_Z%i_%s", it_M, it_Z, particle.c_str()),
                                     Form("Excitation energy with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, particle.c_str()),
                                     1000, -60, 60));
+                    Istantiate(pData.MG.mEx_EDC[it_M][it_Z][particle],
+                               new TH2D(Form("pData_MG_mEx_EDC_M%i_Z%i_%s", it_M, it_Z, particle.c_str()),
+                                        Form("Ex vs EDC with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, particle.c_str()),
+                                        1000, -10, 10 , 2000, 0, 2000));
                 for (const auto &it_gamma : gammas) {
                     Istantiate(pData.MG.mELab_ThetaLab[it_M][it_Z][particle][it_gamma],
                                new TH2D(Form("pData_MG_mELab_ThetaLab_M%i_Z%i_%s_%s", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
@@ -595,6 +599,31 @@ inline void Selector::PlotMugastGraphs() {
                                     ["NOCONDITION"],
              mugast_fragment.Get_ThetaLab(ii),
              mugast_fragment.Get_E(ii));
+
+        bool AGATA_GOOD = *AddTS - *LTS > 175 && *AddTS - *LTS < 184;
+        if (AGATA_GOOD) {
+            double EDC {0};
+            for (long unsigned int jj = 0; jj < AddE.GetSize(); ++jj) {
+                EDC = 1E3 * CorrectDoppler(*vamos_fragment.Get_p4(), AddE[jj] / 1E3,
+                                              AddX[jj], AddY[jj], AddZ[jj]),
+                Fill(pData.MG.mEx_EDC   [vamos_fragment.Get_id_M()]
+                                        [vamos_fragment.Get_id_Z()]
+                                        [mugast_fragment.Get_Particle(ii)],
+                     mugast_fragment.Get_Ex(ii),
+                     EDC);
+                for (const auto& gamma: gammas){
+                    if (gamma=="NOCONDITION") continue;
+                    if (abs(std::stod(gamma)-EDC)>20) continue;
+
+                    Fill(pData.MG.mELab_ThetaLab[vamos_fragment.Get_id_M()]
+                                                [vamos_fragment.Get_id_Z()]
+                                                [mugast_fragment.Get_Particle(ii)]
+                                                [gamma],
+                         mugast_fragment.Get_ThetaLab(ii),
+                         mugast_fragment.Get_E(ii));
+                }
+            }
+        }
 
         //E TOF
         Fill(pConf.MG.mE_TOF[mugast_fragment.Get_MG(ii)],

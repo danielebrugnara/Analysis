@@ -232,7 +232,7 @@ class Selector : public TSelector {
     //std::vector<std::string> siliconsMG = {"MG1", "MG2", "MG3", "MG4", "MG5", "MG6", "MG7", "MG8", "MG9", "MG10", "MG11"};
     std::vector<std::string> alpha_correction = {"70", "80", "90", "100", "110", "120", "130", "140", "150", "160", "170"};
     std::vector<std::string> particles = {"p", "d", "ANY"};
-    std::vector<std::string> gammas = {"360keV", "ANY", "NOCONDITION"};
+    std::vector<std::string> gammas = {"360", "1319", "1660", "NOCONDITION"};
     std::vector<std::string> strips;
 
     struct MGConf {
@@ -250,6 +250,7 @@ class Selector : public TSelector {
         //std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mEx_TW; //[M][Z][Parcle]
         //std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mECM_ThetaCM;
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>>>> mELab_ThetaLab;
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mEx_EDC;
     };
 
     struct MMConf {

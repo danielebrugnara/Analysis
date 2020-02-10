@@ -192,6 +192,10 @@ bool MugastIdentification::InitializeELoss() {
         }
     }
 
+    int beam_precision = 100;
+    int fragment_precision = 200;
+
+
     if (e_loss_file_path != 0) {
         for (const auto &particle : particles) {
             if (particle == "m4_z2") continue;  //TODO: generate table
@@ -202,7 +206,7 @@ bool MugastIdentification::InitializeELoss() {
                              layer_names[layer] +
                              ".G4table";
                 energy_loss[particle][layer] =
-                    new NPL::EnergyLoss(tmp_string, "G4Table", 100);
+                    new NPL::EnergyLoss(tmp_string, "G4Table", fragment_precision);
             }
         }
     }
@@ -213,30 +217,30 @@ bool MugastIdentification::InitializeELoss() {
                                     layer_names[layer] + 
                                     ".G4table",
                                 "G4Table",
-                                50);
+                                beam_precision);
     }
 
 
     //SRIM tables
     energy_loss["m2_z1"]["ice_front"] = 
-        new NPL::EnergyLoss("./Configs/ELossTables/Deuteron_in_ice.txt", "SRIM", 100);
+        new NPL::EnergyLoss("./Configs/ELossTables/Deuteron_in_ice.txt", "SRIM", fragment_precision);
     energy_loss["m2_z1"]["ice_back"] = 
-        new NPL::EnergyLoss("./Configs/ELossTables/Deuteron_in_ice.txt", "SRIM", 100);
+        new NPL::EnergyLoss("./Configs/ELossTables/Deuteron_in_ice.txt", "SRIM", fragment_precision);
 
     energy_loss["m2_z1"]["he3_front"] = 
-        new NPL::EnergyLoss("./Configs/ELossTables/Deuteron_in_Helium.txt", "SRIM", 100);
+        new NPL::EnergyLoss("./Configs/ELossTables/Deuteron_in_Helium.txt", "SRIM", fragment_precision);
     energy_loss["m2_z1"]["he3_back"] = 
-        new NPL::EnergyLoss("./Configs/ELossTables/Deuteron_in_Helium.txt", "SRIM", 100);
+        new NPL::EnergyLoss("./Configs/ELossTables/Deuteron_in_Helium.txt", "SRIM", fragment_precision);
 
     energy_loss["beam"]["ice_front"] =
-        new NPL::EnergyLoss("./Configs/ELossTables/Argon_in_ice.txt", "SRIM", 50);
+        new NPL::EnergyLoss("./Configs/ELossTables/Argon_in_ice.txt", "SRIM", beam_precision);
     energy_loss["beam"]["ice_back"] =
-        new NPL::EnergyLoss("./Configs/ELossTables/Argon_in_ice.txt", "SRIM", 50);
+        new NPL::EnergyLoss("./Configs/ELossTables/Argon_in_ice.txt", "SRIM", beam_precision);
 
     energy_loss["beam"]["he3_front"] =
-        new NPL::EnergyLoss("./Configs/ELossTables/Argon_in_Helium.txt", "SRIM", 50);
+        new NPL::EnergyLoss("./Configs/ELossTables/Argon_in_Helium.txt", "SRIM", beam_precision);
     energy_loss["beam"]["he3_back"] =
-        new NPL::EnergyLoss("./Configs/ELossTables/Argon_in_Helium.txt", "SRIM", 50);
+        new NPL::EnergyLoss("./Configs/ELossTables/Argon_in_Helium.txt", "SRIM", beam_precision);
 
     current_ice_thickness.first = 10E-3;
     current_ice_thickness.second = current_ice_thickness.first * ice_percentage_second;
