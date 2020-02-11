@@ -33,10 +33,10 @@ class MugastIdentification : public Identification {
 
     static constexpr double ice_percentage_second = 1.;
     struct Data {
-        TTreeReaderValue<TMugastPhysics> *Mugast;
-        TTreeReaderValue<float> *TW;
-        int VAMOS_id_M;
-        int VAMOS_id_Z;
+        TTreeReaderValue<TMugastPhysics> * Mugast;
+        TTreeReaderValue<float> *          TW;
+        int                                VAMOS_id_M;
+        int                                VAMOS_id_Z;
         Data(TTreeReaderValue<TMugastPhysics> *Mugast,
              TTreeReaderValue<float> *TW,
              int VAMOS_id_M,
@@ -46,11 +46,11 @@ class MugastIdentification : public Identification {
                                 VAMOS_id_Z(VAMOS_id_Z){};
     };
 
-    std::array<int, n_detectors> cuts_MG;
-    std::array<int, 3> cuts_M;
-    std::array<int, 2> cuts_Z;
-    std::array<std::string, 3> particles;
-    std::array<std::string, 2> strips;
+    std::array<int, n_detectors>    cuts_MG;
+    std::array<int, 3>              cuts_M;
+    std::array<int, 2>              cuts_Z;
+    std::array<std::string, 3>      particles;
+    std::array<std::string, 2>      strips;
 
    private:
     double beam_energy;
@@ -64,26 +64,27 @@ class MugastIdentification : public Identification {
     std::vector<std::string> layers;
 
     struct Fragment {
-        const unsigned int multiplicity;
-        std::vector<TVector3> Pos;
-        std::vector<TVector3> EmissionDirection;
-        std::vector<TVector3> TelescopeNormal;
-        std::vector<int> SI_X;
-        std::vector<int> SI_Y;
-        std::vector<double> SI_E;
-        std::vector<double> SI_E2;
-        std::vector<double> E;
-        std::vector<double> Ex;
-        std::vector<double> E2;
-        std::vector<double> SI_T;
-        std::vector<double> T;
-        std::vector<double> T2;
-        std::vector<double> MG;
-        std::vector<int> M;
-        std::vector<int> Z;
-        std::vector<bool> Indentified;
-        std::vector<std::string> Particle;
-        Fragment(const unsigned int multiplicity) : multiplicity(multiplicity) {
+        const unsigned int          multiplicity;
+        std::vector<TVector3>       Pos;
+        std::vector<TVector3>       EmissionDirection;
+        std::vector<TVector3>       TelescopeNormal;
+        std::vector<int>            SI_X;
+        std::vector<int>            SI_Y;
+        std::vector<double>         SI_E;
+        std::vector<double>         SI_E2;
+        std::vector<double>         E;
+        std::vector<double>         Ex;
+        std::vector<double>         E2;
+        std::vector<double>         SI_T;
+        std::vector<double>         T;
+        std::vector<double>         T2;
+        std::vector<double>         MG;
+        std::vector<int>            M;
+        std::vector<int>            Z;
+        std::vector<bool>           Indentified;
+        std::vector<std::string>    Particle;
+        Fragment(const unsigned int multiplicity) 
+                    :   multiplicity(multiplicity) {
             Pos.resize(multiplicity);
             EmissionDirection.resize(multiplicity);
             TelescopeNormal.resize(multiplicity);
@@ -104,8 +105,8 @@ class MugastIdentification : public Identification {
             Particle.resize(multiplicity);
         };
     };
-    Data const *data;
-    Fragment *fragment;
+    Data const* data;
+    Fragment*   fragment;
 
     //Interpolations
     Interpolation* gas_thickness;
@@ -147,7 +148,7 @@ class MugastIdentification : public Identification {
         }
     };
 
-    inline void SetData(Data const *data) {
+    inline void SetData(Data const* data) {
         if (this->data != nullptr)
             delete this->data;
         if (this->fragment != nullptr)

@@ -7,5 +7,6 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/libCalibration_rdict.pcm ${CMAKE_C
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/libIdentification_rdict.pcm ${CMAKE_CURRENT_BINARY_DIR}/src/libIdentification.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/libVamosIdentification_rdict.pcm ${CMAKE_CURRENT_BINARY_DIR}/src/libVamosIdentification.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/libMugastIdentification_rdict.pcm ${CMAKE_CURRENT_BINARY_DIR}/src/libMugastIdentification.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/libAgataProcessing_rdict.pcm ${CMAKE_CURRENT_BINARY_DIR}/src/libAgataProcessing.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/libSelector_rdict.pcm ${CMAKE_CURRENT_BINARY_DIR}/src/libSelector.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/libAnalysis_rdict.pcm ${CMAKE_CURRENT_BINARY_DIR}/src/libAnalysis.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})
