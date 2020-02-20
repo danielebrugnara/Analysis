@@ -50,13 +50,6 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     std::cout << "------------>finished: vamos_fragment initialization\n";
 #endif
 
-    //Initializing Histograms
-
-    //Configurations
-    //Target
-    //thickness_angle = new Interpolation("./Configs/Interpolations/GasThickness.txt");
-    //angle_angle = new Interpolation("./Configs/Interpolations/EntranceAngleHavar.txt");
-
     //////////////////////////////////////////////////////////////////////////////////////////////////
     ///Histogram pointer initialization//////////////////////////////////////////////////////////////
 

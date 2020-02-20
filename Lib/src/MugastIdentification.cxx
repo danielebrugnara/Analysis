@@ -48,8 +48,8 @@ bool MugastIdentification::Initialize(const double &beam_energy,
     reaction["M47_Z19_m4_z2"] = new NPL::Reaction("46Ar(3He,4He)45Ar@" + std::to_string(beam_energy));
 
 
-    gas_thickness = new Interpolation("./Configs/Interpolations/GasThickness.txt");
-    havar_angle = new Interpolation("./Configs/Interpolations/EntranceAngleHavar.txt");
+    gas_thickness = new Interpolation("./Configs/Interpolations/He_thickness_500Torr.txt");
+    havar_angle = new Interpolation("./Configs/Interpolations/Entrance_angle_500Torr.txt");
 
     TFile *tmp_file = new TFile("./Configs/Interpolations/TW_Brho_M46_Z18.root");
     if (tmp_file){
