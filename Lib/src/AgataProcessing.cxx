@@ -1,19 +1,19 @@
 #include "AgataProcessing.h"
 
-AgataProcessing::AgataProcessing(unsigned long ref_ts,
-                                    const double z_shift)
-                                        :ref_ts(ref_ts),
-                                        z_shift(z_shift),
-                                        gammaray(nullptr),
-                                        data(nullptr){
+AgataProcessing::AgataProcessing():ref_ts(179),
+                                    z_shift(-4),
+                                    data(nullptr),
+                                    gammaray(nullptr){
 }
 
 AgataProcessing::~AgataProcessing(){
- delete gammaray;
- delete data;    
+    delete gammaray;
+    delete data;    
 }
 
 inline void AgataProcessing::Process(){
+    if (**data->AddTS - **data->LTS > ref_ts - 5 &&
+            **data->AddTS - **data->LTS < ref_ts + 5) gammaray->in_coincidence = true;    
     for (int ii = 0; ii < **(data->nbAdd); ++ii){                            
         ComputeDoppler(ii);
     }
@@ -48,14 +48,4 @@ inline double AgataProcessing::CorrectDoppler(int  ii, double additional_shift){
     tmp_four_vec.Boost(- data->p4->BoostVector());
 
     return tmp_four_vec.Energy();
-}
-
-
-inline void AgataProcessing::SetData(Data const* data){
-    if (this->data != nullptr)
-        delete this->data;
-    if (this->gammaray != nullptr)
-        delete this->gammaray;
-    this->data = data;
-    gammaray = new Gamma(**(data->nbAdd));
 }

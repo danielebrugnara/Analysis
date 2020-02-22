@@ -122,8 +122,10 @@ class VamosIdentification : public Identification {
         std::cout << "------------>VamosIdentification::SetData()\n";
 #endif
         //TODO: will this cause memory leaks?
-        if (this->data != nullptr) delete this->data;
-        if (this->fragment != nullptr) delete this->fragment;
+        if (this->data != nullptr) 
+            delete this->data;
+        if (this->fragment != nullptr) 
+            delete this->fragment;
 #ifdef VERBOSE_DEBUG
         std::cout << "------------>finished : pointers deleted\n";
 #endif

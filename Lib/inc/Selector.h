@@ -162,9 +162,11 @@ class Selector : public TSelector {
     //My methods
     inline void LoadVamosData();
     inline void LoadMugastData();
+    inline void LoadAgataData();
 
     inline void PlotVamosGraphs();
     inline void PlotMugastGraphs();
+    inline void PlotAgataGraphs();
 
     //Constants
     const Long64_t TS_TO_S      = 1E8;
@@ -182,9 +184,10 @@ class Selector : public TSelector {
     Interpolation *thickness_angle;
     Interpolation *angle_angle;
 
-    //VAMOS/////////////////////////////////////////////////////////////////////////////////
+    //Analysis classes/////////////////////////////////////////////////////////////////////////////////
     VamosIdentification     vamos_fragment;
     MugastIdentification    mugast_fragment;
+    AgataProcessing         agata_gammas;
 
     //Interpolation *FP_time_interpolation;
 
@@ -214,7 +217,6 @@ class Selector : public TSelector {
     struct AgataData {
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH1D *>>> hDC;             //[mass][nucleus][condition]
         std::unordered_map<int, std::unordered_map<int, TH2D *>> mDC;                                              //[mass][nucleus]
-        std::unordered_map<int, std::unordered_map<int, TH2D *>> mDC_ThetaMUGAST;                                  //[mass][nucleus]
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mEx_DC;          //[mass][nucleus][particle]
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mELab_ThetaLab;  //[mass][nucleus][particle]
     };
@@ -296,8 +298,6 @@ class Selector : public TSelector {
     std::map<std::string, double> mass;
 
    private:
-    inline double CorrectDoppler(const TLorentzVector &, const Double_t &, const Double_t &, const Double_t &, const Double_t &);
-    const double agata_Zshift = -4;
 
     std::unordered_map<std::string, bool> enabled_histograms;
     std::ofstream* new_graph_file = nullptr;
