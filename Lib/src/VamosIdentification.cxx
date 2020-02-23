@@ -100,7 +100,7 @@ VamosIdentification::~VamosIdentification() {
 }
 
 void VamosIdentification::ReadFPTimeShifts() {
-    std::ifstream cali_file("./Configs/FP_Time.cal");
+    std::ifstream cali_file("./Configs/Calibrations/FP_Time.cal");
     std::string line;
     std::string min;
     std::string max;
