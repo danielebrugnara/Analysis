@@ -85,7 +85,10 @@ class AgataProcessing{
         Data const*   data;
 
     public:
-        inline bool In_Coincidence(){return gammaray->in_coincidence;};
+        inline bool In_Coincidence(){if (gammaray) 
+                                        return gammaray->in_coincidence;
+                                     else
+                                        return false;};
         inline unsigned int Get_Mult(){return gammaray->multiplicity;};
         inline double Get_E(const int &i){return gammaray->E[i];};
         inline double Get_EDC(const int &i){return gammaray->EDC[i];};

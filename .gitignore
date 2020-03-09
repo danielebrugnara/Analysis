@@ -1,6 +1,6 @@
 Build/
 build/
-Data/
+Data
 Out/
 *.swp
 .vscode/

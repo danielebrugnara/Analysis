@@ -2,8 +2,8 @@
 
 AgataProcessing::AgataProcessing():ref_ts(179),
                                     z_shift(-4),
-                                    data(nullptr),
-                                    gammaray(nullptr){
+                                    gammaray(nullptr),
+                                    data(nullptr){
 }
 
 AgataProcessing::~AgataProcessing(){
