@@ -11,11 +11,11 @@
 #include "Identification.h"
 #include "Minimizer.h"
 #include "Interpolation.h"
-#include "TMugastPhysics.h"
+#include "EnergyLoss.h"
 
 //TODO: generate internal library for the following headers
-#include "NPEnergyLoss.h"
 #include "NPReaction.h"
+#include "TMugastPhysics.h"
 
 class MugastIdentification : public Identification {
    public:
@@ -49,7 +49,8 @@ class MugastIdentification : public Identification {
     std::array<int, n_detectors>    cuts_MG;
     std::array<int, 3>              cuts_M;
     std::array<int, 2>              cuts_Z;
-    std::array<std::string, 3>      particles;
+    std::array<std::string, 3>      light_particles;
+    std::array<std::string, 5>      fragments;
     std::array<std::string, 2>      strips;
 
    private:
@@ -129,7 +130,7 @@ class MugastIdentification : public Identification {
     std::unordered_map<int, std::unordered_map<int, double>> mass;
 
     //Energy Loss
-    std::unordered_map<std::string, std::unordered_map<std::string, NPL::EnergyLoss *>> energy_loss;
+    std::unordered_map<std::string, std::unordered_map<std::string, EnergyLoss *>> energy_loss;
     std::pair<double, double> current_ice_thickness;
 
     bool with_cuts;
@@ -205,7 +206,7 @@ class MugastIdentification : public Identification {
         TCutG *tmp_cut;
         for (unsigned int ii = 0; ii < fragment->multiplicity; ++ii) {
             fragment->Particle[ii] = "NONE";
-            for (const auto &cut_it : particles) {
+            for (const auto &cut_it : light_particles) {
                 if (with_cuts) {
                     try {
                         tmp_cut = cut_type["E_TOF"].at("E_TOF_" + cut_it + "_MG" +
@@ -247,7 +248,7 @@ class MugastIdentification : public Identification {
 #endif
 
         //Energy reconstruction
-        std::unordered_map<std::string, NPL::EnergyLoss *> *ptr_tmp;
+        std::unordered_map<std::string, EnergyLoss *> *ptr_tmp;
         for (unsigned int ii = 0; ii < fragment->multiplicity; ++ii) {
             //if (!fragment->Indentified[ii]) {
             fragment->EmissionDirection[ii] = fragment->Pos[ii] - target_pos;

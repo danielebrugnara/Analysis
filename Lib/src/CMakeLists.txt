@@ -3,10 +3,15 @@ include_directories(${analysis_SOURCE_DIR}/Lib/inc $ENV{NPTOOL}/NPLib/include)
 
 link_directories($ENV{NPTOOL}/NPLib/lib)
 
+#Libraries without root
+add_library(Units SHARED Units.cxx)
 
 #Building root dictinaries
 ROOT_GENERATE_DICTIONARY(G__Interpolation Interpolation.h LINKDEF ${analysis_SOURCE_DIR}/Lib/inc/InterpolationLinkDef.h)
 add_library(Interpolation SHARED Interpolation.cxx G__Interpolation.cxx)
+
+ROOT_GENERATE_DICTIONARY(G__EnergyLoss EnergyLoss.h LINKDEF ${analysis_SOURCE_DIR}/Lib/inc/EnergyLossLinkDef.h)
+add_library(EnergyLoss SHARED EnergyLoss.cxx G__EnergyLoss.cxx)
 
 ROOT_GENERATE_DICTIONARY(G__Minimizer Minimizer.h LINKDEF ${analysis_SOURCE_DIR}/Lib/inc/MinimizerLinkDef.h)
 add_library(Minimizer SHARED Minimizer.cxx G__Minimizer.cxx)
@@ -31,21 +36,23 @@ add_library(Selector SHARED Selector.cxx G__Selector.cxx)
 ROOT_GENERATE_DICTIONARY(G__Analysis Analysis.h LINKDEF ${analysis_SOURCE_DIR}/Lib/inc/AnalysisLinkDef.h)
 add_library(Analysis SHARED Analysis.cxx G__Analysis.cxx)
 
-
+set_target_properties(Units PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
 set_target_properties(Selector PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
 set_target_properties(VamosIdentification PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
 set_target_properties(MugastIdentification PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
 set_target_properties(AgataProcessing PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
 set_target_properties(Interpolation PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
+set_target_properties(EnergyLoss PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
 set_target_properties(Minimizer PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
 set_target_properties(Calibration PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
 set_target_properties(Analysis PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
 
 #Linking to needed dynamic libraries
 target_link_libraries(Interpolation ${ROOT_LIBRARIES})
+target_link_libraries(EnergyLoss ${ROOT_LIBRARIES} Units)
 target_link_libraries(Calibration ${ROOT_LIBRARIES})
 target_link_libraries(VamosIdentification ${ROOT_LIBRARIES} Interpolation)
-target_link_libraries(MugastIdentification ${ROOT_LIBRARIES} Interpolation Minimizer NPMugast Calibration NPPhysics NPReactionConditions)
+target_link_libraries(MugastIdentification ${ROOT_LIBRARIES} Interpolation Minimizer NPMugast Calibration EnergyLoss NPPhysics NPReactionConditions)
 target_link_libraries(AgataProcessing ${ROOT_LIBRARIES})
 target_link_libraries(Selector ${ROOT_LIBRARIES}  NPMugast NPMUST2 NPCATS VamosIdentification MugastIdentification AgataProcessing)
 target_link_libraries(Analysis ${ROOT_LIBRARIES} Selector)

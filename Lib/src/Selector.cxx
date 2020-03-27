@@ -232,7 +232,7 @@ void Selector::SlaveBegin(TTree * /*tree*/) {
     }
     for (const auto &it_M : vamos_fragment.cuts_M) {
         for (const auto &it_Z : vamos_fragment.cuts_Z) {
-            for (const auto &particle : mugast_fragment.particles) {
+            for (const auto &particle : mugast_fragment.light_particles) {
                 Istantiate(pData.MG.hEx[it_M][it_Z][particle],
                            new TH1D(Form("pData_MG_hEx_M%i_Z%i_%s", it_M, it_Z, particle.c_str()),
                                     Form("Excitation energy with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, particle.c_str()),

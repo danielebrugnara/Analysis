@@ -3,7 +3,8 @@
 MugastIdentification::MugastIdentification() : cuts_MG({1, 3, 4, 5, 7, 11}),
                                                cuts_M({1, 2, 4}),
                                                cuts_Z({1, 2}),
-                                               particles({"m1_z1", "m2_z1", "m4_z2"}),
+                                               light_particles({"m1_z1", "m2_z1", "m4_z2"}),
+                                               fragments({"m1_z1", "m2_z1", "m4_z2","m46_z18", "m47_z19"}),
                                                strips({"X", "Y"}),
                                                layers({"ice_front",
                                                        "havar_front",
@@ -27,7 +28,7 @@ MugastIdentification::~MugastIdentification() {
     for (const auto &MG : cuts_MG) {
         delete calibrations_TY[MG];
     }
-    for (const auto &particle : particles) {
+    for (const auto &particle : light_particles) {
         if (particle == "m4_z2") continue;  //TODO: generate table
         for (const auto &layer : layers) {
             delete energy_loss[particle][layer];
@@ -156,91 +157,67 @@ bool MugastIdentification::InitializeELoss() {
 
     layer_names["ice_front"] = "Ice";
     layer_names["havar_front"] = "Havar";
-    layer_names["he3_front"] = "He_gas";
-    layer_names["he3_back"] = "Ice";
+    layer_names["he3_front"] = "Helium";
+    layer_names["he3_back"] = "Helium";
     layer_names["havar_back"] = "Havar";
     layer_names["ice_back"] = "Ice";
     layer_names["al_front"] = "Al";
 
-    std::unordered_map<std::string, std::string> particle_names;
+    std::unordered_map<std::string, std::string> fragment_names;
 
-    particle_names["m1_z1"] = "proton";
-    particle_names["m2_z1"] = "deuteron";
-    particle_names["m4_z2"] = "alpha";
+    fragment_names["m1_z1"] = "Proton";
+    fragment_names["m2_z1"] = "Deuteron";
+    fragment_names["m4_z2"] = "Alpha";
+    fragment_names["m46_z18"] = "Ar46";
+    fragment_names["m47_z19"] = "K47";
 
-    for (const auto &particle : particles) {
+    for (const auto &fragment : fragments) {
         for (const auto &layer : layers) {
-            energy_loss[particle][layer] = nullptr;
+            energy_loss[fragment][layer] = nullptr;
         }
     }
 
-    std::ifstream configs_file("./Configs/Configs.txt");
-    std::string line;
-
-    std::string tmp_string;
-
-    std::string e_loss_file_path("not_found");
-
-    if (configs_file) {
-        while (std::getline(configs_file, line)) {
-            std::istringstream line_str(line);
-            line_str >> tmp_string;
-            if (tmp_string.compare("ELossTableFolder:") == 0) {
-                line_str >> e_loss_file_path;
-                break;
-            }
-        }
-    }
+    std::string e_loss_file_path("./Configs/ELossTables/");
+    std::string pressure("500Torr");
 
     int beam_precision = 100;
     int fragment_precision = 200;
 
-
+    
     if (e_loss_file_path != 0) {
-        for (const auto &particle : particles) {
-            if (particle == "m4_z2") continue;  //TODO: generate table
+        for (const auto &fragment : fragments) {
+
+            int precision;
+            if (fragment == "m46_z18")
+                precision = beam_precision;
+            else
+                precision = fragment_precision;
+            
             for (const auto &layer : layers) {
-                tmp_string = e_loss_file_path +
-                             particle_names[particle] +
-                             "_" +
-                             layer_names[layer] +
-                             ".G4table";
-                energy_loss[particle][layer] =
-                    new NPL::EnergyLoss(tmp_string, "G4Table", fragment_precision);
+                std::string tmp_string;
+                if (layer_names[layer] != "Helium"){
+                    tmp_string = e_loss_file_path +
+                                                fragment_names[fragment] +
+                                                "_in_" +
+                                                layer_names[layer] +
+                                                ".txt";
+                }else{
+                    tmp_string = e_loss_file_path +
+                                                fragment_names[fragment] +
+                                                "_in_" +
+                                                layer_names[layer] +
+                                                pressure+
+                                                ".txt";
+                }
+                energy_loss[fragment][layer] =
+                    new EnergyLoss(tmp_string, "SRIM", precision);
             }
         }
     }
 
     for (const auto &layer : layers) {
-        energy_loss["beam"][layer] =
-            new NPL::EnergyLoss(e_loss_file_path+"Ar46_" + 
-                                    layer_names[layer] + 
-                                    ".G4table",
-                                "G4Table",
-                                beam_precision);
+        energy_loss["beam"][layer] = energy_loss["m46_z18"][layer];
     }
-
-
-    //SRIM tables
-    energy_loss["m2_z1"]["ice_front"] = 
-        new NPL::EnergyLoss("./Configs/ELossTables/Deuteron_in_ice.txt", "SRIM", fragment_precision);
-    energy_loss["m2_z1"]["ice_back"] = 
-        new NPL::EnergyLoss("./Configs/ELossTables/Deuteron_in_ice.txt", "SRIM", fragment_precision);
-
-    energy_loss["m2_z1"]["he3_front"] = 
-        new NPL::EnergyLoss("./Configs/ELossTables/Deuteron_in_Helium.txt", "SRIM", fragment_precision);
-    energy_loss["m2_z1"]["he3_back"] = 
-        new NPL::EnergyLoss("./Configs/ELossTables/Deuteron_in_Helium.txt", "SRIM", fragment_precision);
-
-    energy_loss["beam"]["ice_front"] =
-        new NPL::EnergyLoss("./Configs/ELossTables/Argon_in_ice.txt", "SRIM", beam_precision);
-    energy_loss["beam"]["ice_back"] =
-        new NPL::EnergyLoss("./Configs/ELossTables/Argon_in_ice.txt", "SRIM", beam_precision);
-
-    energy_loss["beam"]["he3_front"] =
-        new NPL::EnergyLoss("./Configs/ELossTables/Argon_in_Helium.txt", "SRIM", beam_precision);
-    energy_loss["beam"]["he3_back"] =
-        new NPL::EnergyLoss("./Configs/ELossTables/Argon_in_Helium.txt", "SRIM", beam_precision);
 
     current_ice_thickness.first = 10E-3;
     current_ice_thickness.second = current_ice_thickness.first * ice_percentage_second;
