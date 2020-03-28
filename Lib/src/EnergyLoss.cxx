@@ -69,10 +69,11 @@ EnergyLoss::EnergyLoss(std::string Path, std::string Source, int NumberOfSlice =
     // Reading Data
     double energy, nuclear, electronic;
     std::string unit, dummy;
-
-    while (TableFile >> energy >> unit >> electronic >> nuclear >> dummy >> dummy >> dummy >> dummy >> dummy >> dummy)
-    {
-      //std::cout << energy << "\tElectronic: " << electronic << std::endl;
+    std::string line;
+    while (std::getline(TableFile, line)){
+      std::istringstream str(line);
+      str >> energy >> unit >> electronic >> nuclear >> dummy >> dummy >> dummy >> dummy >> dummy >> dummy;
+      if (energy == 0 || electronic == 0) continue;
 
       if (unit == "keV")
         energy = energy * UNITS::keV;

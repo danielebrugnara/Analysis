@@ -2,6 +2,7 @@ add_subdirectory(src)
 
 #Adding root dictionaries to the binary folder
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/libInterpolation_rdict.pcm ${CMAKE_CURRENT_BINARY_DIR}/src/libInterpolation.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/libEnergyLoss_rdict.pcm ${CMAKE_CURRENT_BINARY_DIR}/src/libEnergyLoss.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/libMinimizer_rdict.pcm ${CMAKE_CURRENT_BINARY_DIR}/src/libMinimizer.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/libCalibration_rdict.pcm ${CMAKE_CURRENT_BINARY_DIR}/src/libCalibration.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/libIdentification_rdict.pcm ${CMAKE_CURRENT_BINARY_DIR}/src/libIdentification.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})
