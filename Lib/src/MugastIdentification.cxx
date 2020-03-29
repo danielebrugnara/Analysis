@@ -61,7 +61,7 @@ bool MugastIdentification::Initialize(const double &beam_energy,
         TW_Brho_M46_Z18 = nullptr;
     }
 
-    std::string tmp_file_path = "./Configs/Interpolations/IceThickness.root";
+    std::string tmp_file_path = "./Configs/Interpolations/TW_Ice_Thickness.root";
     std::ifstream test_file(tmp_file_path);
     if (test_file){
         test_file.close();

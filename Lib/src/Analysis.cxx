@@ -130,7 +130,7 @@ Analysis::Data_partial *Analysis::RunSelector(std::string run) {
     TTree *tree = (TTree *)file->Get("PhysicsTree");
     std::cout << "---------->Starting selector for run : " << run << "<----------\n";
     Selector *selector = new Selector();
-    tree->Process(selector, ("analyzed_" + run.substr(run.find_last_of("/") + 1)).c_str(), 2000);
+    tree->Process(selector, ("analyzed_" + run.substr(run.find_last_of("/") + 1)).c_str());
     if (generate_TW_ice_interpolation) {
         Data_partial *partial_data = new Data_partial(selector->GetTWvsIce());
         delete selector;
