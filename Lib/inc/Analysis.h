@@ -18,7 +18,7 @@
 
 class Analysis {
    private:
-    static constexpr int data_size = 500;
+    static constexpr int data_size = 1000;
     struct Data_partial {
         double TW_vs_ice[data_size][2];
         Data_partial(std::vector<std::pair<double, double>> const & TW_vs_ice){

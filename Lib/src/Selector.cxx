@@ -415,7 +415,7 @@ Bool_t Selector::Process(Long64_t entry) {
     std::cout << "------------>Finished: Analysis of one event\n";
 #endif
 
-   if (entry%500 == 0) mugast_fragment.StoreTWvsIce(); 
+   if (entry%10000 == 0) mugast_fragment.StoreTWvsIce(); 
     return kTRUE;
 }
 
