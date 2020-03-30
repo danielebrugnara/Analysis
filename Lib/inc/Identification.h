@@ -9,18 +9,19 @@
 #include <TFile.h>
 #include <TKey.h>
 
-class Identification {
-   public:
+class Identification
+{
+public:
     Identification();
     ~Identification();
 
     void LoadCuts(std::string);
-   private:
 
-   protected:
+private:
+protected:
     //TODO: use templates to include SetData here
-    std::unordered_map<std::string, TCutG*> cuts;
-    std::unordered_map<std::string, std::unordered_map<std::string, TCutG*>> cut_type;
+    std::unordered_map<std::string, TCutG *> cuts;
+    std::unordered_map<std::string, std::unordered_map<std::string, TCutG *>> cut_type;
 };
 
 #endif

@@ -2,35 +2,40 @@
 
 VamosIdentification::VamosIdentification() : cuts_Z({18, 19, -1}),
                                              //cuts_M({45, 46, 47, -1, -2}),
-                                             //cuts_Q({13, 14, 15, 16, 17, 18, 19, -1, -2}), 
+                                             //cuts_Q({13, 14, 15, 16, 17, 18, 19, -1, -2}),
                                              cuts_M({45, 46, 47, -2}),
-                                             cuts_Q({13, 14, 15, 16, 17, 18, 19, -2}), 
+                                             cuts_Q({13, 14, 15, 16, 17, 18, 19, -2}),
                                              data(nullptr),
-                                             fragment(nullptr){}
+                                             fragment(nullptr)
+{
+}
 
-bool VamosIdentification::Initialize() {
+bool VamosIdentification::Initialize()
+{
 #ifdef VERBOSE_DEBUG
-        std::cout << "------------>VamosIdentification::Initialize()\n";
+    std::cout << "------------>VamosIdentification::Initialize()\n";
 #endif
 
     //Focal plane aligments
     ReadFPTimeShifts();
-    TFile * tmp_file = new TFile("./Configs/Interpolations/InterpolationTimeFP.root");
+    TFile *tmp_file = new TFile("./Configs/Interpolations/InterpolationTimeFP.root");
     FP_time_interpolation = new Interpolation(tmp_file);
     tmp_file->Close();
 
     //Masses in MeV [M][Z] as ints
-    for (const auto &it_M : cuts_M) {
-        for (const auto &it_Z : cuts_Z) {
+    for (const auto &it_M : cuts_M)
+    {
+        for (const auto &it_Z : cuts_Z)
+        {
             mass[it_M][it_Z] = it_M * AMU_TO_MEV;
         }
     }
 
     //More precise data [M][Z]
-    mass[46][18] = 45.968082712 * AMU_TO_MEV;  //in MeV
-    mass[47][18] = 46.972934865 * AMU_TO_MEV;  //in MeV
-    mass[47][19] = 46.961661614 * AMU_TO_MEV;  //in MeV
-    mass[46][19] = 45.961981586 * AMU_TO_MEV;  //In MeV
+    mass[46][18] = 45.968082712 * AMU_TO_MEV; //in MeV
+    mass[47][18] = 46.972934865 * AMU_TO_MEV; //in MeV
+    mass[47][19] = 46.961661614 * AMU_TO_MEV; //in MeV
+    mass[46][19] = 45.961981586 * AMU_TO_MEV; //In MeV
 
     std::unordered_map<std::string, TCutG *> *tmp = new std::unordered_map<std::string, TCutG *>();
 
@@ -44,11 +49,14 @@ bool VamosIdentification::Initialize() {
     std::cout << "Starting to look for VAMOS files\n";
 #endif
 
-    try {
+    try
+    {
         (*tmp)["dE2_E_Z19"] = cuts.at("dE2_E_Z19");
         (*tmp)["dE2_E_Z18"] = cuts.at("dE2_E_Z18");
         (*tmp)["dE2_E_Z-1"] = cuts.at("dE2_E_Z-1");
-    } catch (const std::out_of_range &err) {
+    }
+    catch (const std::out_of_range &err)
+    {
         std::cerr << err.what() << std::endl;
         throw std::runtime_error("Unable to find one of the dE2_E cuts\n");
     }
@@ -57,7 +65,8 @@ bool VamosIdentification::Initialize() {
 
     //Mass over Q cuts
     tmp = new std::unordered_map<std::string, TCutG *>();
-    try {
+    try
+    {
         (*tmp)["MQ_Q_M46_Q18"] = cuts.at("MQ_Q_M46_Q18");
         (*tmp)["MQ_Q_M47_Q18"] = cuts.at("MQ_Q_M47_Q18");
         (*tmp)["MQ_Q_M45_Q16"] = cuts.at("MQ_Q_M45_Q16");
@@ -79,7 +88,9 @@ bool VamosIdentification::Initialize() {
         (*tmp)["MQ_Q_M47_Q19"] = cuts.at("MQ_Q_M47_Q19");
         //(*tmp)["MQ_Q_M-1_Q-1"] = cuts.at("MQ_Q_M-1_Q-1");
         (*tmp)["MQ_Q_M-2_Q-2"] = cuts.at("MQ_Q_M-2_Q-2");
-    } catch (const std::out_of_range &err) {
+    }
+    catch (const std::out_of_range &err)
+    {
         std::cerr << err.what() << std::endl;
         throw std::runtime_error("Unable to find one of the MQ_Q cuts\n");
     }
@@ -93,20 +104,24 @@ bool VamosIdentification::Initialize() {
     return true;
 }
 
-VamosIdentification::~VamosIdentification() {
+VamosIdentification::~VamosIdentification()
+{
     delete data;
     delete fragment;
     delete FP_time_interpolation;
 }
 
-void VamosIdentification::ReadFPTimeShifts() {
+void VamosIdentification::ReadFPTimeShifts()
+{
     std::ifstream cali_file("./Configs/Calibrations/FP_Time.cal");
     std::string line;
     std::string min;
     std::string max;
     std::string shift;
-    if (!cali_file) throw std::runtime_error("Error Opening cali file\n");
-    while (std::getline(cali_file, line)) {
+    if (!cali_file)
+        throw std::runtime_error("Error Opening cali file\n");
+    while (std::getline(cali_file, line))
+    {
         std::stringstream str;
         str << line;
         str >> min >> max >> shift;
@@ -114,13 +129,15 @@ void VamosIdentification::ReadFPTimeShifts() {
     }
     double tmp = -1E6;
 #ifdef VERBOSE_DEBUG
-        std::cout << "Dumping FP shift calibration\n";
+    std::cout << "Dumping FP shift calibration\n";
 #endif
-    for (const auto &it : TimeShifts) {
-        if (it.first < tmp) throw std::runtime_error("Time shifts not incremental\n");
+    for (const auto &it : TimeShifts)
+    {
+        if (it.first < tmp)
+            throw std::runtime_error("Time shifts not incremental\n");
         tmp = it.first;
 #ifdef VERBOSE_DEBUG
-        std::cout << it.first <<"    "<<it.second<<"\n";
+        std::cout << it.first << "    " << it.second << "\n";
 #endif
     }
 }
