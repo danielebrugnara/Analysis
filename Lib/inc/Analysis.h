@@ -69,7 +69,7 @@ private:
     std::mutex mtx_data;
     std::mutex mtx_fork;
     std::string GetRun();
-    bool Job(const int);
+    bool Job(const int, int*);
 
     void UpdateData(Data_partial &);
     //ClassDef(Analysis, 1);

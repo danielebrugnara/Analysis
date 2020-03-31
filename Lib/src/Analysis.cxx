@@ -41,18 +41,27 @@ bool Analysis::RunAnalysis()
     system("rm -rf ./Out");
     system("mkdir ./Out");
 
-    if (! NecessaryFilesPresent())
-        n_threads =1;
+    if (! NecessaryFilesPresent()) {
+        n_threads = 1;
+        std::cout << "n_threads moved to 1, as GraphsEnabled.txt file is missing\n";    
+    }
     //Assigning to threads
+    std::vector<int> exit_status;
     for (int ii = 0; ii < n_threads; ++ii)
     {
-        threads.push_back(std::thread(&Analysis::Job, this, ii));
+        exit_status.push_back(0);
+        threads.push_back(std::thread(&Analysis::Job, this, ii, &exit_status.back()));
     }
 
     //Waiting for threads to finish
     for (int ii = 0; ii < n_threads; ++ii)
     {
         threads.at(ii).join();
+    }
+
+    for (const auto & stat: exit_status){
+        if (stat != 0)
+            throw stat;
     }
 
     std::cout << "Joined threads, adding output files :\n";
@@ -84,7 +93,7 @@ bool Analysis::RunAnalysis()
 }
 
 //This job will be assigned to a thread
-bool Analysis::Job(const int ind)
+bool Analysis::Job(const int ind, int* exit_status)
 {
     try
     {
@@ -141,8 +150,8 @@ bool Analysis::Job(const int ind)
                 wait(&status); //Wait child process to complete instructions
                 threads_pid[ind] = 0;
                 if (WEXITSTATUS(status) == 1){
-                    //std::out << "exit(1) after \n";
-                    throw 1;
+                    *exit_status=1;
+                    return false;
                 }
                     
             }
@@ -157,6 +166,11 @@ bool Analysis::Job(const int ind)
     catch (std::runtime_error &e)
     {
         std::cout << e.what();
+    }
+    catch (int &e)
+    {
+        std::cout << "Exception : " << e << std::endl;
+
     }
     return false;
 }
@@ -219,7 +233,7 @@ void Analysis::UpdateData(Data_partial &partial_data)
 }
 
 bool Analysis::NecessaryFilesPresent(){
-    std::ifstream file_tmp("Config/GraphsEnabled.txt");
-    if (file_tmp) return true;
+    std::ifstream file_tmp("Configs/GraphsEnabled.txt");
+    if (file_tmp.good()) return true;
     else return false;
 }

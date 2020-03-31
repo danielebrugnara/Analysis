@@ -1,44 +1,38 @@
 #ifndef __SELECTOR_H__
 #define __SELECTOR_H__
 
-#include <TChain.h>
+//Cpp headers
+#include <map>
+#include <string>
+#include <vector>
+#include <fstream>
+
+//ROOT headers
 #include <TFile.h>
-#include <TROOT.h>
 #include <TSelector.h>
 #include <TTreeReader.h>
 #include <TTreeReaderArray.h>
 #include <TTreeReaderValue.h>
-
 #include <TMath.h>
+#include <TH1D.h>
+#include <TH2.h>
+#include <TH2D.h>
+#include <TH3D.h>
+#include <TLorentzVector.h>
 
-// Headers needed by this particular selector
+// External libraries
 #include "TCATSPhysics.h"
 #include "TMugastPhysics.h"
 #include "TMust2Physics.h"
 
+// Internal libraries
 #include "Interpolation.h"
 #include "VamosIdentification.h"
 #include "MugastIdentification.h"
 #include "AgataProcessing.h"
 
-#include <TMath.h>
-#include <map>
-#include <string>
-#include <vector>
 
-#include <fstream>
 
-#include <TCutG.h>
-#include <TH1D.h>
-#include <TH2.h>
-#include <TH2D.h>
-#include <TH3D.h>
-#include <TStyle.h>
-
-#include <TLorentzVector.h>
-
-#include <TGClient.h>
-#include <TSystem.h>
 
 class Selector : public TSelector
 {
@@ -181,10 +175,6 @@ public:
 
     std::string file_name;
 
-    //Target
-    Interpolation *thickness_angle;
-    Interpolation *angle_angle;
-
     //Analysis classes/////////////////////////////////////////////////////////////////////////////////
     VamosIdentification vamos_fragment;
     MugastIdentification mugast_fragment;
@@ -236,6 +226,7 @@ public:
     std::vector<std::string> alpha_correction = {"70", "80", "90", "100", "110", "120", "130", "140", "150", "160", "170"};
     std::vector<std::string> particles = {"p", "d", "ANY"};
     std::vector<std::string> gammas = {"360", "1319", "1660", "NOCONDITION"};
+    double gamma_gate = 3.;
 
 
 
@@ -297,11 +288,6 @@ public:
 
     Conf pConf;
     Data pData;
-
-    //Graphical cuts////////////////////////////////////////////////////////////////////////////////////
-    std::unordered_map<std::string, std::map<std::string, TCutG *>> cut;
-
-    std::map<std::string, double> mass;
 
 private:
     std::unordered_map<std::string, bool> enabled_histograms;

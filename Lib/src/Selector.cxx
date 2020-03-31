@@ -137,11 +137,6 @@ void Selector::SlaveBegin(TTree * /*tree*/)
                            new TH2D(Form("pData_AGATA_mEx_DC_M%i_Z%i_%s", it_M, it_Z, particle.c_str()),
                                     Form("Excitation energy AGATA vs MUGAST M%i Z%i and %s", it_M, it_Z, particle.c_str()),
                                     1000, -10, 10, 4000, 0, 4));
-
-                Istantiate(pData.AGATA.mELab_ThetaLab[it_M][it_Z][particle],
-                           new TH2D(Form("pData_AGATA_ELab_ThetaLab_M%i_Z%i_%s", it_M, it_Z, particle.c_str()),
-                                    Form("Excitation energy AGATA vs MUGAST M%i Z%i and %s", it_M, it_Z, particle.c_str()),
-                                    1000, 0, 10, 1000, 0, 10));
             }
         }
     }
@@ -286,6 +281,11 @@ Bool_t Selector::Process(Long64_t entry)
     std::cout << "------------>Finished: Loading Agata data, positive exit\n";
 #endif
 
+    agata_gammas.Process();
+#ifdef VERBOSE_DEBUG
+    std::cout << "------------>Finished: Processing Agata data, positive exit\n";
+#endif
+
     PlotAgataGraphs();
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>Finished: Plotting agata graphs, positive exit\n";
@@ -400,7 +400,6 @@ inline void Selector::PlotMugastGraphs()
                          [mugast_fragment.Get_Particle(ii)],
              mugast_fragment.Get_Ex(ii));
 
-        //ELab Theta Lab
         Fill(pData.MG.mELab_ThetaLab[vamos_fragment.Get_id_M()]
                                     [vamos_fragment.Get_id_Z()]
                                     [mugast_fragment.Get_Particle(ii)]
@@ -410,6 +409,8 @@ inline void Selector::PlotMugastGraphs()
 
         if (agata_gammas.In_Coincidence())
         {
+            std::cerr << "Gamma in coincidence\n";
+            //ELab Theta Lab
             for (long unsigned int jj = 0; jj < agata_gammas.Get_Mult(); ++jj)
             {
                 Fill(pData.MG.mEx_EDC[vamos_fragment.Get_id_M()]
@@ -417,19 +418,21 @@ inline void Selector::PlotMugastGraphs()
                                      [mugast_fragment.Get_Particle(ii)],
                      mugast_fragment.Get_Ex(ii),
                      agata_gammas.Get_EDC(jj));
-                for (const auto &gamma : gammas)
-                {
-                    if (gamma == "NOCONDITION")
-                        continue;
-                    if (abs(std::stod(gamma) - agata_gammas.Get_EDC(jj)) > 20)
-                        continue;
 
-                    Fill(pData.MG.mELab_ThetaLab[vamos_fragment.Get_id_M()]
-                                                [vamos_fragment.Get_id_Z()]
-                                                [mugast_fragment.Get_Particle(ii)]
-                                                [gamma],
-                         mugast_fragment.Get_ThetaLab(ii),
-                         mugast_fragment.Get_E(ii));
+                for (const auto &it_gamma : gammas)
+                {
+                    if (it_gamma == "NOCONDITION")
+                        continue;
+                    if (abs(std::stod(it_gamma) - agata_gammas.Get_EDC(jj)) < gamma_gate)
+                    {
+                        //ELab ThetaLab with gamma condition
+                        Fill(pData.MG.mELab_ThetaLab[vamos_fragment.Get_id_M()]
+                                                    [vamos_fragment.Get_id_Z()]
+                                                    [mugast_fragment.Get_Particle(ii)]
+                                                    [it_gamma],
+                             mugast_fragment.Get_ThetaLab(ii),
+                             mugast_fragment.Get_E(ii));
+                    }
                 }
             }
         }
@@ -442,8 +445,6 @@ inline void Selector::PlotMugastGraphs()
         Fill(pConf.MG.mE_TOF2[mugast_fragment.Get_MG(ii)],
              mugast_fragment.Get_SI_E(ii),
              mugast_fragment.Get_T2(ii));
-        //Strip
-        //E
 
         for (const auto &dimension : mugast_fragment.strips)
         {
