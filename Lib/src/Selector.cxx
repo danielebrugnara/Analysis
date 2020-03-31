@@ -10,8 +10,9 @@ Selector::~Selector()
 {
     TIter iter(fOutput);
     TObject *obj;
-    while ((obj = iter()))
+    while (iter != iter.End())
     {
+        obj = iter();
         delete obj;
     }
 }
@@ -236,7 +237,6 @@ void Selector::SlaveBegin(TTree * /*tree*/)
     if (new_graph_file != nullptr)
     {
         new_graph_file->close();
-        //TODO: kill all threads here
         exit(1);
     }
 
