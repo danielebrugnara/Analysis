@@ -2,14 +2,10 @@
 
 #include "Selector.h"
 
-/////////////////////////////////////////////////////////////////////////////////////////
 //Constructor///////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
 Selector::Selector(TTree *) {}
 
-/////////////////////////////////////////////////////////////////////////////////////////
 //Distructor////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
 Selector::~Selector()
 {
     TIter iter(fOutput);
@@ -20,9 +16,7 @@ Selector::~Selector()
     }
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
 //Begn//////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
 void Selector::Begin(TTree * /*tree*/)
 {
 #ifdef VERBOSE_DEBUG
@@ -32,9 +26,7 @@ void Selector::Begin(TTree * /*tree*/)
     TString option = GetOption();
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
 //Slave Begin///////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
 void Selector::SlaveBegin(TTree * /*tree*/)
 {
 #ifdef VERBOSE_DEBUG
@@ -45,7 +37,6 @@ void Selector::SlaveBegin(TTree * /*tree*/)
     TString option = GetOption();
     file_name = "./Out/" + option;
 
-    //////////////////////////////////////////////////////////////////////////////////////////////////
     ///Deciding which graphs to plot/////////////////////////////////////////////////////////////////
     GetSettings(); //Decides which histograms to fill
     ///Loading Identification classes/////////////////////////////////////////////////////////////
@@ -66,7 +57,6 @@ void Selector::SlaveBegin(TTree * /*tree*/)
     std::cout << "------------>finished: vamos_fragment initialization\n";
 #endif
 
-    //////////////////////////////////////////////////////////////////////////////////////////////////
     ///Histogram pointer initialization//////////////////////////////////////////////////////////////
 
     //Config histograms//////////////////////////////////////////////////////////////////////////////
@@ -110,41 +100,6 @@ void Selector::SlaveBegin(TTree * /*tree*/)
                new TH2D("pConf-CATS-mCATSpos",
                         "Beam position on CATS",
                         1000, -50, 50, 1000, -50, 50));
-
-    //MUGAST
-    for (int ii = 0; ii < 128; ii++)
-    {
-        strips.push_back(to_string(ii));
-    }
-
-    //    for (const auto &MM : siliconsMM) {
-    //        Istantiate(pConf.SI.mdE_E_Si[MM],
-    //                    new TH2D(Form("pConf-SI-mdE_E_Si-%s", MM.c_str()),
-    //                                Form("dE E of %s", MM.c_str()),
-    //                                1000, 0, 28, 1000, 0, 28));
-    //    }
-    //    for (const auto &SI : silicons) {
-    //
-    //        Istantiate(pConf.SI.mStrip_E[SI]["X"],
-    //                    new TH2D(Form("pConf-SI-mStrip_E-%s-%s", SI.c_str(), "X"),
-    //                                Form("Strip vs E of %s %s", SI.c_str(), "X"),
-    //                                128, 0, 128, 1000, 0, 30));
-    //
-    //        Istantiate(pConf.SI.mStrip_E[SI]["Y"],
-    //                    new TH2D(Form("pConf-SI-mStrip_E-%s-%s", SI.c_str(), "Y"),
-    //                                Form("Strip vs E of %s %s", SI.c_str(), "Y"),
-    //                                128, 0, 128, 1000, 0, 30));
-    //
-    //        Istantiate(pConf.SI.mStrip_T[SI]["X"],
-    //                    new TH2D(Form("pConf-SI-mStrip_T-%s-%s", SI.c_str(), "X"),
-    //                                Form("Strip vs T of %s %s", SI.c_str(), "X"),
-    //                                128, 0, 128, 1000, 0, 1500));
-    //
-    //        Istantiate(pConf.SI.mStrip_T[SI]["Y"],
-    //                    new TH2D(Form("pConf-SI-mStrip_T-%s-%s", SI.c_str(), "Y"),
-    //                                Form("Strip vs T of %s %s", SI.c_str(), "Y"),
-    //                                128, 0, 128, 1000, 0, 1500));
-    //    }
 
     //Data histograms//////////////////////////////////////////////////////////////////////////////
     for (const auto &it_M : vamos_fragment.cuts_M)
@@ -275,68 +230,14 @@ void Selector::SlaveBegin(TTree * /*tree*/)
         }
     }
     //TODO: Must2
-    //for (const auto &it_MM : must2_fragment.cuts_MM) {
-    //    Istantiate(pConf.MM.mE_TOF[it_MM],
-    //                new TH2D(Form("pConf-MM-mE_TOF-MM%i", it_MM),
-    //                            Form("E vs TOF of MM%i", it_MM),
-    //                            1000, 0, 28, 1000, 260, 380));
-    //    for (const auto &it_M : vamos_fragment.cuts_M) {
-    //        for (const auto &it_Z : vamos_fragment.cuts_Z) {
-    //            Istantiate(pData.MM.mdE_E_Si[it_M][it_Z][it_MM],
-    //                        new TH2D(Form("pData_SI_mdE_E_Si_M%i_Z%i_%s", it_M, it_Z, it_MM),
-    //                                    Form("dE E of %s with M%i Z%i", MM.c_str(), it_M, it_Z),
-    //                                    1000, 0, 28, 1000, 0, 28));
-    //
-    //            Istantiate(pData.MM.mE_TOF[it_M][it_Z][it_MM],
-    //                        new TH2D(Form("pData_MM_mE_TOF_M%i_Z%i_MM%i", it_M, it_Z, it_MM),
-    //                                    Form("E vs TOF of MM%i with M%i Z%i", it_MM, it_M, it_Z),
-    //                                    1000, 0, 28, 1000, 260, 380));
-    //        }
-    //    }
-    //}
 
     //TODO: Add MUST2
-
-    //Istantiate(pData.SI.mE_TOF[it_M][it_Z]["MG"],
-    //            new TH2D(Form("pData_SI_mE_TOF_MG_M%i_Z%i", it_M, it_Z),
-    //                        Form("E vs TOF of all MG with M%i Z%i", it_M, it_Z),
-    //                        1000, 0, 28, 1000, 260, 380));
-    //            for (const auto &particle : particles) {
-    //                Istantiate(pData.SI.hEx[it_M][it_Z][particle],
-    //                            new TH1D(Form("pData_SI-hEx_M%i_Z%i_%s", it_M, it_Z, particle.c_str()),
-    //                                        Form("Excitation energy with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, particle.c_str()),
-    //                                        1000, -60, 60));
-    //
-    //                Istantiate(pData.SI.mEx_TW[it_M][it_Z][particle],
-    //                            new TH2D(Form("pData_SI_mEx_TW_M%i_Z%i_%s", it_M, it_Z, particle.c_str()),
-    //                                        Form("Excitation energy vs Time with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, particle.c_str()),
-    //                                        5000, 242, 328, 1000, -60, 60));
-    //
-    //                Istantiate(pData.SI.mECM_ThetaCM[it_M][it_Z][particle],
-    //                            new TH2D(Form("pData_SI_mECM_ThetaCM_M%i_Z%i_%s", it_M, it_Z, particle.c_str()),
-    //                                        Form("E CM vs Theta CM with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, particle.c_str()),
-    //                                        1000, 0, 180, 1000, 0, 60));
-    //
-    //                for (const auto &gamma : gammas) {
-    //                    Istantiate(pData.SI.mELab_ThetaLab[it_M][it_Z][particle][gamma],
-    //                                new TH2D(Form("pData_SI_mELab_ThetaLab_M%i_Z%i_%s_%s", it_M, it_Z, particle.c_str(), gamma.c_str()),
-    //                                            Form("ELab vs Theta Lab with M%i Z%i in VAMOS and %s in MUGAST and %s in AGATA", it_M, it_Z, particle.c_str(), gamma.c_str()),
-    //                                            1000, 0, 180, 1000, 0, 60));
-    //                }
-    //            }
-    //        }
-    //    }
-    //    for (const auto &particle : particles) {
-    //        Istantiate(pData.SI.mELab_ThetaLab[0][0][particle]["ANY"],
-    //                    new TH2D(Form("pData-SI-mELab_ThetaLab-%s-%s-%s", "ANY", "ANY", particle.c_str()),
-    //                                Form("E Lab vs Theta Lab with %s %s in VAMOS and %s in MUGAST", "ANY", "ANY", particle.c_str()),
-    //                                1000, 0, 180, 1000, 0, 60));
-    //     }
 
     if (new_graph_file != nullptr)
     {
         new_graph_file->close();
         //TODO: kill all threads here
+        exit(1);
     }
 
 #ifdef VERBOSE_DEBUG
@@ -352,37 +253,31 @@ void Selector::SlaveBegin(TTree * /*tree*/)
 #endif
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
 //Processing entry//////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-
 Bool_t Selector::Process(Long64_t entry)
 {
+#ifdef VERBOSE_DEBUG
+    std::cout << "------------>Selector::Process()\n";
+#endif
     fReader.SetLocalEntry(entry);
     if (entry % 5000 == 0)
         std::cout << "Processed entries : " << entry << " of  " << total_entries << "\n";
 
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Selector::Process()\n";
-#endif
 
     //Vamos/////////////////////////////////////////////
     LoadVamosData();
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>Finished: Loading Vamos data\n";
 #endif
+
     vamos_fragment.Identify();
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>Finished: Identification\n";
 #endif
+
     PlotVamosGraphs();
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>Finished: Plotting VAMOS graphs\n";
-#endif
-    //if (!vamos_fragment.Identified()) goto mugast_label;
-
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Finished: Vamos identification, positive exit\n";
 #endif
 
     //Agata/////////////////////////////////////////////
@@ -396,48 +291,25 @@ Bool_t Selector::Process(Long64_t entry)
     std::cout << "------------>Finished: Plotting agata graphs, positive exit\n";
 #endif
 
-    //MUGAST//////////////////////////////////////////////////////////////////////////////////////////////////////
-    //mugast_label:  //Label of goto previous to VAMOS
+    //MUGAST////////////////////////////////////////////
     LoadMugastData();
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>Finished: Loading Mugast data\n";
 #endif
+
     mugast_fragment.Identify();
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>Finished: Mugast identification, negative exit\n";
 #endif
 
     PlotMugastGraphs();
-
-    //SI data loops
-    //    try {
-    //E-TOF plots
-    //        //Cats///////////////////////////////////////////////////////////////////////////////////////////////////
-    //        for (long unsigned int ii = 0; ii < (*CATS).PositionX.size(); ii++) {
-    //            Fill(pConf.CATS.mCATSpos, (*CATS).PositionX[ii], (*CATS).PositionY[ii]);
-    //        }
-    //    } catch (std::out_of_range &e) {
-    //        std::cerr << "Silicon Physics loop :" << e.what() << std::endl;
-    //    }
-
-    //MUST2
-    //    for (long unsigned int ii = 0; ii < (*MUST2).Si_E.size(); ii++) {
-    //        Fill(pConf.SI.mE_TOF[Form("MM%i", (*MUST2).TelescopeNumber[ii])],
-    //                (*MUST2).Si_E[ii], (*MUST2).Si_T[ii]);
-    //        if (vamos_fragment.Identified()) {
-    //            Fill(pData.SI.mE_TOF[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][Form("MM%i",(*MUST2).TelescopeNumber[ii])],
-    //                 (*MUST2).Si_E[ii], (*MUST2).Si_T[ii]);
-    //        }
-    //    }
-
-    //AGATA
-    // Fill(pConf.AGATA.hAddTS_LTS,*AddTS-*LTS);
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>Finished: Analysis of one event\n";
 #endif
 
     if (entry % 10000 == 0)
         mugast_fragment.StoreTWvsIce();
+
     return kTRUE;
 }
 
@@ -572,29 +444,21 @@ inline void Selector::PlotMugastGraphs()
              mugast_fragment.Get_T2(ii));
         //Strip
         //E
-        Fill(pConf.MG.mStrip_E[mugast_fragment.Get_MG(ii)]["X"],
-             mugast_fragment.Get_SI_X(ii),
-             mugast_fragment.Get_SI_E(ii));
 
-        Fill(pConf.MG.mStrip_E[mugast_fragment.Get_MG(ii)]["Y"],
-             mugast_fragment.Get_SI_Y(ii),
-             mugast_fragment.Get_SI_E(ii));
-        //T
-        Fill(pConf.MG.mStrip_T[mugast_fragment.Get_MG(ii)]["X"],
-             mugast_fragment.Get_SI_X(ii),
-             mugast_fragment.Get_T(ii));
+        for (const auto &dimension : mugast_fragment.strips)
+        {
+            Fill(pConf.MG.mStrip_E[mugast_fragment.Get_MG(ii)][dimension],
+                 mugast_fragment.Get_SI_X(ii),
+                 mugast_fragment.Get_SI_E(ii));
 
-        Fill(pConf.MG.mStrip_T[mugast_fragment.Get_MG(ii)]["Y"],
-             mugast_fragment.Get_SI_Y(ii),
-             mugast_fragment.Get_T(ii));
-        //T2
-        Fill(pConf.MG.mStrip_T2[mugast_fragment.Get_MG(ii)]["X"],
-             mugast_fragment.Get_SI_X(ii),
-             mugast_fragment.Get_T2(ii));
+            Fill(pConf.MG.mStrip_T[mugast_fragment.Get_MG(ii)][dimension],
+                 mugast_fragment.Get_SI_X(ii),
+                 mugast_fragment.Get_T(ii));
 
-        Fill(pConf.MG.mStrip_T2[mugast_fragment.Get_MG(ii)]["Y"],
-             mugast_fragment.Get_SI_Y(ii),
-             mugast_fragment.Get_T2(ii));
+            Fill(pConf.MG.mStrip_T2[mugast_fragment.Get_MG(ii)][dimension],
+                 mugast_fragment.Get_SI_X(ii),
+                 mugast_fragment.Get_T2(ii));
+        }
 
         if (vamos_fragment.Identified())
         {
@@ -640,7 +504,6 @@ bool Selector::GetSettings()
     std::ifstream ifile(config_file);
     if (ifile)
     {
-        //       std::ifstream file(config_file);
         std::string line;
         while (std::getline(ifile, line))
         {

@@ -57,15 +57,19 @@ public:
     Data_partial *RunSelector(std::string);
 
 private:
+
+    bool NecessaryFilesPresent();
     int n_threads;
     std::stack<std::string> file_names;
     std::stack<std::string> processed_files;
     std::vector<std::thread> threads;
+    std::vector<int> threads_pid;
     bool generate_TW_ice_interpolation;
     std::mutex mtx_job_que;
     std::mutex mtx_data;
+    std::mutex mtx_fork;
     std::string GetRun();
-    bool Job();
+    bool Job(const int);
 
     void UpdateData(Data_partial &);
     //ClassDef(Analysis, 1);

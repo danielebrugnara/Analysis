@@ -13,15 +13,17 @@ int main(int argc, char* argv[]) {
     try {
         my_analysis = new Analysis(n_threads);
         my_analysis->RunAnalysis();
-        //root_app.Run();
 
     } catch (const std::runtime_error& error) {
-        std::cerr << error.what() << std::endl;
-        return -1;
+        std::cerr << "Caught error : " << error.what() << std::endl;
+        return 3;
     } catch (const std::logic_error& error) {
         std::cerr << "Caught error : " << error.what() << std::endl;
-        return -1;
+        return 2;
+    } catch (int error){
+        std::cerr << "Caught error : " << error << std::endl; 
+        return 1;
     }
-    std::cout << "Analysis completed!\n";
+    std::cout << "Analysis completed succesfully!\n";
     return 0;
 }

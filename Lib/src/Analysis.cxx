@@ -22,6 +22,8 @@ Analysis::Analysis(int n_threads) : n_threads(n_threads)
 
     std::ifstream file_test("./Configs/Interpolations/TW_Ice_Thickness.root");
     generate_TW_ice_interpolation = file_test ? false : true;
+    
+    threads_pid.resize(n_threads, 0);
 }
 
 Analysis::~Analysis()
@@ -39,10 +41,12 @@ bool Analysis::RunAnalysis()
     system("rm -rf ./Out");
     system("mkdir ./Out");
 
+    if (! NecessaryFilesPresent())
+        n_threads =1;
     //Assigning to threads
     for (int ii = 0; ii < n_threads; ++ii)
     {
-        threads.push_back(std::thread(&Analysis::Job, this));
+        threads.push_back(std::thread(&Analysis::Job, this, ii));
     }
 
     //Waiting for threads to finish
@@ -80,7 +84,7 @@ bool Analysis::RunAnalysis()
 }
 
 //This job will be assigned to a thread
-bool Analysis::Job()
+bool Analysis::Job(const int ind)
 {
     try
     {
@@ -100,6 +104,7 @@ bool Analysis::Job()
             //Forking process to avoid ROOT threading problems
             Data_partial *partial_data = nullptr;
 
+            mtx_fork.lock();
             switch (pid = fork())
             {
             case -1:
@@ -118,9 +123,13 @@ bool Analysis::Job()
                 {
                     RunSelector(current_run);
                 }
-                exit(1);
+                exit(0);
                 break;
             default:
+
+                threads_pid[ind] = pid;
+                mtx_fork.unlock();
+
                 close(p[1]);
                 if (generate_TW_ice_interpolation)
                 {
@@ -130,6 +139,12 @@ bool Analysis::Job()
                     fclose(in);
                 }
                 wait(&status); //Wait child process to complete instructions
+                threads_pid[ind] = 0;
+                if (WEXITSTATUS(status) == 1){
+                    //std::out << "exit(1) after \n";
+                    throw 1;
+                }
+                    
             }
             if (generate_TW_ice_interpolation)
             {
@@ -201,4 +216,10 @@ void Analysis::UpdateData(Data_partial &partial_data)
         ++ii;
     }
     mtx_data.unlock();
+}
+
+bool Analysis::NecessaryFilesPresent(){
+    std::ifstream file_tmp("Config/GraphsEnabled.txt");
+    if (file_tmp) return true;
+    else return false;
 }

@@ -190,10 +190,6 @@ public:
     MugastIdentification mugast_fragment;
     AgataProcessing agata_gammas;
 
-    //Interpolation *FP_time_interpolation;
-
-    //VamosId *IdentifiedNucleus;  //Pointer deleted and created every event
-
     struct VamosConf
     { //Configuration spectra
         TH2D *mdE_E;
@@ -240,7 +236,8 @@ public:
     std::vector<std::string> alpha_correction = {"70", "80", "90", "100", "110", "120", "130", "140", "150", "160", "170"};
     std::vector<std::string> particles = {"p", "d", "ANY"};
     std::vector<std::string> gammas = {"360", "1319", "1660", "NOCONDITION"};
-    std::vector<std::string> strips;
+
+
 
     struct MGConf
     {
@@ -270,7 +267,7 @@ public:
     };
 
     struct MMData
-    {                                                                                                       //
+    {                                                                                                       
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mE_TOF;   //[Mass][Nucl][M*#]
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mdE_E_Si; //[Mass][Nucl][M*#]
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH1D *>>> hEx;      //[Mass][Nucl][Parcle]
@@ -304,10 +301,6 @@ public:
     //Graphical cuts////////////////////////////////////////////////////////////////////////////////////
     std::unordered_map<std::string, std::map<std::string, TCutG *>> cut;
 
-    //TFile *MUGASTcuts;
-
-    //long long counter;
-
     std::map<std::string, double> mass;
 
 private:
@@ -318,7 +311,6 @@ private:
     template <class T>
     bool Istantiate(T *&ptr, T *ptr_value)
     {
-        //if (fOutput->FindObject(name)) {
         if (enabled_histograms.find(ptr_value->GetName()) != enabled_histograms.end())
         {
             ptr = ptr_value;
@@ -351,24 +343,11 @@ private:
 #ifdef Selector_cxx
 void Selector::Init(TTree *tree)
 {
-    // The Init() function is called when the selector needs to initialize
-    // a new tree or chain. Typically here the reader is initialized.
-    // It is normally not necessary to make changes to the generated
-    // code, but the routine can be extended by the user if needed.
-    // Init() will be called many times when running on PROOF
-    // (once per file to be processed).
-
     fReader.SetTree(tree);
 }
 
 Bool_t Selector::Notify()
 {
-    // The Notify() function is called when a new file is opened. This
-    // can be either for a new TTree in a TChain or when when a new TTree
-    // is started when using PROOF. It is normally not necessary to make changes
-    // to the generated code, but the routine can be extended by the
-    // user if needed. The return value is currently not used.
-
     return kTRUE;
 }
 
