@@ -113,9 +113,9 @@ public:
     inline double Get_Charge() { return fragment->Charge; };
     inline double Identified() { return fragment->Identified; };
     inline TLorentzVector *Get_p4() { return &(fragment->p4); };
-    inline double Get_id_Z() { return fragment->id_Z; };
-    inline double Get_id_M() { return fragment->id_M; };
-    inline double Get_id_Q() { return fragment->id_Q; };
+    inline unsigned int Get_id_Z() { return fragment->id_Z; };
+    inline unsigned int Get_id_M() { return fragment->id_M; };
+    inline unsigned int Get_id_Q() { return fragment->id_Q; };
 
     //////////////////////////////////////////////////////////////////
     //Inline Functions implementation (required to be in header file)

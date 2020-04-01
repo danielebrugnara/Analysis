@@ -240,7 +240,7 @@ void Selector::SlaveBegin(TTree * /*tree*/)
 #endif
 
     ///Temporary histogram///////////////////////////////////////////////////////////////////////////
-    general_histo_ptr = new TH2D("test", "test", 1000, -400, 400, 1000, 0, 100);
+    general_histo_ptr = new TH2D("test", "Ex vs theta Lab", 1000, TMath::Pi()/2., TMath::Pi(), 1000, -10, 10);
     fOutput->Add(general_histo_ptr);
 
 #ifdef VERBOSE_DEBUG
@@ -407,9 +407,13 @@ inline void Selector::PlotMugastGraphs()
              mugast_fragment.Get_ThetaLab(ii),
              mugast_fragment.Get_E(ii));
 
+        if (vamos_fragment.Get_id_M()==47 && vamos_fragment.Get_id_Z()==19 && mugast_fragment.Get_Particle(ii)=="m2_z1"){
+        general_histo_ptr->Fill(
+             mugast_fragment.Get_ThetaLab(ii),
+             mugast_fragment.Get_Ex(ii));
+        }
         if (agata_gammas.In_Coincidence())
         {
-            std::cerr << "Gamma in coincidence\n";
             //ELab Theta Lab
             for (long unsigned int jj = 0; jj < agata_gammas.Get_Mult(); ++jj)
             {

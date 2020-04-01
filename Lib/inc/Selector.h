@@ -191,7 +191,6 @@ public:
 
     struct VamosData
     { //Data spectra
-        //std::unordered_map<int, std::unordered_map<int, int>> evNr; //[M][Z]
         std::unordered_map<int, std::unordered_map<int, TH2D *>> mTW_Brho; //[M][Z]
     };
 
@@ -226,7 +225,7 @@ public:
     std::vector<std::string> alpha_correction = {"70", "80", "90", "100", "110", "120", "130", "140", "150", "160", "170"};
     std::vector<std::string> particles = {"p", "d", "ANY"};
     std::vector<std::string> gammas = {"360", "1319", "1660", "NOCONDITION"};
-    double gamma_gate = 3.;
+    double gamma_gate = 30.;
 
 
 
