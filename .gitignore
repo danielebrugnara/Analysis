@@ -5,4 +5,7 @@ Out/
 *.swp
 .vscode/
 *.root
+*.so
+*.d
+*.pcm
 
