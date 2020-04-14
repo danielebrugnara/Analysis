@@ -256,7 +256,7 @@ Bool_t Selector::Process(Long64_t entry)
 #endif
     fReader.SetLocalEntry(entry);
     if (entry % 5000 == 0)
-        std::cout << "Processed entries : " << entry << " of  " << total_entries << "\n";
+        std::cout << "\rProcessed entries : " << entry ;
 
 
     //Vamos/////////////////////////////////////////////

@@ -23,7 +23,9 @@ EnergyLoss::EnergyLoss(std::string Path, std::string Source, int NumberOfSlice =
   fNumberOfSlice = NumberOfSlice;
   fNumberOfMass = NumberOfMass;
 
+#ifdef VERBOSE_DEBUG
   std::cout << "----->Initializing an EnergyLoss object " << std::endl;
+#endif
 
   std::ifstream TableFile;
 
@@ -31,7 +33,9 @@ EnergyLoss::EnergyLoss(std::string Path, std::string Source, int NumberOfSlice =
   TableFile.open(Path.c_str());
   if (TableFile.is_open())
   {
-    std::cout << "Reading Energy Loss File (absolute path): " << Path << std::endl;
+#ifdef VERBOSE_DEBUG
+    std::cout << "Reading Energy Loss File : " << Path << std::endl;
+#endif
   }
   else
   {
