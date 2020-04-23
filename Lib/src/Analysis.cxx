@@ -226,7 +226,6 @@ void Analysis::UpdateData(Data_partial &partial_data)
 
         data.TW_vs_ice.emplace_back(partial_data.TW_vs_ice[ii][0],
                                     partial_data.TW_vs_ice[ii][1]);
-        std::cout << ii << std::endl;
         ++ii;
     }
     mtx_data.unlock();

@@ -134,6 +134,7 @@ private:
     //Energy Loss
     std::unordered_map<std::string, std::unordered_map<std::string, EnergyLoss *>> energy_loss;
     std::pair<double, double> current_ice_thickness;
+    bool use_constant_thickness;
 
     bool with_cuts;
     double havar_thickness;
@@ -170,7 +171,7 @@ private:
     double InitialBeamEnergy(double);
     double MiddleTargetBeamEnergy(double);
 
-public:
+public: //Functions called by selector
     inline int Get_Mult() { return fragment->multiplicity; };
     inline TVector3 *Get_Pos(const int &i) { return &(fragment->Pos[i]); };
     inline TVector3 *Get_EmissionDirection(const int &i) { return &(fragment->EmissionDirection[i]); };

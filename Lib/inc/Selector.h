@@ -245,6 +245,7 @@ public:
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH1D *>>> hEx; //[M][Z][Particle]
         //std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mECM_ThetaCM;
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>>>> mELab_ThetaLab;
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>>>> mEx_ThetaLab;
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mEx_EDC;
     };
 
@@ -289,6 +290,12 @@ public:
     Data pData;
 
 private:
+    //struct HistogramSettings{
+    //    std::vector<std::string> lims;
+    //    bool enabled;
+    //    HistogramSettings(bool enabled): enabled(enabled){};
+    //};
+    //std::unordered_map<std::string, HistogramSettings> enabled_histograms;
     std::unordered_map<std::string, bool> enabled_histograms;
     std::ofstream *new_graph_file = nullptr;
     bool GetSettings();
@@ -300,6 +307,12 @@ private:
         {
             ptr = ptr_value;
             fOutput->Add(ptr);
+            //auto const *lims = &enabled_histograms[ptr_value->GetName()].lims;
+            //if (lims->size()%3){
+            //    for (int ii=0; ii<lims->size(); ii+=3){
+            //        //ptr->GetXaxis();
+            //    }
+            //}
         }
         else if (new_graph_file != nullptr)
         {

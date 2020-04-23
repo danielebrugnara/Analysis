@@ -110,7 +110,8 @@ void Selector::SlaveBegin(TTree * /*tree*/)
             Istantiate(pData.VAMOS.mTW_Brho[it_M][it_Z],
                        new TH2D(Form("pData_VAMOS_mTW_Brho_%i_%i", it_M, it_Z),
                                 Form("Time vs Brho with M%i Z%i in VAMOS", it_M, it_Z),
-                                5000, 242, 328, 1000, 0.5, 1.5));
+                                //5000, 242, 328, 1000, 0.5, 1.5));
+                                5000, 0, 450, 1000, 0.5, 1.5));
         }
     }
     //VAMOS
@@ -217,6 +218,10 @@ void Selector::SlaveBegin(TTree * /*tree*/)
                                new TH2D(Form("pData_MG_mELab_ThetaLab_M%i_Z%i_%s_%s", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
                                         Form("ELab vs Theta Lab with M%i Z%i in VAMOS and %s in MUGAST and %s in AGATA", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
                                         1000, 0, 3.1416, 1000, 0, 20));
+                    Istantiate(pData.MG.mEx_ThetaLab[it_M][it_Z][particle][it_gamma],
+                               new TH2D(Form("pData_MG_mEx_ThetaLab_M%i_Z%i_%s_%s", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
+                                        Form("Ex vs Theta Lab with M%i Z%i in VAMOS and %s in MUGAST and %s in AGATA", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
+                                        1000, 0, 3.1416, 1000, -10, 10));
                 }
             }
             Istantiate(pData.MG.hEx[it_M][it_Z]["NONE"],
@@ -407,6 +412,13 @@ inline void Selector::PlotMugastGraphs()
              mugast_fragment.Get_ThetaLab(ii),
              mugast_fragment.Get_E(ii));
 
+        Fill(pData.MG.mEx_ThetaLab[vamos_fragment.Get_id_M()]
+                                    [vamos_fragment.Get_id_Z()]
+                                    [mugast_fragment.Get_Particle(ii)]
+                                    ["NOCONDITION"],
+             mugast_fragment.Get_ThetaLab(ii),
+             mugast_fragment.Get_Ex(ii));
+
         if (vamos_fragment.Get_id_M()==47 && vamos_fragment.Get_id_Z()==19 && mugast_fragment.Get_Particle(ii)=="m2_z1"){
         general_histo_ptr->Fill(
              mugast_fragment.Get_ThetaLab(ii),
@@ -436,6 +448,13 @@ inline void Selector::PlotMugastGraphs()
                                                     [it_gamma],
                              mugast_fragment.Get_ThetaLab(ii),
                              mugast_fragment.Get_E(ii));
+
+                        Fill(pData.MG.mEx_ThetaLab[vamos_fragment.Get_id_M()]
+                                                    [vamos_fragment.Get_id_Z()]
+                                                    [mugast_fragment.Get_Particle(ii)]
+                                                    [it_gamma],
+                             mugast_fragment.Get_ThetaLab(ii),
+                             mugast_fragment.Get_Ex(ii));
                     }
                 }
             }
@@ -519,7 +538,25 @@ bool Selector::GetSettings()
             str >> enabled;
             if (enabled.compare("false"))
             { //IS ENABLED
+
+                //enabled_histograms.emplace(Graph, true); 
                 enabled_histograms[Graph] = true;
+                
+                
+                std::string tmp_str;
+                std::vector<std::string> settings;
+                while(str>>tmp_str){
+                    settings.push_back(tmp_str);
+                }
+                //if (settings.size()==0) continue;
+                //if (settings.size()%3){
+                //    enabled_histograms[Graph].lims = settings;
+                //}else{
+                //    std::cout   <<"Settings for : " 
+                //                << Graph 
+                //                <<" incorrect, keeping default ones\n";
+                //}
+
             }
         }
     }

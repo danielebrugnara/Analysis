@@ -15,6 +15,7 @@ MugastIdentification::MugastIdentification() : cuts_MG({1, 3, 4, 5, 7, 11}),
                                                        "al_front"}),
                                                data(nullptr),
                                                fragment(nullptr),
+                                               use_constant_thickness(false),
                                                with_cuts(true),
                                                havar_thickness(3.8E-3)
 { //in mm
@@ -52,6 +53,12 @@ bool MugastIdentification::Initialize(const double &beam_energy,
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>MugastIdentification::Initialize()\n";
 #endif
+
+    if(use_constant_thickness){
+        current_ice_thickness.first = 3E-2;
+        current_ice_thickness.second = 3E-2;
+    }
+
     reaction["M47_Z19_m1_z1"] = new NPL::Reaction("46Ar(3He,p)48K@" + std::to_string(beam_energy));
     reaction["M47_Z19_m2_z1"] = new NPL::Reaction("46Ar(3He,d)47K@" + std::to_string(beam_energy));
     reaction["M47_Z19_m4_z2"] = new NPL::Reaction("46Ar(3He,4He)45Ar@" + std::to_string(beam_energy));
@@ -307,7 +314,10 @@ bool MugastIdentification::Identify()
     //Evaluate Ice thickness
     if (TW_vs_ice_thickness == nullptr)
     {
-        IdentifyIceThickness();
+        if (use_constant_thickness){
+        }else{
+            IdentifyIceThickness();
+        }
     }
     else
     {
