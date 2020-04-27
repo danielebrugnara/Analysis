@@ -34,10 +34,24 @@ add_definitions(${ROOT_CXX_FLAGS})
 include_directories($ENV{NPTOOL}/NPLib/include ${CMAKE_BINARY_DIR})
 link_directories($ENV{NPTOOL}/NPLib/lib)
 
+include_directories("${CMAKE_BINARY_DIR}/../../Lib/inc/")
+link_directories("${CMAKE_BINARY_DIR}/../../Build/Lib/bin/")
+
+
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+foreach(dir ${dirs})
+	  message(STATUS "selected include dir='${dir}'")
+endforeach()
+
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY LINK_DIRECTORIES)
+foreach(dir ${dirs})
+	  message(STATUS "selected linking dir='${dir}'")
+endforeach()
+
 #static library for selector
 ROOT_GENERATE_DICTIONARY(G__Selector Selector.h LINKDEF SelectorLinkDef.h)
 add_library(Selector STATIC Selector.cxx G__Selector.cxx)
-target_link_libraries(Selector ${ROOT_LIBRARIES} NPMugast NPMUST2 NPCATS NPInitialConditions NPReactionConditions NPInteractionCoordinates)
+target_link_libraries(Selector ${ROOT_LIBRARIES} NPMugast NPMUST2 NPCATS NPInitialConditions NPReactionConditions NPInteractionCoordinates EnergyLoss)
 
 ROOT_GENERATE_DICTIONARY(G__RunSelector RunSelector.h LINKDEF RunSelectorLinkDef.h)
 add_library(RunSelector STATIC RunSelector.cxx G__RunSelector.cxx)

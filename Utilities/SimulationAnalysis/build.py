@@ -15,7 +15,7 @@ def clean():
 
 def build():
     os.system("cmake .")
-    os.system("make")
+    os.system("make -j4")
 
 def main():
     parser = argparse.ArgumentParser(description='Run and build analysisn simulation')
@@ -41,8 +41,8 @@ def main():
         build()
         return 0
     if (args.clean_and_build):
-        build()
         clean()
+        build()
         return 0
 
     

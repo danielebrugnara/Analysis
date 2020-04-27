@@ -15,6 +15,8 @@
 #include <TTreeReader.h>
 #include <TTreeReaderValue.h>
 #include <TTreeReaderArray.h>
+#include <TH2.h>
+#include <TStyle.h>
 
 // Headers needed by this particular selector
 #include "TInteractionCoordinates.h"
@@ -26,6 +28,8 @@
 #include "TInitialConditions.h"
 
 #include "TReactionConditions.h"
+
+#include "EnergyLoss.h"
 
 
 

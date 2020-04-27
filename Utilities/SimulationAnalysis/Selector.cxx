@@ -26,8 +26,6 @@
 
 
 #include "Selector.h"
-#include <TH2.h>
-#include <TStyle.h>
 
 void Selector::Begin(TTree * /*tree*/)
 {
