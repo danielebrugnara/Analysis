@@ -68,25 +68,25 @@ private:
 
     struct Fragment
     {
-        const unsigned int multiplicity;
-        std::vector<TVector3> Pos;
-        std::vector<TVector3> EmissionDirection;
-        std::vector<TVector3> TelescopeNormal;
-        std::vector<int> SI_X;
-        std::vector<int> SI_Y;
-        std::vector<double> SI_E;
-        std::vector<double> SI_E2;
-        std::vector<double> E;
-        std::vector<double> Ex;
-        std::vector<double> E2;
-        std::vector<double> SI_T;
-        std::vector<double> T;
-        std::vector<double> T2;
-        std::vector<double> MG;
-        std::vector<int> M;
-        std::vector<int> Z;
-        std::vector<bool> Indentified;
-        std::vector<std::string> Particle;
+        const unsigned int multiplicity;            //Number of particles detected
+        std::vector<TVector3> Pos;                  //3D positions
+        std::vector<TVector3> EmissionDirection;    //Depends on the target position
+        std::vector<TVector3> TelescopeNormal;      //
+        std::vector<int> SI_X;                      //Intrinsic X
+        std::vector<int> SI_Y;                      //Intrinsic Y
+        std::vector<double> SI_E;                   //Energy deposition measured
+        std::vector<double> SI_E2;                  //Second layer energy deposition
+        std::vector<double> E;                      //After E-Loss corrections
+        std::vector<double> Ex;                     //Ex computed with reaction
+        std::vector<double> E2;                     //Second layer 
+        std::vector<double> SI_T;                   //Un calibrated time
+        std::vector<double> T;                      //Calibrated time
+        std::vector<double> T2;                     //
+        std::vector<double> MG;                     //
+        std::vector<int> M;                         //Mass number
+        std::vector<int> Z;                         //Z number
+        std::vector<bool> Indentified;              //
+        std::vector<std::string> Particle;          //
         Fragment(const unsigned int multiplicity)
             : multiplicity(multiplicity)
         {

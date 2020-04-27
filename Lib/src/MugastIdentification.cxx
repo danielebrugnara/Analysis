@@ -117,12 +117,6 @@ bool MugastIdentification::InitializeCuts()
             mass[it_M][it_Z] = it_M * AMU_TO_MEV;
         }
     }
-
-    //More precise masses [M][Z]
-    mass[2][1] = 2.01410177812 * AMU_TO_MEV;  //In MeV
-    mass[1][1] = 1.00782503223 * AMU_TO_MEV;  //In MeV
-    mass[46][18] = 45.968082712 * AMU_TO_MEV; //in MeV
-
     std::unordered_map<std::string, TCutG *> *tmp = new std::unordered_map<std::string, TCutG *>();
 
     std::vector<std::string> tmp_cut_names;
