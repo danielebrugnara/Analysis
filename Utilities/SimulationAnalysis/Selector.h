@@ -1,8 +1,8 @@
 //////////////////////////////////////////////////////////
 // This class has been automatically generated on
-// Sun Apr 26 09:15:17 2020 by ROOT version 6.20/04
-// from TTree SimulatedTree/Data created / analysed with the NPTool package
-// found on file: Data/flat_sim.root
+// Wed Apr 29 12:46:37 2020 by ROOT version 6.20/04
+// from TTree PhysicsTree/Data created / analysed with the NPTool package
+// found on file: simu_ana.root
 //////////////////////////////////////////////////////////
 
 #ifndef Selector_h
@@ -15,21 +15,17 @@
 #include <TTreeReader.h>
 #include <TTreeReaderValue.h>
 #include <TTreeReaderArray.h>
-#include <TH2.h>
-#include <TStyle.h>
+
+#include <TVector3.h>
+#include <TH1D.h>
+#include <TH2D.h>
 
 // Headers needed by this particular selector
-#include "TInteractionCoordinates.h"
+#include "TCATSPhysics.h"
 
-#include "TMust2Data.h"
+#include "TMust2Physics.h"
 
-#include "TMugastData.h"
-
-#include "TInitialConditions.h"
-
-#include "TReactionConditions.h"
-
-#include "EnergyLoss.h"
+#include "TMugastPhysics.h"
 
 
 
@@ -39,12 +35,26 @@ public :
    TTree          *fChain = 0;   //!pointer to the analyzed TTree or TChain
 
    // Readers to access the data (delete the ones you do not need).
-   TTreeReaderValue<TInteractionCoordinates> InteractionCoordinates = {fReader, "InteractionCoordinates"};
-   TTreeReaderValue<TMust2Data> MUST2 = {fReader, "MUST2"};
-   TTreeReaderValue<TMugastData> Mugast = {fReader, "Mugast"};
-   TTreeReaderValue<TInitialConditions> InitialConditions = {fReader, "InitialConditions"};
-   TTreeReaderValue<TReactionConditions> ReactionConditions = {fReader, "ReactionConditions"};
+   TTreeReaderValue<TCATSPhysics> CATS = {fReader, "CATS"};
+   TTreeReaderValue<TMust2Physics> MUST2 = {fReader, "MUST2"};
+   TTreeReaderValue<TMugastPhysics> Mugast = {fReader, "Mugast"};
+   TTreeReaderValue<Int_t> Nev = {fReader, "Nev"};
+   TTreeReaderArray<Double_t> Ex = {fReader, "Ex"};
+   TTreeReaderArray<Double_t> ELab = {fReader, "ELab"};
+   TTreeReaderArray<Double_t> EDep = {fReader, "EDep"};
+   TTreeReaderArray<Double_t> ThetaLab = {fReader, "ThetaLab"};
+   TTreeReaderArray<Double_t> ThetaCM = {fReader, "ThetaCM"};
    TTreeReaderValue<Int_t> Run = {fReader, "Run"};
+   TTreeReaderArray<Double_t> X = {fReader, "X"};
+   TTreeReaderArray<Double_t> Y = {fReader, "Y"};
+   TTreeReaderArray<Double_t> Z = {fReader, "Z"};
+   TTreeReaderArray<Double_t> dE = {fReader, "dE"};
+   TTreeReaderArray<Double_t> dTheta = {fReader, "dTheta"};
+
+   //Needed for this particular selector
+   TH1D* angdistr;
+   TH2D* kinematicline;
+   TVector3 position;
 
 
    Selector(TTree * /*tree*/ =0) { }

@@ -26,61 +26,91 @@
 
 
 #include "Selector.h"
+#include <TH2.h>
+#include <TStyle.h>
 
 void Selector::Begin(TTree * /*tree*/)
 {
-   // The Begin() function is called at the start of the query.
-   // When running with PROOF Begin() is only called on the client.
-   // The tree argument is deprecated (on PROOF 0 is passed).
+	// The Begin() function is called at the start of the query.
+	// When running with PROOF Begin() is only called on the client.
+	// The tree argument is deprecated (on PROOF 0 is passed).
 
-   TString option = GetOption();
+	TString option = GetOption();
 }
 
 void Selector::SlaveBegin(TTree * /*tree*/)
 {
-   // The SlaveBegin() function is called after the Begin() function.
-   // When running with PROOF SlaveBegin() is called on each slave server.
-   // The tree argument is deprecated (on PROOF 0 is passed).
+	// The SlaveBegin() function is called after the Begin() function.
+	// When running with PROOF SlaveBegin() is called on each slave server.
+	// The tree argument is deprecated (on PROOF 0 is passed).
 
-   TString option = GetOption();
+	TString option = GetOption();
+
+	angdistr = new TH1D("angdistr", "Angular distribution", 1000, 0, 3.1415);
+	fOutput->Add(angdistr);
+	kinematicline = new TH2D("kinematicline", "Kinematic line", 1000, 0, 3.1415, 1000, -20, 20);
+	fOutput->Add(kinematicline);
 
 }
 
 Bool_t Selector::Process(Long64_t entry)
 {
-   // The Process() function is called for each entry in the tree (or possibly
-   // keyed object in the case of PROOF) to be processed. The entry argument
-   // specifies which entry in the currently loaded tree is to be processed.
-   // When processing keyed objects with PROOF, the object is already loaded
-   // and is available via the fObject pointer.
-   //
-   // This function should contain the \"body\" of the analysis. It can contain
-   // simple or elaborate selection criteria, run algorithms on the data
-   // of the event and typically fill histograms.
-   //
-   // The processing can be stopped by calling Abort().
-   //
-   // Use fStatus to set the return value of TTree::Process().
-   //
-   // The return value is currently not used.
+	// The Process() function is called for each entry in the tree (or possibly
+	// keyed object in the case of PROOF) to be processed. The entry argument
+	// specifies which entry in the currently loaded tree is to be processed.
+	// When processing keyed objects with PROOF, the object is already loaded
+	// and is available via the fObject pointer.
+	//
+	// This function should contain the \"body\" of the analysis. It can contain
+	// simple or elaborate selection criteria, run algorithms on the data
+	// of the event and typically fill histograms.
+	//
+	// The processing can be stopped by calling Abort().
+	//
+	// Use fStatus to set the return value of TTree::Process().
+	//
+	// The return value is currently not used.
 
-   fReader.SetLocalEntry(entry);
+	fReader.SetLocalEntry(entry);
+	//std::cout << *Nev << std::endl;
+	//
+	//
+	//if (Ex[0]>-100)
+	//	std::cout << Ex[0] << std::endl;
+	for (int ii=0; ii<20;++ii){
+		if (X[ii]>-100){
+			position.SetXYZ(X[ii],Y[ii], Z[ii]);
+			std::cout <<"X: " << X[0] << std::endl;
+			std::cout <<"EDep " << EDep[0] << std::endl;
+			angdistr->Fill(position.Theta());
+			kinematicline->Fill(position.Theta(),EDep[ii]);
+		}
+	}
 
-   return kTRUE;
+
+	return kTRUE;
 }
 
 void Selector::SlaveTerminate()
 {
-   // The SlaveTerminate() function is called after all entries or objects
-   // have been processed. When running with PROOF SlaveTerminate() is called
-   // on each slave server.
+	// The SlaveTerminate() function is called after all entries or objects
+	// have been processed. When running with PROOF SlaveTerminate() is called
+	// on each slave server.
+	TFile *top = new TFile("output.root", "recreate");
+	TIter iter(fOutput);
+	TObject *obj;
+	while ((obj = iter()))
+	{
+		obj->Write();
+	}
+	top->Close();
 
 }
 
 void Selector::Terminate()
 {
-   // The Terminate() function is the last function to be called during
-   // a query. It always runs on the client, it can be used to present
-   // the results graphically or save the results to file.
+	// The Terminate() function is the last function to be called during
+	// a query. It always runs on the client, it can be used to present
+	// the results graphically or save the results to file.
 
 }
