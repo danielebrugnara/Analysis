@@ -9,8 +9,7 @@ Minimizer::Minimizer(std::function<double(const double &)> function_ptr,
                      double quenching = 1,
                      double h=1E-3)  :      
                             function_ptr(function_ptr),
-                            y({0, 0}),
-                            x({0, starting_value}),
+                            x({starting_value, starting_value}),
                             derivative({0, 0}),
                             step({0, 0}),
                             rate({learning_rate, learning_rate}),
@@ -26,6 +25,9 @@ Minimizer::~Minimizer()
 {
 }
 
+void Minimizer::SetThreashold(double threashold){
+    this->threshold=threashold;
+}
 
 double Minimizer::Minimize()
 {
@@ -36,33 +38,25 @@ double Minimizer::Minimize()
         step[0]=step[1];
 		step[1]=-derivative[1]*rate[1];
         fx = function_ptr(x[0]);
-		do {
-			x[1] = x[0]+step[1];
-			//if(x[1]<a) {
-			//	x[1]=a;
-			//} else if(x1>b) {
-			//	x[1]=b;
-			//}
-			if(function_ptr(x[1]) >fx) {
-				step[1]/=2;
-				continue;
-			}
-            if(derivative[1] < 1E-3){
-                step[1]*=2;
-                continue;
-            }
-		} while(0);
-        rate[0]=rate[1];
-		rate[1]=rate[1]*quenching;
-#ifdef VERBOSE_DEBUG
-        std::cout   << "Step number : " << n_steps
+        x[0] = x[1];
+	    x[1] = x[0]+step[1];
+//#ifdef VERBOSE_DEBUG
+        std::cout   << "Step number : " << n_steps << "--->"
                     << " x value : "<< x[0]
                     << " y value : "<< fx
                     << " derivative value : "<< derivative[1]
-                    << " rate value : " << rate[1]
+                    << " step value : " << step[1]
                     << std::endl;
-#endif
-        if(++n_steps>max_steps)
+//#endif
+		if(function_ptr(x[1]) >fx && n_steps>2) {
+			step[1]/=2;
+			//continue;
+               break;
+		}
+        rate[0]=rate[1];
+		rate[1]=rate[1]*quenching;
+        ++n_steps;
+        if(n_steps>max_steps)
             throw std::runtime_error("Reached max steps in minimizer\n");
 	} while(fabs(x[1]-x[0])>threshold);
     return x[1];

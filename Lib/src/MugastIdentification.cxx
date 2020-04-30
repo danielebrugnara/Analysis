@@ -54,7 +54,8 @@ bool MugastIdentification::Initialize(const double &beam_energy,
     std::cout << "------------>MugastIdentification::Initialize()\n";
 #endif
 
-    if(use_constant_thickness){
+    if (use_constant_thickness)
+    {
         current_ice_thickness.first = 3E-2;
         current_ice_thickness.second = 3E-2;
     }
@@ -62,6 +63,17 @@ bool MugastIdentification::Initialize(const double &beam_energy,
     reaction["M47_Z19_m1_z1"] = new NPL::Reaction("46Ar(3He,p)48K@" + std::to_string(beam_energy));
     reaction["M47_Z19_m2_z1"] = new NPL::Reaction("46Ar(3He,d)47K@" + std::to_string(beam_energy));
     reaction["M47_Z19_m4_z2"] = new NPL::Reaction("46Ar(3He,4He)45Ar@" + std::to_string(beam_energy));
+
+    //Masses in MeV [M][Z] as ints
+    for (const auto &it_M : cuts_M)
+    {
+        for (const auto &it_Z : cuts_Z)
+        {
+            mass[it_M][it_Z] = NPL::Nucleus(it_Z, it_M).Mass();
+            std::cout << "MASS::::::::: " << mass[it_M][it_Z] << std::endl;
+        }
+    }
+    mass[46][18] = NPL::Nucleus(18, 46).Mass();
 
     gas_thickness = new Interpolation("./Configs/Interpolations/He_thickness_500Torr.txt");
     havar_angle = new Interpolation("./Configs/Interpolations/Entrance_angle_500Torr.txt");
@@ -109,14 +121,6 @@ bool MugastIdentification::Initialize(const double &beam_energy,
 
 bool MugastIdentification::InitializeCuts()
 {
-    //Masses in MeV [M][Z] as ints
-    for (const auto &it_M : cuts_M)
-    {
-        for (const auto &it_Z : cuts_Z)
-        {
-            mass[it_M][it_Z] = NPL::Nucleus(it_Z,it_M).Mass();
-        }
-    }
     std::unordered_map<std::string, TCutG *> *tmp = new std::unordered_map<std::string, TCutG *>();
 
     std::vector<std::string> tmp_cut_names;
@@ -252,7 +256,7 @@ bool MugastIdentification::InitializeELoss()
         energy_loss["beam"][layer] = energy_loss["m46_z18"][layer];
     }
 
-    current_ice_thickness.first = 10E-3;
+    current_ice_thickness.first = 10E-3; //in mm
     current_ice_thickness.second = current_ice_thickness.first * ice_percentage_second;
     beam_energy_match_threashold = 0.3; //In MeV
 
@@ -308,8 +312,11 @@ bool MugastIdentification::Identify()
     //Evaluate Ice thickness
     if (TW_vs_ice_thickness == nullptr)
     {
-        if (use_constant_thickness){
-        }else{
+        if (use_constant_thickness)
+        {
+        }
+        else
+        {
             IdentifyIceThickness();
         }
     }
@@ -465,7 +472,10 @@ void MugastIdentification::IdentifyIceThickness()
 
 #ifdef VERBOSE_DEBUG
     std::cout << "Final beam energy : " << final_beam_energy << "\n";
-    std::cout << "Computed initial beam energy : " << initial_beam_energy << "\n";
+    std::cout << "Computed initial beam energy : " << initial_beam_energy
+              << " With thickness : " << current_ice_thickness.first
+              << " With brho : " << brho
+              << " and mass : " << mass[46][18] << std::endl;
 #endif
 
     if (abs(beam_energy - initial_beam_energy) > beam_energy_match_threashold)
@@ -473,35 +483,49 @@ void MugastIdentification::IdentifyIceThickness()
         //ice_thickness_minimizer = new Minimizer(this->Thickness_discr,
         //                                        current_ice_thickness.first, 0.7, 0.1, 100, 1, 1E-3);
 #ifdef VERBOSE_DEBUG
-    std::cout << "Before minimizer call, ice_thickness.first = "<<current_ice_thickness.first<<"\n";
+        std::cout << "Before minimizer call, ice_thickness.first = " << current_ice_thickness.first << "\n";
 #endif
-        ice_thickness_minimizer = new Minimizer([this](const double & tck){return this->beam_energy-this->InitialBeamEnergy(this->final_beam_energy, tck);},
-                                                current_ice_thickness.first, 0.7, 0.1, 100, 1, 1E-3);
-        current_ice_thickness.first = ice_thickness_minimizer->Minimize();
-        current_ice_thickness.second = current_ice_thickness.first*ice_percentage_second;
-#ifdef VERBOSE_DEBUG
-    std::cout << "After minimizer call, ice_thickness.first = "<<current_ice_thickness.first<<"\n";
-#endif
+        double tmp_threashold{2E-4};
+        double tmp_precision{0.1}; //in MeV                                              //MeV
+        ice_thickness_minimizer = new Minimizer([this](const double &tck) { return pow(this->beam_energy - this->InitialBeamEnergy(this->final_beam_energy, tck), 2); },
+                                                current_ice_thickness.first,        //starting value
+                                                1E-6 * current_ice_thickness.first, //learning rate
+                                                tmp_threashold, //threashold
+                                                100,                                //max_steps
+                                                1,                                  //quenching
+                                                1E-4);                              //h
+        while (fabs(beam_energy - InitialBeamEnergy(final_beam_energy, current_ice_thickness.first)) > tmp_precision)
+        {
+            tmp_threashold/=2;
+            ice_thickness_minimizer->SetThreashold(tmp_threashold);
+            current_ice_thickness.first = ice_thickness_minimizer->Minimize();
+            current_ice_thickness.second = current_ice_thickness.first * ice_percentage_second;
+        }
 
+        //#ifdef VERBOSE_DEBUG
+        std::cout << "After minimizer call, ice_thickness.first = " << current_ice_thickness.first
+                  << " energy difference : " << beam_energy - InitialBeamEnergy(final_beam_energy, current_ice_thickness.first)
+                  << "\n";
+        //#endif
 
-//        ice_thickness_minimizer = new Minimizer((beam_energy - initial_beam_energy) / gradient_descent_normalization,
-//                                                current_ice_thickness.first,
-//                                                7E-7,
-//                                                0.002,
-//                                                beam_energy_match_threashold / gradient_descent_normalization,
-//                                                200,
-//                                                1);
-//        double energy_difference;
-//        for (int ii = 0; ii < 100; ++ii)
-//        {
-//            energy_difference = beam_energy - InitialBeamEnergy(final_beam_energy);
-//            if (abs(energy_difference) < beam_energy_match_threashold)
-//                break;
-//            current_ice_thickness.first =
-//                ice_thickness_minimizer
-//                    ->PerformStep(energy_difference / gradient_descent_normalization);
-//            current_ice_thickness.second = ice_percentage_second * current_ice_thickness.first;
-//        }
+        //        ice_thickness_minimizer = new Minimizer((beam_energy - initial_beam_energy) / gradient_descent_normalization,
+        //                                                current_ice_thickness.first,
+        //                                                7E-7,
+        //                                                0.002,
+        //                                                beam_energy_match_threashold / gradient_descent_normalization,
+        //                                                200,
+        //                                                1);
+        //        double energy_difference;
+        //        for (int ii = 0; ii < 100; ++ii)
+        //        {
+        //            energy_difference = beam_energy - InitialBeamEnergy(final_beam_energy);
+        //            if (abs(energy_difference) < beam_energy_match_threashold)
+        //                break;
+        //            current_ice_thickness.first =
+        //                ice_thickness_minimizer
+        //                    ->PerformStep(energy_difference / gradient_descent_normalization);
+        //            current_ice_thickness.second = ice_percentage_second * current_ice_thickness.first;
+        //        }
         for (const auto &it : reaction)
         {
             it.second->SetBeamEnergy(MiddleTargetBeamEnergy(final_beam_energy));
@@ -512,40 +536,45 @@ void MugastIdentification::IdentifyIceThickness()
 #endif
 }
 
-double MugastIdentification::InitialBeamEnergy(double beam_energy_from_brho, double ice_thickness)
+double MugastIdentification::InitialBeamEnergy(double beam_energy_from_brho, double tck)
 {
 #ifdef VERBOSE_DEBUG
-    std::cout << "------------>Started: MugastIdentification::InitialBeamEnergy()\n";
+    std::cout << "------------>Started: MugastIdentification::InitialBeamEnergy(), thickness : " << tck << " \n";
 #endif
     beam_energy_from_brho =
         energy_loss["beam"]["ice_back"]
             ->EvaluateInitialEnergy(beam_energy_from_brho,
-                                    ice_thickness*ice_percentage_second,
+                                    tck * ice_percentage_second,
                                     0);
+    //std::cout << beam_energy_from_brho << std::endl;
 
     beam_energy_from_brho =
         energy_loss["beam"]["havar_back"]
             ->EvaluateInitialEnergy(beam_energy_from_brho,
                                     havar_thickness,
                                     0);
+    //std::cout << beam_energy_from_brho << std::endl;
 
     beam_energy_from_brho =
         energy_loss["beam"]["he3_front"]
             ->EvaluateInitialEnergy(beam_energy_from_brho,
                                     average_beam_thickness,
                                     0);
+    //std::cout << beam_energy_from_brho << std::endl;
 
     beam_energy_from_brho =
         energy_loss["beam"]["havar_front"]
             ->EvaluateInitialEnergy(beam_energy_from_brho,
                                     havar_thickness,
                                     0);
+    //std::cout << beam_energy_from_brho << std::endl;
 
     beam_energy_from_brho =
         energy_loss["beam"]["ice_front"]
             ->EvaluateInitialEnergy(beam_energy_from_brho,
-                                    ice_thickness,
+                                    tck,
                                     0);
+    //std::cout << beam_energy_from_brho << std::endl;
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>Finished: MugastIdentification::InitialBeamEnergy()\n";
 #endif

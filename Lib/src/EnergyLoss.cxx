@@ -358,7 +358,7 @@ double EnergyLoss::Eval(double energy) const
   }
   else if (energy != energy)
   {
-    throw std::runtime_error("WARNING: nan energy given to EnergyLoss\n");
+    throw std::runtime_error("\033[1;31mWARNING: nan energy given to EnergyLoss\033[0m\n");
     return 0;
   }
 
