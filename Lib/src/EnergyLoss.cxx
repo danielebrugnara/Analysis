@@ -353,7 +353,7 @@ double EnergyLoss::Eval(double energy) const
 {
   if (energy < 0)
   {
-    throw std::runtime_error("WARNING: negative energy given to EnergyLoss\n");
+    throw std::runtime_error("\033[1;31mWARNING: negative energy given to EnergyLoss\033[0m\n");
     return 0;
   }
   else if (energy != energy)

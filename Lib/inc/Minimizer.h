@@ -2,20 +2,22 @@
 #define __MINIMIZER_H__
 
 #include <array>
+#include <functional>
 #include <iostream>
 #include <math.h>
 
 class Minimizer
 {
 public:
-  Minimizer(double (*) (const double &), double, double, double, int, double, double);
+  Minimizer(std::function<double(const double &)>, double, double, double, int, double, double);
   ~Minimizer();
 
   //inline double PerformStep(double );
   double GetCoefficient() { return coefficient; };
 
 private:
-  double (*function_ptr) (const double &);
+  //double (*function_ptr) (const double &);
+  std::function<double(const double &)> function_ptr;
   std::array<double, 2> y;
   std::array<double, 2> x;
   std::array<long double, 2> derivative;

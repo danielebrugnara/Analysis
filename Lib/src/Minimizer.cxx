@@ -1,6 +1,7 @@
 #include "Minimizer.h"
 
-Minimizer::Minimizer(double (*function_ptr)(const double &),
+//Minimizer::Minimizer(double (*function_ptr)(const double &),
+Minimizer::Minimizer(std::function<double(const double &)> function_ptr,
                      double starting_value,
                      double learning_rate = 0.7,
                      double threshold = 0.1,
@@ -53,6 +54,14 @@ double Minimizer::Minimize()
 		} while(0);
         rate[0]=rate[1];
 		rate[1]=rate[1]*quenching;
+#ifdef VERBOSE_DEBUG
+        std::cout   << "Step number : " << n_steps
+                    << " x value : "<< x[0]
+                    << " y value : "<< fx
+                    << " derivative value : "<< derivative[1]
+                    << " rate value : " << rate[1]
+                    << std::endl;
+#endif
         if(++n_steps>max_steps)
             throw std::runtime_error("Reached max steps in minimizer\n");
 	} while(fabs(x[1]-x[0])>threshold);

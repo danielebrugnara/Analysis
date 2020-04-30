@@ -472,11 +472,16 @@ void MugastIdentification::IdentifyIceThickness()
     {
         //ice_thickness_minimizer = new Minimizer(this->Thickness_discr,
         //                                        current_ice_thickness.first, 0.7, 0.1, 100, 1, 1E-3);
-        auto tmp_ptr = 
-        ice_thickness_minimizer = new Minimizer(&this->[this](const double & tck){return this->beam_energy-this->InitialBeamEnergy(this->final_beam_energy, tck);},
+#ifdef VERBOSE_DEBUG
+    std::cout << "Before minimizer call, ice_thickness.first = "<<current_ice_thickness.first<<"\n";
+#endif
+        ice_thickness_minimizer = new Minimizer([this](const double & tck){return this->beam_energy-this->InitialBeamEnergy(this->final_beam_energy, tck);},
                                                 current_ice_thickness.first, 0.7, 0.1, 100, 1, 1E-3);
         current_ice_thickness.first = ice_thickness_minimizer->Minimize();
         current_ice_thickness.second = current_ice_thickness.first*ice_percentage_second;
+#ifdef VERBOSE_DEBUG
+    std::cout << "After minimizer call, ice_thickness.first = "<<current_ice_thickness.first<<"\n";
+#endif
 
 
 //        ice_thickness_minimizer = new Minimizer((beam_energy - initial_beam_energy) / gradient_descent_normalization,
