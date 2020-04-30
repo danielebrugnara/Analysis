@@ -502,11 +502,11 @@ void MugastIdentification::IdentifyIceThickness()
             current_ice_thickness.second = current_ice_thickness.first * ice_percentage_second;
         }
 
-        //#ifdef VERBOSE_DEBUG
+#ifdef VERBOSE_DEBUG
         std::cout << "After minimizer call, ice_thickness.first = " << current_ice_thickness.first
                   << " energy difference : " << beam_energy - InitialBeamEnergy(final_beam_energy, current_ice_thickness.first)
                   << "\n";
-        //#endif
+#endif
 
         //        ice_thickness_minimizer = new Minimizer((beam_energy - initial_beam_energy) / gradient_descent_normalization,
         //                                                current_ice_thickness.first,

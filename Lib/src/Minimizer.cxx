@@ -40,17 +40,16 @@ double Minimizer::Minimize()
         fx = function_ptr(x[0]);
         x[0] = x[1];
 	    x[1] = x[0]+step[1];
-//#ifdef VERBOSE_DEBUG
+#ifdef VERBOSE_DEBUG
         std::cout   << "Step number : " << n_steps << "--->"
                     << " x value : "<< x[0]
                     << " y value : "<< fx
                     << " derivative value : "<< derivative[1]
                     << " step value : " << step[1]
                     << std::endl;
-//#endif
+#endif
 		if(function_ptr(x[1]) >fx && n_steps>2) {
 			step[1]/=2;
-			//continue;
                break;
 		}
         rate[0]=rate[1];
