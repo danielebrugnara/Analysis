@@ -9,6 +9,8 @@
 #include "Identification.h"
 #include "Interpolation.h"
 
+#include "NPNucleus.h"
+
 #include <array>
 #include <sstream>
 

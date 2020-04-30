@@ -16,6 +16,7 @@
 //TODO: generate internal library for the following headers
 #include "NPReaction.h"
 #include "TMugastPhysics.h"
+#include "NPNucleus.h"
 
 class MugastIdentification : public Identification
 {
@@ -33,6 +34,9 @@ public:
     static constexpr double gradient_descent_normalization{1.E3};
 
     static constexpr double ice_percentage_second = 1.;
+    //double Thickness_discr(const double & tck){
+    //    return beam_energy-InitialBeamEnergy(final_beam_energy, tck);
+    //}
     struct Data
     {
         TTreeReaderValue<TMugastPhysics> *Mugast;
@@ -133,7 +137,7 @@ private:
 
     //Energy Loss
     std::unordered_map<std::string, std::unordered_map<std::string, EnergyLoss *>> energy_loss;
-    std::pair<double, double> current_ice_thickness;
+    std::pair<double, double> current_ice_thickness;//first layer, second layer
     bool use_constant_thickness;
 
     bool with_cuts;
@@ -167,8 +171,8 @@ public:
 
 private:
     void IdentifyIceThickness();
-    static constexpr double average_beam_thickness = 3.776; //500 Torr
-    double InitialBeamEnergy(double);
+    static constexpr double average_beam_thickness = 3.723; //500 Torr
+    double InitialBeamEnergy(double, double);
     double MiddleTargetBeamEnergy(double);
 
 public: //Functions called by selector

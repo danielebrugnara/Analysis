@@ -353,12 +353,12 @@ double EnergyLoss::Eval(double energy) const
 {
   if (energy < 0)
   {
-    std::cout << "WARNING: negative energy given to EnergyLoss" << std::endl;
+    throw std::runtime_error("WARNING: negative energy given to EnergyLoss\n");
     return 0;
   }
   else if (energy != energy)
   {
-    std::cout << "WARNING: nan energy given to EnergyLoss" << std::endl;
+    throw std::runtime_error("WARNING: nan energy given to EnergyLoss\n");
     return 0;
   }
 

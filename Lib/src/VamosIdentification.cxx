@@ -27,15 +27,9 @@ bool VamosIdentification::Initialize()
     {
         for (const auto &it_Z : cuts_Z)
         {
-            mass[it_M][it_Z] = it_M * AMU_TO_MEV;
+            mass[it_M][it_Z] = NPL::Nucleus(it_Z, it_M).Mass();
         }
     }
-
-    //More precise data [M][Z]
-    mass[46][18] = 45.968082712 * AMU_TO_MEV; //in MeV
-    mass[47][18] = 46.972934865 * AMU_TO_MEV; //in MeV
-    mass[47][19] = 46.961661614 * AMU_TO_MEV; //in MeV
-    mass[46][19] = 45.961981586 * AMU_TO_MEV; //In MeV
 
     std::unordered_map<std::string, TCutG *> *tmp = new std::unordered_map<std::string, TCutG *>();
 
