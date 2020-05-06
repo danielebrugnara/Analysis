@@ -149,6 +149,32 @@ void Selector::SlaveBegin(TTree * /*tree*/)
     //CATS
 
     //MUGAST
+
+    Istantiate(pConf.MG.hit , 
+                new TH3D("pConf_MG_hit",
+                            "Hits on Mugast",
+                            100, -150, 150,
+                            100, -150, 150, 
+                            100, -150, 150));
+
+    Istantiate(pConf.MG.hit_XY , 
+                new TH2D("pConf_MG_hit_XY",
+                            "Hits on Mugast XY",
+                            1000, -150, 150,
+                            1000, -150, 150));
+
+    Istantiate(pConf.MG.hit_XZ , 
+                new TH2D("pConf_MG_hit_XZ",
+                            "Hits on Mugast XZ",
+                            1000, -150, 150,
+                            1000, -150, 150));
+
+    Istantiate(pConf.MG.hit_YZ , 
+                new TH2D("pConf_MG_hit_YZ",
+                            "Hits on Mugast YZ",
+                            1000, -150, 150,
+                            1000, -150, 150));
+
     for (const auto &it_MG : mugast_fragment.cuts_MG)
     {
         //E TOF////////////////////////////////////////
@@ -168,7 +194,7 @@ void Selector::SlaveBegin(TTree * /*tree*/)
             Istantiate(pConf.MG.mStrip_E[it_MG][strip],
                        new TH2D(Form("pConf_SI_mStrip_E_MG%i_%s", it_MG, strip.c_str()),
                                 Form("Strip vs E of MG%i %s", it_MG, strip.c_str()),
-                                129, 0, 121, 1000, 0, 30));
+                                129, 0, 129, 1000, 0, 30));
 
             //Strip T////////////////////////////////////////
             Istantiate(pConf.MG.mStrip_T[it_MG][strip],
@@ -208,20 +234,28 @@ void Selector::SlaveBegin(TTree * /*tree*/)
                            new TH1D(Form("pData_MG_hEx_M%i_Z%i_%s", it_M, it_Z, particle.c_str()),
                                     Form("Excitation energy with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, particle.c_str()),
                                     1000, -60, 60));
+
                 Istantiate(pData.MG.mEx_EDC[it_M][it_Z][particle],
                            new TH2D(Form("pData_MG_mEx_EDC_M%i_Z%i_%s", it_M, it_Z, particle.c_str()),
                                     Form("Ex vs EDC with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, particle.c_str()),
                                     1000, -10, 10, 2000, 0, 2000));
+
                 for (const auto &it_gamma : gammas)
                 {
                     Istantiate(pData.MG.mELab_ThetaLab[it_M][it_Z][particle][it_gamma],
                                new TH2D(Form("pData_MG_mELab_ThetaLab_M%i_Z%i_%s_%s", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
                                         Form("ELab vs Theta Lab with M%i Z%i in VAMOS and %s in MUGAST and %s in AGATA", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
                                         1000, 0, 3.1416, 1000, 0, 20));
+
                     Istantiate(pData.MG.mEx_ThetaLab[it_M][it_Z][particle][it_gamma],
                                new TH2D(Form("pData_MG_mEx_ThetaLab_M%i_Z%i_%s_%s", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
                                         Form("Ex vs Theta Lab with M%i Z%i in VAMOS and %s in MUGAST and %s in AGATA", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
                                         1000, 0, 3.1416, 1000, -10, 10));
+
+                    Istantiate(pData.MG.hThetaCM[it_M][it_Z][particle][it_gamma],
+                               new TH1D(Form("pData_MG_hThetaCM_M%i_Z%i_%s_%s", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
+                                        Form("Theta CM with M%i Z%i in VAMOS and %s in MUGAST and %s in AGATA", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
+                                        1000, 0, 3.1415));
                 }
             }
             Istantiate(pData.MG.hEx[it_M][it_Z]["NONE"],
@@ -399,6 +433,26 @@ inline void Selector::PlotMugastGraphs()
 #endif
     for (int ii = 0; ii < mugast_fragment.Get_Mult(); ++ii)
     {
+        if (mugast_fragment.Get_T(ii)>260 && mugast_fragment.Get_T(ii)<380){
+            //Only events with tof
+            Fill(pConf.MG.hit,
+                    mugast_fragment.Get_Pos(ii)->X(),
+                    mugast_fragment.Get_Pos(ii)->Y(),
+                    mugast_fragment.Get_Pos(ii)->Z());
+
+            Fill(pConf.MG.hit_XY,
+                    mugast_fragment.Get_Pos(ii)->X(),
+                    mugast_fragment.Get_Pos(ii)->Y());
+
+            Fill(pConf.MG.hit_XZ,
+                    mugast_fragment.Get_Pos(ii)->X(),
+                    mugast_fragment.Get_Pos(ii)->Z());
+
+            Fill(pConf.MG.hit_YZ,
+                    mugast_fragment.Get_Pos(ii)->Y(),
+                    mugast_fragment.Get_Pos(ii)->Z());
+
+        }
         //Ex
         Fill(pData.MG.hEx[vamos_fragment.Get_id_M()]
                          [vamos_fragment.Get_id_Z()]
@@ -418,6 +472,12 @@ inline void Selector::PlotMugastGraphs()
                                     ["NOCONDITION"],
              mugast_fragment.Get_ThetaLab(ii),
              mugast_fragment.Get_Ex(ii));
+
+        Fill(pData.MG.hThetaCM[vamos_fragment.Get_id_M()]
+                                    [vamos_fragment.Get_id_Z()]
+                                    [mugast_fragment.Get_Particle(ii)]
+                                    ["NOCONDITION"],
+             mugast_fragment.Get_ThetaCM(ii));
 
         if (vamos_fragment.Get_id_M()==47 && vamos_fragment.Get_id_Z()==19 && mugast_fragment.Get_Particle(ii)=="m2_z1"){
         general_histo_ptr->Fill(
@@ -455,6 +515,12 @@ inline void Selector::PlotMugastGraphs()
                                                     [it_gamma],
                              mugast_fragment.Get_ThetaLab(ii),
                              mugast_fragment.Get_Ex(ii));
+
+                        Fill(pData.MG.hThetaCM[vamos_fragment.Get_id_M()]
+                                                    [vamos_fragment.Get_id_Z()]
+                                                    [mugast_fragment.Get_Particle(ii)]
+                                                    [it_gamma],
+                             mugast_fragment.Get_ThetaCM(ii));
                     }
                 }
             }
@@ -469,20 +535,29 @@ inline void Selector::PlotMugastGraphs()
              mugast_fragment.Get_SI_E(ii),
              mugast_fragment.Get_T2(ii));
 
-        for (const auto &dimension : mugast_fragment.strips)
-        {
-            Fill(pConf.MG.mStrip_E[mugast_fragment.Get_MG(ii)][dimension],
+            Fill(pConf.MG.mStrip_E[mugast_fragment.Get_MG(ii)]["X"],
                  mugast_fragment.Get_SI_X(ii),
                  mugast_fragment.Get_SI_E(ii));
 
-            Fill(pConf.MG.mStrip_T[mugast_fragment.Get_MG(ii)][dimension],
+            Fill(pConf.MG.mStrip_T[mugast_fragment.Get_MG(ii)]["X"],
                  mugast_fragment.Get_SI_X(ii),
                  mugast_fragment.Get_T(ii));
 
-            Fill(pConf.MG.mStrip_T2[mugast_fragment.Get_MG(ii)][dimension],
+            Fill(pConf.MG.mStrip_T2[mugast_fragment.Get_MG(ii)]["X"],
                  mugast_fragment.Get_SI_X(ii),
                  mugast_fragment.Get_T2(ii));
-        }
+
+            Fill(pConf.MG.mStrip_E[mugast_fragment.Get_MG(ii)]["Y"],
+                 mugast_fragment.Get_SI_Y(ii),
+                 mugast_fragment.Get_SI_E(ii));
+
+            Fill(pConf.MG.mStrip_T[mugast_fragment.Get_MG(ii)]["Y"],
+                 mugast_fragment.Get_SI_Y(ii),
+                 mugast_fragment.Get_T(ii));
+
+            Fill(pConf.MG.mStrip_T2[mugast_fragment.Get_MG(ii)]["Y"],
+                 mugast_fragment.Get_SI_Y(ii),
+                 mugast_fragment.Get_T2(ii));
 
         if (vamos_fragment.Identified())
         {

@@ -48,8 +48,18 @@ void Selector::SlaveBegin(TTree * /*tree*/)
 
 	angdistr = new TH1D("angdistr", "Angular distribution", 1000, 0, 3.1415);
 	fOutput->Add(angdistr);
+	ex = new TH1D("ex", "ex", 1000, -10, 10);
+	fOutput->Add(ex);
+	ex_theta = new TH2D("ex_theta", "ex vs theta", 1000, 0, 3.1415, 1000, -10, 10);
+	fOutput->Add(ex_theta);
+	theta_cm = new TH1D("theta_cm", "theta_cm", 1000, 0, 3.1415);
+	fOutput->Add(theta_cm);
 	kinematicline = new TH2D("kinematicline", "Kinematic line", 1000, 0, 3.1415, 1000, -20, 20);
 	fOutput->Add(kinematicline);
+
+	for (const auto & it: MG_nr){
+		strip_E[it] = new TH2D(Form("MG%i_strip_E", it), Form("MG%i_strip_E", it), 129, 0, 129, 1000, 0, 30);
+	}
 
 }
 
@@ -80,10 +90,11 @@ Bool_t Selector::Process(Long64_t entry)
 	for (int ii=0; ii<20;++ii){
 		if (X[ii]>-100){
 			position.SetXYZ(X[ii],Y[ii], Z[ii]);
-			std::cout <<"X: " << X[0] << std::endl;
-			std::cout <<"EDep " << EDep[0] << std::endl;
 			angdistr->Fill(position.Theta());
-			kinematicline->Fill(position.Theta(),EDep[ii]);
+			ex->Fill(Ex[ii]);
+			ex_theta->Fill(position.Theta(),Ex[ii]);
+            theta_cm->Fill(ThetaCM[ii]);
+			kinematicline->Fill(position.Theta(),ELab[ii]);
 		}
 	}
 

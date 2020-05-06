@@ -70,7 +70,6 @@ bool MugastIdentification::Initialize(const double &beam_energy,
         for (const auto &it_Z : cuts_Z)
         {
             mass[it_M][it_Z] = NPL::Nucleus(it_Z, it_M).Mass();
-            std::cout << "MASS::::::::: " << mass[it_M][it_Z] << std::endl;
         }
     }
     mass[46][18] = NPL::Nucleus(18, 46).Mass();
@@ -310,12 +309,13 @@ bool MugastIdentification::Identify()
 #endif
 
     //Evaluate Ice thickness
+    brho = TW_Brho_M46_Z18->Evaluate(**(data->TW));
+    final_beam_energy = sqrt(pow(brho / 3.3356E-3 * charge_state_interpolation, 2) + pow(mass[46][18], 2)) - (mass[46][18]);
+    initial_beam_energy = InitialBeamEnergy(final_beam_energy, current_ice_thickness.first);
+
     if (TW_vs_ice_thickness == nullptr)
     {
-        if (use_constant_thickness)
-        {
-        }
-        else
+        if (!use_constant_thickness)
         {
             IdentifyIceThickness();
         }
@@ -324,6 +324,11 @@ bool MugastIdentification::Identify()
     {
         current_ice_thickness.first = ice_thickness->Evaluate(**(data->TW));
         current_ice_thickness.second = current_ice_thickness.first * ice_percentage_second;
+    }
+    for (const auto &it : reaction)
+    {
+        it.second->SetBeamEnergy(MiddleTargetBeamEnergy(final_beam_energy));
+        //std::cout << MiddleTargetBeamEnergy(final_beam_energy) << std::endl;
     }
 
     //Applying (time) re-calibrations
@@ -378,6 +383,8 @@ bool MugastIdentification::Identify()
 
                     fragment->Indentified[ii] = true;
                     fragment->Particle[ii] = cut_it;
+                    //fragment->E_CM[ii] = fragment->E[ii]*((double)fragment->M[ii]+(double)data->VAMOS_id_M)/
+                    //                        (4.*(double)data->VAMOS_id_M*pow(cos(fragment->EmissionDirection[ii].Theta()), 2)); 
                 }
             }
             if (!fragment->Indentified[ii])
@@ -439,8 +446,11 @@ bool MugastIdentification::Identify()
                                          fragment->Particle[ii])) != reaction.end())
         {
             fragment->Ex[ii] = reaction_it->second
-                                   ->ReconstructRelativistic(fragment->E[ii],
+                                    ->ReconstructRelativistic(fragment->E[ii],
                                                              Get_ThetaLab(ii));
+            fragment->E_CM[ii] = reaction_it->second
+                                    ->EnergyLabToThetaCM(fragment->E[ii],
+                                                        fragment->EmissionDirection[ii].Theta());
         }
         else
         {
@@ -465,10 +475,10 @@ void MugastIdentification::IdentifyIceThickness()
     std::cout << "------------>Started: MugastIdentification::IdentifyIceThickness()\n";
 #endif
 
-    brho = TW_Brho_M46_Z18->Evaluate(**(data->TW));
-    final_beam_energy = sqrt(pow(brho / 3.3356E-3 * charge_state_interpolation, 2) + pow(mass[46][18], 2)) - (mass[46][18]);
-
-    initial_beam_energy = InitialBeamEnergy(final_beam_energy, current_ice_thickness.first);
+//    brho = TW_Brho_M46_Z18->Evaluate(**(data->TW));
+//    final_beam_energy = sqrt(pow(brho / 3.3356E-3 * charge_state_interpolation, 2) + pow(mass[46][18], 2)) - (mass[46][18]);
+//
+//    initial_beam_energy = InitialBeamEnergy(final_beam_energy, current_ice_thickness.first);
 
 #ifdef VERBOSE_DEBUG
     std::cout << "Final beam energy : " << final_beam_energy << "\n";
@@ -507,29 +517,6 @@ void MugastIdentification::IdentifyIceThickness()
                   << " energy difference : " << beam_energy - InitialBeamEnergy(final_beam_energy, current_ice_thickness.first)
                   << "\n";
 #endif
-
-        //        ice_thickness_minimizer = new Minimizer((beam_energy - initial_beam_energy) / gradient_descent_normalization,
-        //                                                current_ice_thickness.first,
-        //                                                7E-7,
-        //                                                0.002,
-        //                                                beam_energy_match_threashold / gradient_descent_normalization,
-        //                                                200,
-        //                                                1);
-        //        double energy_difference;
-        //        for (int ii = 0; ii < 100; ++ii)
-        //        {
-        //            energy_difference = beam_energy - InitialBeamEnergy(final_beam_energy);
-        //            if (abs(energy_difference) < beam_energy_match_threashold)
-        //                break;
-        //            current_ice_thickness.first =
-        //                ice_thickness_minimizer
-        //                    ->PerformStep(energy_difference / gradient_descent_normalization);
-        //            current_ice_thickness.second = ice_percentage_second * current_ice_thickness.first;
-        //        }
-        for (const auto &it : reaction)
-        {
-            it.second->SetBeamEnergy(MiddleTargetBeamEnergy(final_beam_energy));
-        }
     }
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>Finished: MugastIdentification::IdentifyIceThickness()\n";
@@ -546,35 +533,30 @@ double MugastIdentification::InitialBeamEnergy(double beam_energy_from_brho, dou
             ->EvaluateInitialEnergy(beam_energy_from_brho,
                                     tck * ice_percentage_second,
                                     0);
-    //std::cout << beam_energy_from_brho << std::endl;
 
     beam_energy_from_brho =
         energy_loss["beam"]["havar_back"]
             ->EvaluateInitialEnergy(beam_energy_from_brho,
                                     havar_thickness,
                                     0);
-    //std::cout << beam_energy_from_brho << std::endl;
 
     beam_energy_from_brho =
         energy_loss["beam"]["he3_front"]
             ->EvaluateInitialEnergy(beam_energy_from_brho,
                                     average_beam_thickness,
                                     0);
-    //std::cout << beam_energy_from_brho << std::endl;
 
     beam_energy_from_brho =
         energy_loss["beam"]["havar_front"]
             ->EvaluateInitialEnergy(beam_energy_from_brho,
                                     havar_thickness,
                                     0);
-    //std::cout << beam_energy_from_brho << std::endl;
 
     beam_energy_from_brho =
         energy_loss["beam"]["ice_front"]
             ->EvaluateInitialEnergy(beam_energy_from_brho,
                                     tck,
                                     0);
-    //std::cout << beam_energy_from_brho << std::endl;
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>Finished: MugastIdentification::InitialBeamEnergy()\n";
 #endif

@@ -33,10 +33,8 @@ public:
     static constexpr int charge_state_interpolation{16};
     static constexpr double gradient_descent_normalization{1.E3};
 
-    static constexpr double ice_percentage_second = 1.;
-    //double Thickness_discr(const double & tck){
-    //    return beam_energy-InitialBeamEnergy(final_beam_energy, tck);
-    //}
+    static constexpr double ice_percentage_second = 0.85;
+
     struct Data
     {
         TTreeReaderValue<TMugastPhysics> *Mugast;
@@ -81,6 +79,7 @@ private:
         std::vector<double> SI_E;                   //Energy deposition measured
         std::vector<double> SI_E2;                  //Second layer energy deposition
         std::vector<double> E;                      //After E-Loss corrections
+        std::vector<double> E_CM;                      //After E-Loss corrections
         std::vector<double> Ex;                     //Ex computed with reaction
         std::vector<double> E2;                     //Second layer 
         std::vector<double> SI_T;                   //Un calibrated time
@@ -102,6 +101,7 @@ private:
             SI_E.resize(multiplicity);
             SI_E2.resize(multiplicity);
             E.resize(multiplicity);
+            E_CM.resize(multiplicity);
             Ex.resize(multiplicity);
             E2.resize(multiplicity);
             SI_T.resize(multiplicity);
@@ -191,9 +191,9 @@ public: //Functions called by selector
     inline double Get_T(const int &i) { return fragment->T[i]; }
     inline std::string Get_Particle(const int &i) { return fragment->Particle[i]; }
     inline double Get_ThetaLab(const int &i)
-    {
-        return fragment->EmissionDirection[i].Angle(TVector3(0, 0, 1));
-    }
+        {return fragment->EmissionDirection[i].Angle(TVector3(0, 0, 1));};
+    inline double Get_ThetaCM(const int &i)
+        {return fragment->E_CM[i];};
 };
 
 #endif

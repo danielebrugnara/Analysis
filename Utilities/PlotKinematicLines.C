@@ -1,4 +1,5 @@
 #include <NPReaction.h>
+#include <TFile.h>
 
 void PlotKinematicLines(){
     std::vector<std::string> ens = {"378","334"};

@@ -23,7 +23,6 @@ void StripUptime(std::string file_name)
 			{
 				std::string tmp_name = "pConf_SI_mStrip_" + it_type + "_" + it_mg + "_" + it_strip;
 				TH2D *tmp_ptr = (TH2D *)file->Get(tmp_name.c_str());
-
 				for (int ii = 0; ii < tmp_ptr->GetXaxis()->GetNbins(); ++ii)
 				{
 					double counts = 0;
@@ -50,12 +49,12 @@ void StripUptime(std::string file_name)
 						std::pair<int, int> tmp_pair(std::stoi(it_mg.substr(2)), it_data.first);
 						if (!std::count(tmp_vec.begin(), tmp_vec.end(), tmp_pair)){
 							tmp_vec.push_back(tmp_pair);
-							std::cout << "Disabled :"
-												<< it_type << " " 
-												<< it_mg << " " 
-												<< it_strip << " " 
-												<< it_data.first << " "
-												<< std::endl;
+							std::cout << "Disabled : "
+								<<" mg : "<< it_mg << " "
+								<<" type : "<< it_type << " " 
+								<<" strip : "<< it_strip << " " 
+								<<" data.first : "<< it_data.first << " "
+								<<"  "<< std::endl;
 						}
 					}
 				}
@@ -73,5 +72,4 @@ void StripUptime(std::string file_name)
 			out_file 	<< std::endl;
 	}
 	out_file.close();
-
 }

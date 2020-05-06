@@ -53,8 +53,13 @@ public :
 
    //Needed for this particular selector
    TH1D* angdistr;
+   TH1D* ex;
+   TH2D* ex_theta;
+   TH1D* theta_cm;
    TH2D* kinematicline;
    TVector3 position;
+   std::vector<int> MG_nr = {1, 3, 4, 5, 7, 11};
+   std::map<int, TH2D *> strip_E;
 
 
    Selector(TTree * /*tree*/ =0) { }

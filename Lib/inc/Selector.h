@@ -231,6 +231,10 @@ public:
 
     struct MGConf
     {
+        TH3D *hit;
+        TH2D *hit_XY;
+        TH2D *hit_XZ;
+        TH2D *hit_YZ;
         std::unordered_map<int, TH2D *> mE_TOF;                                     //[M*#]
         std::unordered_map<int, TH2D *> mE_TOF2;                                    //[M*#]
         std::unordered_map<int, std::unordered_map<std::string, TH2D *>> mStrip_E;  //[M*#][X\Y]
@@ -246,6 +250,7 @@ public:
         //std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mECM_ThetaCM;
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>>>> mELab_ThetaLab;
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>>>> mEx_ThetaLab;
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, TH1D *>>>> hThetaCM;
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mEx_EDC;
     };
 
