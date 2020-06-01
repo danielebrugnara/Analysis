@@ -219,3 +219,9 @@ double VamosIdentification::GetShift()
     }
     return shift + FP_time_interpolation->Evaluate(**data->Xf);
 }
+
+double VamosIdentification::Get_EnFromBrho(){
+    if(fragment->id_Z == 0 || fragment->id_M == 0 || fragment->id_Q == 0) 
+        return 0;
+    return sqrt(pow(**data->Brho / 3.3356E-3 * fragment->id_Q, 2) + pow(mass[fragment->id_M][fragment->id_Z], 2)) - (mass[fragment->id_M][fragment->id_Q]);
+}

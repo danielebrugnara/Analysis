@@ -192,6 +192,7 @@ public:
     struct VamosData
     { //Data spectra
         std::unordered_map<int, std::unordered_map<int, TH2D *>> mTW_Brho; //[M][Z]
+        std::unordered_map<int, std::unordered_map<int, TH2D *>> mE_Theta; //[M][Z]
     };
 
     //AGATA////////////////////////////////////////////////////////////////////////////////////

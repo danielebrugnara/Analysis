@@ -309,6 +309,7 @@ bool MugastIdentification::Identify()
 #endif
 
     //Evaluate Ice thickness
+    //TODO: fix this not to make unnecessary calculations
     brho = TW_Brho_M46_Z18->Evaluate(**(data->TW));
     final_beam_energy = sqrt(pow(brho / 3.3356E-3 * charge_state_interpolation, 2) + pow(mass[46][18], 2)) - (mass[46][18]);
     initial_beam_energy = InitialBeamEnergy(final_beam_energy, current_ice_thickness.first);
@@ -458,13 +459,10 @@ bool MugastIdentification::Identify()
         }
     }
 
-    //Ex
-
 #ifdef VERBOSE_DEBUG
     std::cout << "------------>Finished : MugastIdentification::Identify()\n";
 #endif
 
-    //TODO: compute Ex here
     return true;
 }
 

@@ -112,6 +112,11 @@ void Selector::SlaveBegin(TTree * /*tree*/)
                                 Form("Time vs Brho with M%i Z%i in VAMOS", it_M, it_Z),
                                 //5000, 242, 328, 1000, 0.5, 1.5));
                                 5000, 0, 450, 1000, 0.5, 1.5));
+
+            Istantiate(pData.VAMOS.mE_Theta[it_M][it_Z],
+                       new TH2D(Form("pData_VAMOS_mE_Theta__%i_%i", it_M, it_Z),
+                                Form("Energy (Brho) vs Theta with M%i Z%i in VAMOS", it_M, it_Z),
+                                1000, 0, 1, 1000, 1, 450));
         }
     }
     //VAMOS
@@ -238,7 +243,7 @@ void Selector::SlaveBegin(TTree * /*tree*/)
                 Istantiate(pData.MG.mEx_EDC[it_M][it_Z][particle],
                            new TH2D(Form("pData_MG_mEx_EDC_M%i_Z%i_%s", it_M, it_Z, particle.c_str()),
                                     Form("Ex vs EDC with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, particle.c_str()),
-                                    1000, -10, 10, 2000, 0, 2000));
+                                    1000, -20, 20, 2500, 0, 2500));
 
                 for (const auto &it_gamma : gammas)
                 {
@@ -264,7 +269,6 @@ void Selector::SlaveBegin(TTree * /*tree*/)
                                 1000, -60, 60));
         }
     }
-    //TODO: Must2
 
     //TODO: Add MUST2
 
@@ -424,6 +428,10 @@ inline void Selector::PlotVamosGraphs()
         return;
     Fill(pData.VAMOS.mTW_Brho[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()],
          *TW, *Brho);
+
+    Fill(pData.VAMOS.mE_Theta[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()],
+         vamos_fragment.Get_p4()->Angle(TVector3(0, 0, 1)),
+         vamos_fragment.Get_EnFromBrho());
 }
 
 inline void Selector::PlotMugastGraphs()

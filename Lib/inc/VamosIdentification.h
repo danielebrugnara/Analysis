@@ -102,6 +102,7 @@ private:
 
 public:
     //Various computed fragment properties
+
     inline double Get_En() { return fragment->En; };
     inline double Get_D_En() { return fragment->D_En; };
     inline double Get_D_En2() { return fragment->D_En2; };
@@ -119,6 +120,7 @@ public:
     inline unsigned int Get_id_M() { return fragment->id_M; };
     inline unsigned int Get_id_Q() { return fragment->id_Q; };
 
+    double Get_EnFromBrho();
     //////////////////////////////////////////////////////////////////
     //Inline Functions implementation (required to be in header file)
 public:
@@ -127,7 +129,6 @@ public:
 #ifdef VERBOSE_DEBUG
         std::cout << "------------>VamosIdentification::SetData()\n";
 #endif
-        //TODO: will this cause memory leaks?
         if (this->data != nullptr)
             delete this->data;
         if (this->fragment != nullptr)
