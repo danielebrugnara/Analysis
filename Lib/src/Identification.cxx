@@ -1,5 +1,11 @@
 #include "Identification.h"
 
+#ifdef VERBOSE_DEBUG
+#  define DEBUG(x, y) std::cout << (x) << (y) << std::endl;
+#else
+#  define DEBUG(x, y) 
+#endif
+
 Identification::Identification()
 {
 }
@@ -25,23 +31,17 @@ void Identification::LoadCuts(std::string path)
     TIter contents(cuts_file->GetListOfKeys());
     TKey *key;
     TObject *obj;
-#ifdef VERBOSE_DEBUG
-    std::cout << "Starting to look for cuts:\n";
-#endif
+    DEBUG("Starting to look for cuts:", "");
     while ((key = (TKey *)contents()))
     {
         obj = cuts_file->Get(key->GetName());
         if (obj->InheritsFrom("TCutG"))
         {
-#ifdef VERBOSE_DEBUG
-            std::cout << key->GetName() << "\n";
-#endif
+            DEBUG("Key : ", key->GetName());
             TCutG *tmp = (TCutG *)obj;
             cuts[tmp->GetName()] = tmp;
         }
     }
-#ifdef VERBOSE_DEBUG
-    std::cout << "Finished looking for cuts\n";
-#endif
+    DEBUG("Finished looking for cuts", "");
     return;
 }

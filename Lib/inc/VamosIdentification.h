@@ -126,16 +126,10 @@ public:
 public:
     inline void SetData(Data const *data)
     {
-#ifdef VERBOSE_DEBUG
-        std::cout << "------------>VamosIdentification::SetData()\n";
-#endif
         if (this->data != nullptr)
             delete this->data;
         if (this->fragment != nullptr)
             delete this->fragment;
-#ifdef VERBOSE_DEBUG
-        std::cout << "------------>finished : pointers deleted\n";
-#endif
         fragment = new Fragment();
         this->data = data;
     }

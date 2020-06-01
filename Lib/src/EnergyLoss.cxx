@@ -1,5 +1,10 @@
 #include "EnergyLoss.h"
 
+#ifdef VERBOSE_DEBUG
+#  define DEBUG(x, y) std::cout << (x) << (y) << std::endl;
+#else
+#  define DEBUG(x, y) 
+#endif
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 EnergyLoss::EnergyLoss()
 {
@@ -23,9 +28,7 @@ EnergyLoss::EnergyLoss(std::string Path, std::string Source, int NumberOfSlice =
   fNumberOfSlice = NumberOfSlice;
   fNumberOfMass = NumberOfMass;
 
-#ifdef VERBOSE_DEBUG
-  std::cout << "----->Initializing an EnergyLoss object " << std::endl;
-#endif
+  DEBUG("----->Initializing an EnergyLoss object ", "");
 
   std::ifstream TableFile;
 
@@ -33,9 +36,7 @@ EnergyLoss::EnergyLoss(std::string Path, std::string Source, int NumberOfSlice =
   TableFile.open(Path.c_str());
   if (TableFile.is_open())
   {
-#ifdef VERBOSE_DEBUG
-    std::cout << "Reading Energy Loss File : " << Path << std::endl;
-#endif
+    DEBUG("Reading Energy Loss File : ", Path);
   }
   else
   {

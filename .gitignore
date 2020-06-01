@@ -8,4 +8,5 @@ Out/
 *.so
 *.d
 *.pcm
-
+.MugastShape
+tmp

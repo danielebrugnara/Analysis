@@ -1,4 +1,9 @@
 #include "MugastIdentification.h"
+#ifdef VERBOSE_DEBUG
+#  define DEBUG(x, y) std::cout << (x) << (y) << std::endl;
+#else
+#  define DEBUG(x, y) 
+#endif
 
 MugastIdentification::MugastIdentification() : cuts_MG({1, 3, 4, 5, 7, 11}),
                                                cuts_M({1, 2, 4}),
@@ -50,9 +55,7 @@ MugastIdentification::~MugastIdentification()
 bool MugastIdentification::Initialize(const double &beam_energy,
                                       const TVector3 &target_pos)
 {
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>MugastIdentification::Initialize()\n";
-#endif
+    DEBUG("------------>MugastIdentification::Initialize()", "");
 
     if (use_constant_thickness)
     {
@@ -283,9 +286,7 @@ std::vector<std::pair<double, double>> MugastIdentification::GetTWvsIce()
 
 bool MugastIdentification::Identify()
 {
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>MugastIdentification::Identify()\n";
-#endif
+    DEBUG("------------>MugastIdentification::Identify()", "");
     //Initialization of basic structure
     for (unsigned int ii = 0; ii < fragment->multiplicity; ++ii)
     {
@@ -304,9 +305,7 @@ bool MugastIdentification::Identify()
         fragment->T2[ii] = (**(data->Mugast)).SecondLayer_T[ii];
         fragment->MG[ii] = (**(data->Mugast)).TelescopeNumber[ii];
     }
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>finished: setting up fragment\n";
-#endif
+    DEBUG("------------>finished: setting up fragment", "");
 
     //Evaluate Ice thickness
     //TODO: fix this not to make unnecessary calculations
@@ -341,9 +340,9 @@ bool MugastIdentification::Identify()
             fragment->T[ii] = calibrations_TY[fragment->MG[ii]]
                                   ->Evaluate(fragment->SI_T[ii], fragment->SI_Y[ii]);
     };
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>finished: calibrations\n";
-#endif
+
+    DEBUG("------------>finished: calibrations\n", "");
+
     //Identification with E TOF
     TCutG *tmp_cut;
     for (unsigned int ii = 0; ii < fragment->multiplicity; ++ii)
@@ -395,9 +394,7 @@ bool MugastIdentification::Identify()
             }
         };
     }
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>finished: searching cuts\n";
-#endif
+    DEBUG("------------>finished: searching cuts", "");
 
     //Energy reconstruction
     std::unordered_map<std::string, EnergyLoss *> *ptr_tmp;
@@ -459,9 +456,7 @@ bool MugastIdentification::Identify()
         }
     }
 
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Finished : MugastIdentification::Identify()\n";
-#endif
+    DEBUG("------------>Finished : MugastIdentification::Identify()", "");
 
     return true;
 }
@@ -469,30 +464,25 @@ bool MugastIdentification::Identify()
 void MugastIdentification::IdentifyIceThickness()
 {
 
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Started: MugastIdentification::IdentifyIceThickness()\n";
-#endif
+    DEBUG("------------>Started: MugastIdentification::IdentifyIceThickness()", "");
 
 //    brho = TW_Brho_M46_Z18->Evaluate(**(data->TW));
 //    final_beam_energy = sqrt(pow(brho / 3.3356E-3 * charge_state_interpolation, 2) + pow(mass[46][18], 2)) - (mass[46][18]);
 //
 //    initial_beam_energy = InitialBeamEnergy(final_beam_energy, current_ice_thickness.first);
 
-#ifdef VERBOSE_DEBUG
-    std::cout << "Final beam energy : " << final_beam_energy << "\n";
-    std::cout << "Computed initial beam energy : " << initial_beam_energy
-              << " With thickness : " << current_ice_thickness.first
-              << " With brho : " << brho
-              << " and mass : " << mass[46][18] << std::endl;
-#endif
+    DEBUG("Final beam energy : " , final_beam_energy);
+    DEBUG("Computed initial beam energy : " , initial_beam_energy);
+    DEBUG(" With thickness : " , current_ice_thickness.first);
+    DEBUG(" With brho : " , brho);
+    DEBUG(" and mass : " , mass[46][18]);
 
     if (abs(beam_energy - initial_beam_energy) > beam_energy_match_threashold)
     {
         //ice_thickness_minimizer = new Minimizer(this->Thickness_discr,
         //                                        current_ice_thickness.first, 0.7, 0.1, 100, 1, 1E-3);
-#ifdef VERBOSE_DEBUG
-        std::cout << "Before minimizer call, ice_thickness.first = " << current_ice_thickness.first << "\n";
-#endif
+        DEBUG("Before minimizer call, ice_thickness.first = ", current_ice_thickness.first);
+
         double tmp_threashold{2E-4};
         double tmp_precision{0.1}; //in MeV                                              //MeV
         ice_thickness_minimizer = new Minimizer([this](const double &tck) { return pow(this->beam_energy - this->InitialBeamEnergy(this->final_beam_energy, tck), 2); },
@@ -510,22 +500,16 @@ void MugastIdentification::IdentifyIceThickness()
             current_ice_thickness.second = current_ice_thickness.first * ice_percentage_second;
         }
 
-#ifdef VERBOSE_DEBUG
-        std::cout << "After minimizer call, ice_thickness.first = " << current_ice_thickness.first
-                  << " energy difference : " << beam_energy - InitialBeamEnergy(final_beam_energy, current_ice_thickness.first)
-                  << "\n";
-#endif
+        DEBUG("After minimizer call, ice_thickness.first = ", current_ice_thickness.first);
+        DEBUG(" energy difference : ", beam_energy - InitialBeamEnergy(final_beam_energy, current_ice_thickness.first));
     }
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Finished: MugastIdentification::IdentifyIceThickness()\n";
-#endif
+
+    DEBUG("------------>Finished: MugastIdentification::IdentifyIceThickness()", "");
 }
 
 double MugastIdentification::InitialBeamEnergy(double beam_energy_from_brho, double tck)
 {
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Started: MugastIdentification::InitialBeamEnergy(), thickness : " << tck << " \n";
-#endif
+    DEBUG("------------>Started: MugastIdentification::InitialBeamEnergy(), thickness : ", tck);
     beam_energy_from_brho =
         energy_loss["beam"]["ice_back"]
             ->EvaluateInitialEnergy(beam_energy_from_brho,
@@ -555,9 +539,7 @@ double MugastIdentification::InitialBeamEnergy(double beam_energy_from_brho, dou
             ->EvaluateInitialEnergy(beam_energy_from_brho,
                                     tck,
                                     0);
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Finished: MugastIdentification::InitialBeamEnergy()\n";
-#endif
+    DEBUG("------------>Finished: MugastIdentification::InitialBeamEnergy()", "");
     return beam_energy_from_brho;
 }
 

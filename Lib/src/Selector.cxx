@@ -2,6 +2,11 @@
 
 #include "Selector.h"
 
+#ifdef VERBOSE_DEBUG
+#  define DEBUG(x, y) std::cout << (x) << (y) << std::endl;
+#else
+#  define DEBUG(x, y) 
+#endif
 //Constructor///////////////////////////////////////////////////////////////////////////
 Selector::Selector(TTree *) {}
 
@@ -20,9 +25,7 @@ Selector::~Selector()
 //Begn//////////////////////////////////////////////////////////////////////////////////
 void Selector::Begin(TTree * /*tree*/)
 {
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Selector::Begin()\n";
-#endif
+    DEBUG("------------>Selector::Begin()", "");
 
     TString option = GetOption();
 }
@@ -30,9 +33,7 @@ void Selector::Begin(TTree * /*tree*/)
 //Slave Begin///////////////////////////////////////////////////////////////////////////
 void Selector::SlaveBegin(TTree * /*tree*/)
 {
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Selector::SlaveBegin()\n";
-#endif
+    DEBUG("------------>Selector::SlaveBegin()", "");
     total_entries = fReader.GetEntries(false);
 
     TString option = GetOption();
@@ -54,9 +55,7 @@ void Selector::SlaveBegin(TTree * /*tree*/)
     //mugast_fragment.Initialize(379.04, TVector3(0, 0, 25.));
     mugast_fragment.Initialize(450.00, TVector3(0, 0, 25.));
 
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>finished: vamos_fragment initialization\n";
-#endif
+    DEBUG("------------>finished: vamos_fragment initialization", "");
 
     ///Histogram pointer initialization//////////////////////////////////////////////////////////////
 
@@ -113,10 +112,13 @@ void Selector::SlaveBegin(TTree * /*tree*/)
                                 //5000, 242, 328, 1000, 0.5, 1.5));
                                 5000, 0, 450, 1000, 0.5, 1.5));
 
-            Istantiate(pData.VAMOS.mE_Theta[it_M][it_Z],
-                       new TH2D(Form("pData_VAMOS_mE_Theta__%i_%i", it_M, it_Z),
-                                Form("Energy (Brho) vs Theta with M%i Z%i in VAMOS", it_M, it_Z),
+            for (const auto &particle : mugast_fragment.light_particles)
+            {
+                Istantiate(pData.VAMOS.mE_Theta[it_M][it_Z][particle],
+                       new TH2D(Form("pData_VAMOS_mE_Theta__%i_%i_%s", it_M, it_Z, particle.c_str()),
+                                Form("Energy (Brho) vs Theta with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, particle.c_str()),
                                 1000, 0, 1, 1000, 1, 450));
+            }
         }
     }
     //VAMOS
@@ -147,9 +149,7 @@ void Selector::SlaveBegin(TTree * /*tree*/)
         }
     }
 
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>finished: agata initialization\n";
-#endif
+    DEBUG("------------>finished: agata initialization\n", "");
 
     //CATS
 
@@ -278,25 +278,19 @@ void Selector::SlaveBegin(TTree * /*tree*/)
         exit(1);
     }
 
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>finished: SI initialization\n";
-#endif
+    DEBUG("------------>finished: SI initialization", "");
 
     ///Temporary histogram///////////////////////////////////////////////////////////////////////////
     general_histo_ptr = new TH2D("test", "Ex vs theta Lab", 1000, TMath::Pi()/2., TMath::Pi(), 1000, -10, 10);
     fOutput->Add(general_histo_ptr);
 
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>finished: Selector::SlaveBegin()\n";
-#endif
+    DEBUG("------------>finished: Selector::SlaveBegin()", "");
 }
 
 //Processing entry//////////////////////////////////////////////////////////////////////
 Bool_t Selector::Process(Long64_t entry)
 {
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Selector::Process()\n";
-#endif
+    DEBUG("------------>Selector::Process()", "");
     fReader.SetLocalEntry(entry);
     if (entry % 5000 == 0)
         std::cout << "\rProcessed entries : " << entry ;
@@ -304,51 +298,34 @@ Bool_t Selector::Process(Long64_t entry)
 
     //Vamos/////////////////////////////////////////////
     LoadVamosData();
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Finished: Loading Vamos data\n";
-#endif
+    DEBUG("------------>Finished: Loading Vamos data", "");
 
     vamos_fragment.Identify();
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Finished: Identification\n";
-#endif
+    DEBUG("------------>Finished: Identification", "");
 
-    PlotVamosGraphs();
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Finished: Plotting VAMOS graphs\n";
-#endif
 
     //Agata/////////////////////////////////////////////
     LoadAgataData();
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Finished: Loading Agata data, positive exit\n";
-#endif
+    DEBUG("------------>Finished: Loading Agata data, positive exit", "");
 
     agata_gammas.Process();
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Finished: Processing Agata data, positive exit\n";
-#endif
-
-    PlotAgataGraphs();
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Finished: Plotting agata graphs, positive exit\n";
-#endif
+    DEBUG("------------>Finished: Processing Agata data, positive exit", "");
 
     //MUGAST////////////////////////////////////////////
     LoadMugastData();
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Finished: Loading Mugast data\n";
-#endif
+    DEBUG("------------>Finished: Loading Mugast data", "");
 
     mugast_fragment.Identify();
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Finished: Mugast identification, negative exit\n";
-#endif
+    DEBUG("------------>Finished: Mugast identification, negative exit", "");
+
+    PlotVamosGraphs();
+    DEBUG("------------>Finished: Plotting VAMOS graphs", "");
+
+    PlotAgataGraphs();
+    DEBUG("------------>Finished: Plotting agata graphs, positive exit", "");
 
     PlotMugastGraphs();
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Finished: Analysis of one event\n";
-#endif
+    DEBUG("------------>Finished: Analysis of one event", "");
 
     if (entry % 10000 == 0)
         mugast_fragment.StoreTWvsIce();
@@ -358,9 +335,7 @@ Bool_t Selector::Process(Long64_t entry)
 
 void Selector::SlaveTerminate()
 {
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Selector::SlaveTerminate()\n";
-#endif
+    DEBUG("------------>Selector::SlaveTerminate()", "");
     TFile *top = new TFile(file_name.c_str(), "recreate");
     std::cout << "Output file : " << file_name << "\n";
     TIter iter(fOutput);
@@ -374,9 +349,7 @@ void Selector::SlaveTerminate()
 
 void Selector::Terminate()
 {
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Selector::Terminate()\n";
-#endif
+    DEBUG("------------>Selector::Terminate()", "");
 }
 
 inline void Selector::LoadVamosData()
@@ -409,9 +382,7 @@ inline void Selector::LoadAgataData()
 
 inline void Selector::PlotVamosGraphs()
 {
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Selector::PlotVamosGraphs()\n";
-#endif
+    DEBUG("------------>Selector::PlotVamosGraphs()", "");
     //dE-E plot, no conditions
     Fill(pConf.VAMOS.mdE_E,
          vamos_fragment.Get_En(), vamos_fragment.Get_D_En());
@@ -429,16 +400,17 @@ inline void Selector::PlotVamosGraphs()
     Fill(pData.VAMOS.mTW_Brho[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()],
          *TW, *Brho);
 
-    Fill(pData.VAMOS.mE_Theta[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()],
-         vamos_fragment.Get_p4()->Angle(TVector3(0, 0, 1)),
-         vamos_fragment.Get_EnFromBrho());
+    for (int ii = 0; ii < mugast_fragment.Get_Mult(); ++ii)
+    {
+        Fill(pData.VAMOS.mE_Theta[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][mugast_fragment.Get_Particle(ii)],
+             vamos_fragment.Get_p4()->Angle(TVector3(0, 0, 1)),
+            vamos_fragment.Get_EnFromBrho());
+    }
 }
 
 inline void Selector::PlotMugastGraphs()
 {
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>Selector::PlotMugastGraphs()\n";
-#endif
+    DEBUG("------------>Selector::PlotMugastGraphs()", "");
     for (int ii = 0; ii < mugast_fragment.Get_Mult(); ++ii)
     {
         if (mugast_fragment.Get_T(ii)>260 && mugast_fragment.Get_T(ii)<380){

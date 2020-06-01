@@ -1,5 +1,11 @@
 #include "VamosIdentification.h"
 
+#ifdef VERBOSE_DEBUG
+#  define DEBUG(x, y) std::cout << (x) << (y) << std::endl;
+#else
+#  define DEBUG(x, y) 
+#endif
+
 VamosIdentification::VamosIdentification() : cuts_Z({18, 19, -1}),
                                              //cuts_M({45, 46, 47, -1, -2}),
                                              //cuts_Q({13, 14, 15, 16, 17, 18, 19, -1, -2}),
@@ -12,9 +18,7 @@ VamosIdentification::VamosIdentification() : cuts_Z({18, 19, -1}),
 
 bool VamosIdentification::Initialize()
 {
-#ifdef VERBOSE_DEBUG
-    std::cout << "------------>VamosIdentification::Initialize()\n";
-#endif
+    DEBUG("------------>VamosIdentification::Initialize()", "");
 
     //Focal plane aligments
     ReadFPTimeShifts();
@@ -39,9 +43,7 @@ bool VamosIdentification::Initialize()
 
     //Delta E vs Energy cuts
 
-#ifdef VERBOSE_DEBUG
-    std::cout << "Starting to look for VAMOS files\n";
-#endif
+    DEBUG("Starting to look for VAMOS files", "");
 
     try
     {
@@ -91,9 +93,7 @@ bool VamosIdentification::Initialize()
 
     cut_type["MQ_Q"] = *tmp;
 
-#ifdef VERBOSE_DEBUG
-    std::cout << "Found all needed cuts\n";
-#endif
+    DEBUG("Found all needed cuts", "");
 
     return true;
 }
@@ -122,17 +122,14 @@ void VamosIdentification::ReadFPTimeShifts()
         TimeShifts.push_back(std::pair<double, double>(std::stod(max), std::stod(shift)));
     }
     double tmp = -1E6;
-#ifdef VERBOSE_DEBUG
-    std::cout << "Dumping FP shift calibration\n";
-#endif
+    DEBUG("Dumping FP shift calibration", "");
     for (const auto &it : TimeShifts)
     {
         if (it.first < tmp)
             throw std::runtime_error("Time shifts not incremental\n");
         tmp = it.first;
-#ifdef VERBOSE_DEBUG
-        std::cout << it.first << "    " << it.second << "\n";
-#endif
+        DEBUG("it.first = ", it.first );
+        DEBUG("it.second = ", it.second );
     }
 }
 
