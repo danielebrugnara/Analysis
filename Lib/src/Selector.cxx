@@ -53,7 +53,7 @@ void Selector::SlaveBegin(TTree * /*tree*/)
 
     //Passing beam energy in MeV, target position mm
     //mugast_fragment.Initialize(379.04, TVector3(0, 0, 25.));
-    mugast_fragment.Initialize(450.00, TVector3(0, 0, 25.));
+    mugast_fragment.Initialize(450.00*UNITS::MeV, TVector3(0, 0, 25.));
 
     DEBUG("------------>finished: vamos_fragment initialization", "");
 

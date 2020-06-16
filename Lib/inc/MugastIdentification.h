@@ -1,22 +1,20 @@
-
 #ifndef __MUGASTIDENTIFICATION_H__
 #define __MUGASTIDENTIFICATION_H__
 
+#include <array>
+
 #include <TTreeReaderValue.h>
 #include <TVector3.h>
-
-#include <array>
 
 #include "Calibration.h"
 #include "Identification.h"
 #include "Minimizer.h"
 #include "Interpolation.h"
 #include "EnergyLoss.h"
+#include "ReactionReconstruction.h"
+#include "ReactionFragment.h"
 
-//TODO: generate internal library for the following headers
-#include "NPReaction.h"
 #include "TMugastPhysics.h"
-#include "NPNucleus.h"
 
 class MugastIdentification : public Identification
 {
@@ -33,7 +31,7 @@ public:
     static constexpr int charge_state_interpolation{16};
     static constexpr double gradient_descent_normalization{1.E3};
 
-    static constexpr double ice_percentage_second = 0.85;
+    static constexpr double ice_percentage_second {0.85};
 
     struct Data
     {
@@ -64,8 +62,8 @@ private:
     double beam_energy_match_threashold;
     double brho;
     TVector3 target_pos;
-    std::unordered_map<std::string, NPL::Reaction *> reaction;
-    std::unordered_map<std::string, NPL::Reaction *>::iterator reaction_it;
+
+    std::unordered_map<std::string, ReactionReconstruction> reaction;
     std::vector<std::string> layers;
 
     struct Fragment
@@ -79,7 +77,7 @@ private:
         std::vector<double> SI_E;                   //Energy deposition measured
         std::vector<double> SI_E2;                  //Second layer energy deposition
         std::vector<double> E;                      //After E-Loss corrections
-        std::vector<double> E_CM;                      //After E-Loss corrections
+        std::vector<double> E_CM;                   //After E-Loss corrections
         std::vector<double> Ex;                     //Ex computed with reaction
         std::vector<double> E2;                     //Second layer 
         std::vector<double> SI_T;                   //Un calibrated time
@@ -170,30 +168,30 @@ public:
     bool Identify();
 
 private:
-    void IdentifyIceThickness();
     static constexpr double average_beam_thickness = 3.723; //500 Torr
-    double InitialBeamEnergy(double, double);
-    double MiddleTargetBeamEnergy(double);
+    void    IdentifyIceThickness();
+    double  InitialBeamEnergy(double, double);
+    double  MiddleTargetBeamEnergy(double);
 
 public: //Functions called by selector
-    inline int Get_Mult() { return fragment->multiplicity; };
-    inline TVector3 *Get_Pos(const int &i) { return &(fragment->Pos[i]); };
-    inline TVector3 *Get_EmissionDirection(const int &i) { return &(fragment->EmissionDirection[i]); };
-    inline int Get_SI_X(const int &i) { return fragment->SI_X[i]; };
-    inline int Get_SI_Y(const int &i) { return fragment->SI_Y[i]; };
-    inline double Get_SI_E(const int &i) { return fragment->SI_E[i]; };
-    inline double Get_T2(const int &i) { return fragment->T2[i]; };
-    inline double Get_MG(const int &i) { return fragment->MG[i]; };
-    inline double Get_M(const int &i) { return fragment->M[i]; };
-    inline double Get_Z(const int &i) { return fragment->Z[i]; };
-    inline double Get_E(const int &i) { return fragment->E[i]; };
-    inline double Get_Ex(const int &i) { return fragment->Ex[i]; };
-    inline double Get_T(const int &i) { return fragment->T[i]; }
-    inline std::string Get_Particle(const int &i) { return fragment->Particle[i]; }
-    inline double Get_ThetaLab(const int &i)
+    inline int          Get_Mult()              { return fragment->multiplicity; };
+    inline TVector3*    Get_Pos(const int &i)   { return &(fragment->Pos[i]); };
+    inline int          Get_SI_X(const int &i)  { return fragment->SI_X[i]; };
+    inline int          Get_SI_Y(const int &i)  { return fragment->SI_Y[i]; };
+    inline double       Get_SI_E(const int &i)  { return fragment->SI_E[i]; };
+    inline double       Get_T2(const int &i)    { return fragment->T2[i]; };
+    inline double       Get_MG(const int &i)    { return fragment->MG[i]; };
+    inline double       Get_M(const int &i)     { return fragment->M[i]; };
+    inline double       Get_Z(const int &i)     { return fragment->Z[i]; };
+    inline double       Get_E(const int &i)     { return fragment->E[i]; };
+    inline double       Get_Ex(const int &i)    { return fragment->Ex[i]; };
+    inline double       Get_T(const int &i)     { return fragment->T[i]; }
+    inline std::string  Get_Particle(const int &i)  { return fragment->Particle[i]; }
+    inline double       Get_ThetaCM(const int &i)   {return fragment->E_CM[i];};
+    inline TVector3*    Get_EmissionDirection(const int &i)
+        { return &(fragment->EmissionDirection[i]); };
+    inline double       Get_ThetaLab(const int &i)
         {return fragment->EmissionDirection[i].Angle(TVector3(0, 0, 1));};
-    inline double Get_ThetaCM(const int &i)
-        {return fragment->E_CM[i];};
 };
 
 #endif

@@ -1,4 +1,5 @@
 #include "MugastIdentification.h"
+
 #ifdef VERBOSE_DEBUG
 #  define DEBUG(x, y) std::cout << (x) << (y) << std::endl;
 #else
@@ -22,8 +23,8 @@ MugastIdentification::MugastIdentification() : cuts_MG({1, 3, 4, 5, 7, 11}),
                                                fragment(nullptr),
                                                use_constant_thickness(false),
                                                with_cuts(true),
-                                               havar_thickness(3.8E-3)
-{ //in mm
+                                               havar_thickness(3.8E-3) //in mm
+{ 
 }
 
 MugastIdentification::~MugastIdentification()
@@ -33,6 +34,7 @@ MugastIdentification::~MugastIdentification()
     delete data;
     delete fragment;
     //delete reaction;
+
     for (const auto &MG : cuts_MG)
     {
         delete calibrations_TY[MG];
@@ -55,6 +57,9 @@ MugastIdentification::~MugastIdentification()
 bool MugastIdentification::Initialize(const double &beam_energy,
                                       const TVector3 &target_pos)
 {
+    this->beam_energy = beam_energy;
+    this->target_pos = target_pos;
+
     DEBUG("------------>MugastIdentification::Initialize()", "");
 
     if (use_constant_thickness)
@@ -63,16 +68,26 @@ bool MugastIdentification::Initialize(const double &beam_energy,
         current_ice_thickness.second = 3E-2;
     }
 
-    reaction["M47_Z19_m1_z1"] = new NPL::Reaction("46Ar(3He,p)48K@" + std::to_string(beam_energy));
-    reaction["M47_Z19_m2_z1"] = new NPL::Reaction("46Ar(3He,d)47K@" + std::to_string(beam_energy));
-    reaction["M47_Z19_m4_z2"] = new NPL::Reaction("46Ar(3He,4He)45Ar@" + std::to_string(beam_energy));
+    //Setup of reactions////////////////////////////////
 
+    //reaction["M47_Z19_m1_z1"] = new NPL::Reaction("46Ar(3He,p)48K@" + std::to_string(beam_energy));
+    //reaction["M47_Z19_m2_z1"] = new NPL::Reaction("46Ar(3He,d)47K@" + std::to_string(beam_energy));
+    //reaction["M47_Z19_m4_z2"] = new NPL::Reaction("46Ar(3He,4He)45Ar@" + std::to_string(beam_energy));
+
+    ReactionReconstruction2body::ReactionInput2body tmp_data{
+            ReactionFragment::FragmentSettings(46,18,17,beam_energy,0., TVector3(0., 0., 1.)),
+            ReactionFragment::FragmentSettings( 3, 2, 0,0,0., TVector3()),
+            ReactionFragment::FragmentSettings(47,19,17,0,0., TVector3()),
+            ReactionFragment::FragmentSettings(2,1,1,0,0., TVector3())
+    };
+
+    //Setup of masses////////////////////////////////
     //Masses in MeV [M][Z] as ints
     for (const auto &it_M : cuts_M)
     {
         for (const auto &it_Z : cuts_Z)
         {
-            mass[it_M][it_Z] = NPL::Nucleus(it_Z, it_M).Mass();
+            mass[it_M][it_Z] = ReactionFragment();
         }
     }
     mass[46][18] = NPL::Nucleus(18, 46).Mass();
@@ -107,15 +122,14 @@ bool MugastIdentification::Initialize(const double &beam_energy,
         ice_thickness = nullptr;
     }
 
-    this->beam_energy = beam_energy;
-    this->target_pos = target_pos;
+
     //Cuts Initialization///////////////////////////////////
     InitializeCuts();
 
-    //Calibration initialization//////////////////////////////////////////
+    //Calibration initialization////////////////////////////
     InitializeCalibration();
 
-    //Energy Loss//////////////////////////////////////////////////////////
+    //Energy Loss///////////////////////////////////////////
     InitializeELoss();
 
     return true;
@@ -126,6 +140,7 @@ bool MugastIdentification::InitializeCuts()
     std::unordered_map<std::string, TCutG *> *tmp = new std::unordered_map<std::string, TCutG *>();
 
     std::vector<std::string> tmp_cut_names;
+
     tmp_cut_names.push_back("E_TOF_m1_z1_MG1");
     tmp_cut_names.push_back("E_TOF_m1_z1_MG3");
     tmp_cut_names.push_back("E_TOF_m1_z1_MG4");
@@ -291,19 +306,19 @@ bool MugastIdentification::Identify()
     for (unsigned int ii = 0; ii < fragment->multiplicity; ++ii)
     {
         fragment->Indentified[ii] = false;
-        fragment->Pos[ii] = TVector3((**(data->Mugast)).PosX[ii],
+        fragment->Pos[ii]   = TVector3((**(data->Mugast)).PosX[ii],
                                      (**(data->Mugast)).PosY[ii],
                                      (**(data->Mugast)).PosZ[ii]);
         fragment->TelescopeNormal[ii] = TVector3((**(data->Mugast)).TelescopeNormalX[ii],
                                                  (**(data->Mugast)).TelescopeNormalY[ii],
                                                  (**(data->Mugast)).TelescopeNormalZ[ii]);
-        fragment->SI_E[ii] = (**(data->Mugast)).DSSD_E[ii];
+        fragment->SI_E[ii]  = (**(data->Mugast)).DSSD_E[ii];
         fragment->SI_E2[ii] = (**(data->Mugast)).SecondLayer_E[ii];
-        fragment->SI_X[ii] = (**(data->Mugast)).DSSD_X[ii];
-        fragment->SI_Y[ii] = (**(data->Mugast)).DSSD_Y[ii];
-        fragment->SI_T[ii] = (**(data->Mugast)).DSSD_T[ii];
-        fragment->T2[ii] = (**(data->Mugast)).SecondLayer_T[ii];
-        fragment->MG[ii] = (**(data->Mugast)).TelescopeNumber[ii];
+        fragment->SI_X[ii]  = (**(data->Mugast)).DSSD_X[ii];
+        fragment->SI_Y[ii]  = (**(data->Mugast)).DSSD_Y[ii];
+        fragment->SI_T[ii]  = (**(data->Mugast)).DSSD_T[ii];
+        fragment->T2[ii]    = (**(data->Mugast)).SecondLayer_T[ii];
+        fragment->MG[ii]    = (**(data->Mugast)).TelescopeNumber[ii];
     }
     DEBUG("------------>finished: setting up fragment", "");
 
@@ -328,7 +343,6 @@ bool MugastIdentification::Identify()
     for (const auto &it : reaction)
     {
         it.second->SetBeamEnergy(MiddleTargetBeamEnergy(final_beam_energy));
-        //std::cout << MiddleTargetBeamEnergy(final_beam_energy) << std::endl;
     }
 
     //Applying (time) re-calibrations
@@ -383,8 +397,6 @@ bool MugastIdentification::Identify()
 
                     fragment->Indentified[ii] = true;
                     fragment->Particle[ii] = cut_it;
-                    //fragment->E_CM[ii] = fragment->E[ii]*((double)fragment->M[ii]+(double)data->VAMOS_id_M)/
-                    //                        (4.*(double)data->VAMOS_id_M*pow(cos(fragment->EmissionDirection[ii].Theta()), 2)); 
                 }
             }
             if (!fragment->Indentified[ii])
@@ -479,8 +491,6 @@ void MugastIdentification::IdentifyIceThickness()
 
     if (abs(beam_energy - initial_beam_energy) > beam_energy_match_threashold)
     {
-        //ice_thickness_minimizer = new Minimizer(this->Thickness_discr,
-        //                                        current_ice_thickness.first, 0.7, 0.1, 100, 1, 1E-3);
         DEBUG("Before minimizer call, ice_thickness.first = ", current_ice_thickness.first);
 
         double tmp_threashold{2E-4};
