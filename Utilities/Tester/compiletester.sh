@@ -1,0 +1,1 @@
+gcc -o Tester Tester.cpp -L../../cmake-build-debug/Lib/bin/ -Wl,-rpath,../../cmake-build-debug/Lib/bin/ -lReactionReconstruction -lReactionFragment -I../../Lib/inc/ $(root-config --cflags --glibs) -lstdc++

@@ -75,10 +75,10 @@ bool MugastIdentification::Initialize(const double &beam_energy,
     //reaction["M47_Z19_m4_z2"] = new NPL::Reaction("46Ar(3He,4He)45Ar@" + std::to_string(beam_energy));
 
     ReactionReconstruction2body::ReactionInput2body tmp_data{
-            ReactionFragment::FragmentSettings(46,18,17,beam_energy,0., TVector3(0., 0., 1.)),
-            ReactionFragment::FragmentSettings( 3, 2, 0,0,0., TVector3()),
-            ReactionFragment::FragmentSettings(47,19,17,0,0., TVector3()),
-            ReactionFragment::FragmentSettings(2,1,1,0,0., TVector3())
+            ReactionFragment::FragmentSettings(46,18,17,beam_energy,0.),
+            ReactionFragment::FragmentSettings( 3, 2, 0,0,0.),
+            ReactionFragment::FragmentSettings(47,19,17,0,0.),
+            ReactionFragment::FragmentSettings(2,1,1,0,0.)
     };
 
     //Setup of masses////////////////////////////////
