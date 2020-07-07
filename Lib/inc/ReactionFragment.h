@@ -5,6 +5,7 @@
 #include <fstream>
 
 #include <TLorentzVector.h>
+
 #include <TVector3.h>
 
 #include <Units.h>
@@ -49,28 +50,18 @@ private:
     double Ex;
     double Invariant;
     struct Properties {
-        double Ek;  //primary
-        double E;
         TVector3 Pos;
-        //TVector3 Beta;
         TLorentzVector P;
-        bool modified;
-        std::pair <bool, TLorentzVector> P_tot; //Primary if present
-        Properties( const double & Ek):
-            Ek(Ek),
-            E(0),
-            modified(false){}
+        Properties(){}
     };
+    std::pair <bool, TVector3> betacm;
     Properties Lab, Cm;
-    Properties & GetModified();
-    Properties & GetNotModified();
     bool Fixed;
     bool ExFixed;
-    bool preserve_pcm;
 
 public:
     //Setter methods
-    void Set_Ex             (double const &);
+    void Set_Ex             (double const &); //Keeps p constant
     void Set_Ek             (double const &);
     void Set_Ek_cm          (double const &);
     void Set_E              (double const &);
@@ -95,8 +86,7 @@ public:
     void Set_E_Theta_cm     (double const &, double const &);
     void Set_E_Theta_Phi    (double const &, double const &, double const &);
     void Set_E_Theta_Phi_cm (double const &, double const &, double const &);
-    void Set_P_tot          (TLorentzVector const &);
-    void Set_P_tot_cm       (TLorentzVector const &);
+    void Set_betacm         (TVector3 const &);
     void Set_Fixed          (bool const &);
     void Set_ExFixed        (bool const &);
     inline void Set_Invariant (double const & Inv){Invariant=Inv;};
@@ -109,10 +99,10 @@ public:
     inline double       Get_M          () const {return M;}            ;
     inline double       Get_M_GS       () const {return M-Ex;}         ;
     inline double       Get_M2         () const {return M2;}           ;
-    inline double       Get_Ek         () const {return Lab.Ek;}       ;
-    inline double       Get_Ek_cm      () const {return Cm.Ek;}        ;
-    inline double       Get_E          () const {return Lab.E;}        ;
-    inline double       Get_E_cm       () const {return Cm.E;}         ;
+    inline double       Get_Ek         () const {return Lab.P.E()-M;}  ;
+    inline double       Get_Ek_cm      () const {return Cm.P.E()-M;}   ;
+    inline double       Get_E          () const {return Lab.P.E();}    ;
+    inline double       Get_E_cm       () const {return Cm.P.E();}     ;
     inline double       Get_Ex         () const {return Ex;}           ;
     inline double       Get_Invariant  () const {return Invariant;}    ;
     inline double       Get_Spin       () const {return Spin;}         ;
@@ -127,11 +117,12 @@ public:
     inline bool         Is_Fixed       () const {return Fixed;}        ;
     inline bool         Is_ExFixed     () const {return ExFixed;}      ;
 
-    double Compute_Ex       (TLorentzVector const &);
 private:
     void GetFromData(const int &, const int &);
     void Extract(std::string const &);
-    void ComputeChanges();
+    void UpdateMass();
+    void BoostToLab();
+    void BoostToCm();
     const double precision;
 };
 

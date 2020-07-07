@@ -1,5 +1,7 @@
 #include <ReactionReconstruction.h>
 
+//#define sqrt sqrtl
+
 //Base cass////////////////////////////////////////////////////////////////////////////////
 ReactionReconstruction::ReactionReconstruction( ReactionFragment::FragmentSettings const & p1,
                                                 ReactionFragment::FragmentSettings const & p2):
@@ -19,10 +21,11 @@ void ReactionReconstruction::UpdateVectors() {
     if (!changed_initial_conditions)
         return;
     P_TOT = p1.Get_P() + p2.Get_P();
+
     p1.Set_Invariant( P_TOT * P_TOT );
     p2.Set_Invariant(p1.Get_Invariant());
-    //p1.Set_P_tot(P_CM); //Not necessary
-    //p2.Set_P_tot(P_CM); //Not necessary
+    p1.Set_betacm(P_TOT.BoostVector()); //Not necessary
+    p2.Set_betacm(P_TOT.BoostVector()); //Not necessary
     changed_initial_conditions = false;
 }
 
@@ -125,7 +128,7 @@ double ReactionReconstruction2body::Get_ThetaMax() {
         return UNITS::CONSTANTS::pi;
     }else{
         sqroot = sqrt(sqroot);
-        return sqroot/(2 * p3.Get_M() * p1.Get_P().Vect().Mag());
+        return acos(sqroot/(2 * p3.Get_M() * p1.Get_P().Vect().Mag()));
     }
 }
 
@@ -149,9 +152,11 @@ void ReactionReconstruction2body::Set_Ek(const double & Ek) {
     free.Set_Invariant(p2.Get_M2()+fixed.Get_M2()-2*(E)*p2.Get_M());
     fixed.Set_Invariant(2*p1.Get_M2()+2*p2.Get_M2()-free.Get_Invariant()-p1.Get_Invariant());
     fixed.Set_E_Theta(  E,
-                        acos(   (fixed.Get_Invariant()-p1.Get_M2()-fixed.Get_M2()+2*E*p1.Get_E())/
-                                (2*p1.Get_P().Vect().Mag()*sqrt(E*E-fixed.Get_M2()))));
-    bool debug = fixed.Check_Consistent();
+                        acosl(   (fixed.Get_Invariant()-p1.Get_M2()-fixed.Get_M2()+2*E*p1.Get_E())/
+                                (2*p1.Get_P().Vect().Mag()*sqrtl(E*E-fixed.Get_M2()))));
+    double debug =
+            acosl(   (fixed.Get_Invariant()-p1.Get_M2()-fixed.Get_M2()+2*E*p1.Get_E())/
+    (2*p1.Get_P().Vect().Mag()*sqrt(E*E-fixed.Get_M2())))*180/3.1415;
     UpdateVectors();
 }
 
@@ -308,15 +313,14 @@ void ReactionReconstruction2body::Set_P(const double & P) {
 void ReactionReconstruction2body::UpdateVectors() {
     if (changed_initial_conditions) {
         ReactionReconstruction::UpdateVectors();
-        p3.Set_P_tot(P_TOT);
-        p4.Set_P_tot(P_TOT);
-        p3.Set_P_tot_cm(-P_TOT);
-        p4.Set_P_tot_cm(-P_TOT);
+        p3.Set_betacm(P_TOT.BoostVector());
+        p4.Set_betacm(P_TOT.BoostVector());
     }
 
     //p_f_cm =    (p1.Get_Invariant() - pow(p3.Get_M() - p4.Get_M(), 2) ) /
     //            (2 * p1.Get_Invariant());
     //GetFixedFragment().Set_P(p_f_cm);
+    double debug3 = ((p1.Get_P() + p2.Get_P())*(p1.Get_P()+p2.Get_P()));
     GetFreeFragment().Set_P(p1.Get_P()+p2.Get_P()-GetFixedFragment().Get_P());
 }
 

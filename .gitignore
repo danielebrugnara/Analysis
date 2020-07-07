@@ -10,3 +10,12 @@ Out/
 *.pcm
 .MugastShape
 tmp
+cmake-build-debug
+.idea
+Makefile
+CMakeFiles
+CMakeCache.txt
+cmake_install.cmake
+G__*
+*.rootmap
+lib*.a
