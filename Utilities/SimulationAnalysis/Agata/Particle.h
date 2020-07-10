@@ -5,7 +5,7 @@
 
 class Particle{
     public:
-    Particle();
+    Particle(){};
     Particle(int type, double Energy, double x, double y, double z, int nr){
         this->type=type;
         this->Energy=Energy;

@@ -37,6 +37,7 @@ link_directories("${CMAKE_BINARY_DIR}/../../Build/Lib/bin/")
 link_directories("${CMAKE_BINARY_DIR}")
 
 
+
 get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
 foreach(dir ${dirs})
 	  message(STATUS "selected include dir='${dir}'")
@@ -48,12 +49,16 @@ foreach(dir ${dirs})
 endforeach()
 
 #static library for selector
+ROOT_GENERATE_DICTIONARY(G__Readsimu Readsimu.h LINKDEF ReadsimuLinkDef.h)
+add_library(Readsimu SHARED G__Readsimu.cxx)
+target_link_libraries(Readsimu ${ROOT_LIBRARIES})
+
 ROOT_GENERATE_DICTIONARY(G__Hit Hit.h LINKDEF HitLinkDef.h)
-add_library(Hit STATIC Hit.h G__Hit.cxx)
+add_library(Hit SHARED  G__Hit.cxx)
 target_link_libraries(Hit ${ROOT_LIBRARIES})
 
 ROOT_GENERATE_DICTIONARY(G__Particle Particle.h LINKDEF ParticleLinkDef.h)
-add_library(Particle STATIC Particle.h G__Particle.cxx)
+add_library(Particle SHARED  G__Particle.cxx)
 target_link_libraries(Particle ${ROOT_LIBRARIES})
 
 ROOT_GENERATE_DICTIONARY(G__Selector Selector.h LINKDEF SelectorLinkDef.h)
@@ -62,8 +67,8 @@ target_link_libraries(Selector ${ROOT_LIBRARIES} Hit Particle)
 
 ROOT_GENERATE_DICTIONARY(G__RunSelector RunSelector.h LINKDEF RunSelectorLinkDef.h)
 add_library(RunSelector STATIC RunSelector.cxx G__RunSelector.cxx)
-target_link_libraries(RunSelector ${ROOT_LIBRARIES} Selector)
+target_link_libraries(RunSelector ${ROOT_LIBRARIES} Selector Readsimu)
 
 #linking to main
-add_executable(main main.cxx)
-target_link_libraries(main RunSelector)
+add_executable(simulationanalysis main.cxx)
+target_link_libraries(simulationanalysis RunSelector)

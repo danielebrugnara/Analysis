@@ -17,6 +17,8 @@
 #include <TTreeReaderArray.h>
 
 #include <TVector3.h>
+#include <TH1D.h>
+#include <TH2D.h>
 
 // Headers needed by this particular selector
 #include <vector>
@@ -36,7 +38,7 @@ public :
    TTreeReaderArray<Hit> Hits = {fReader, "Hits"};
 
 
-   Selector(TTree * /*tree*/ =0) { }
+   Selector(TTree * /*tree*/ =0):beta(0.117769),velocity(35.3), t12_1(1.1), t12_2(6.3+t12_1), em_position_1(0., 0., velocity*t12_1), em_position_2(0., 0., velocity*t12_2) { }
    virtual ~Selector() { }
    virtual Int_t   Version() const { return 2; }
    virtual void    Begin(TTree *tree);
@@ -52,7 +54,31 @@ public :
    virtual void    SlaveTerminate();
    virtual void    Terminate();
 
+    double ComputeDoppler(const TVector3 &, const double &);
+    double ComputeDoppler(const TVector3 &, const TVector3 &, const double &);
    ClassDef(Selector,0);
+
+    TH1D * cal_spec;
+    TH1D * core_spec;
+    TH1D * core_spec_DC;
+    TH1D * core_spec_DC_pos_1;
+    TH1D * core_spec_DC_pos_2;
+    TH2D * core_gg;
+    TH2D * core_gg_DC;
+    TH2D * core_gg_DC_pos_1;
+    TH2D * core_gg_DC_pos_2;
+//    TH1D * addb_spec;
+//    TH1D * addb_spec_DC;
+//    TH1D * addb_spec_DC_pos_1;
+//    TH1D * addb_spec_DC_pos_2;
+    TH1D * dist;
+
+    const double beta;
+    const double velocity; //mm/ns
+    const double t12_1; //ns
+    const double t12_2; //ns
+    const TVector3 em_position_1; //mm/ns
+    const TVector3 em_position_2; //mm/ns
 
 };
 
