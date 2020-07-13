@@ -15,8 +15,13 @@ RunSelector::RunSelector(std::string file_name){
     TIter iter (selector->GetOutputList());
     TObject *obj;
     TFile * out_file = new TFile(file_out_name.c_str(), "recreate");
+    this->file_name = file_out_name;
     while ((obj=iter())){
         obj->Write();
     }
     out_file->Close();
 }   
+
+std::string RunSelector::GetFileName() const {
+    return file_name;
+}

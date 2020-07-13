@@ -46,6 +46,11 @@ void Selector::SlaveBegin(TTree * /*tree*/)
 
    TString option = GetOption();
 
+   hspec = new TH1D("hspec", "hspec", 4000, 0, 4000);
+   fOutput->Add(hspec);
+   mgamma_gamma = new TH2D("mgamma_gamma", "mgamma_gamma", 4000, 0, 4000, 4000, 0, 4000);
+   fOutput->Add(mgamma_gamma);
+
 }
 
 Bool_t Selector::Process(Long64_t entry)
@@ -67,6 +72,15 @@ Bool_t Selector::Process(Long64_t entry)
    // The return value is currently not used.
 
    fReader.SetLocalEntry(entry);
+
+   for (const auto & en1: AddE){
+       hspec->Fill(en1);
+       for (const auto & en2: AddE){
+           if (en1 == en2) continue;
+           mgamma_gamma->Fill(en1, en2);
+           mgamma_gamma->Fill(en2, en1);
+       }
+   }
 
    return kTRUE;
 }

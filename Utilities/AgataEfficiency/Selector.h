@@ -16,6 +16,9 @@
 #include <TTreeReaderValue.h>
 #include <TTreeReaderArray.h>
 
+#include <TH1D.h>
+#include <TH2D.h>
+
 // Headers needed by this particular selector
 
 
@@ -67,6 +70,9 @@ public :
    virtual TList  *GetOutputList() const { return fOutput; }
    virtual void    SlaveTerminate();
    virtual void    Terminate();
+
+   TH1D* hspec;
+   TH2D* mgamma_gamma;
 
    ClassDef(Selector,0);
 

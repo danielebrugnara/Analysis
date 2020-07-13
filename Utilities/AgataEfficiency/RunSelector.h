@@ -10,7 +10,10 @@
 #include "Selector.h"
 
 class RunSelector{
-    public:
+public:
     RunSelector(std::string);
+    std::string GetFileName() const;
+private:
+    std::string file_name;
 };
 #endif
