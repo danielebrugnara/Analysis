@@ -8,6 +8,7 @@
 #include <string>
 
 #include "DiaGraph.h"
+#include "LevelScheme.h"
 
 #include <TFile.h>
 #include <TH1D.h>
@@ -16,7 +17,24 @@
 
 class SpectrumAnalyzer {
 public:
-    SpectrumAnalyzer(const std::string &);
+    explicit SpectrumAnalyzer(const std::string &);
+private:
+    TH2D gg;
+    void SetupLevelSchemes();
+
+    struct Gamma{
+        double egamma;
+        double br;
+//        static Gamma FromLevels(const Gamma & g1, const double&e1, const Gamma& g2, const double& e2){
+//            return Gamma{e1-e2, g1.br};
+//        }
+    };
+
+    friend std::ostream& operator<<(std::ostream& os, const Gamma& g)
+    {
+        os << "("<<g.egamma<<" , "<<g.br<<")";
+        return os;
+    }
 };
 
 

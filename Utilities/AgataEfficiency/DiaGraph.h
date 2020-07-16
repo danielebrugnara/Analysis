@@ -3,99 +3,79 @@
 
 #include <iostream>
 // stores adjacency list items
-template <typename T>
-struct adjNode {
-    int val;
-    T cost;
-    T payload;
-    adjNode* next;
+template <typename Tw>
+struct adjEdge {
+    int pointed_ver;
+    Tw weight;
+    adjEdge<Tw>* next;
+};
+
+template <typename Tw, typename Tp>
+struct graphNode{
+    Tp payload;
+    adjEdge<Tw>* adj;
 };
 
 // structure to store edges
-template <typename T>
+template <typename Tw>
 struct graphEdge {
     int start_ver, end_ver;
-    T weight;
+    Tw weight;
 };
 
-template <typename T>
+template <typename Tw, typename  Tp>
 class DiaGraph{
-    // insert new nodes into adjacency list from given graph
-    adjNode<T>* getAdjListNode(int value, int weight, adjNode<T>* head)   {
-        adjNode<T>* newNode = new adjNode<T>;
-        newNode->val = value;
-        newNode->cost = weight;
-        newNode->payload = weight;
-
-        newNode->next = head;   // point new node to current head
-        return newNode;
-    }
-    adjNode<T>* getAdjListNode(int value, T weight, T payload, adjNode<T>* head)   {
-        adjNode<T>* newNode = new adjNode<T>;
-        newNode->val = value;
-        newNode->cost = weight;
-        newNode->payload = payload;
-
-        newNode->next = head;   // point new node to current head
-        return newNode;
-    }
-    int N;  // number of nodes in the graph
 public:
-    adjNode<T> **head;                //adjacency list as array of pointers
-    // Constructor
-    DiaGraph(graphEdge<T> edges[], int n, int N)  {
+    DiaGraph(graphEdge<Tw> edges[], Tp* payloads, int n, int N):N(N){
         // allocate new node
-        head = new adjNode<T>*[N]();
-        this->N = N;
+        head = new graphNode<Tw, Tp>[N];
         // initialize head pointer for all vertices
         for (int i = 0; i < N; ++i)
-            head[i] = nullptr;
+            head[i] = {payloads[i],nullptr};
         // construct directed graph by adding edges to it
-        for (unsigned i = 0; i < n; ++i)  {
+        for (int i = 0; i < n; ++i)  {
             int start_ver = edges[i].start_ver;
             int end_ver = edges[i].end_ver;
-            int weight = edges[i].weight;
+            Tw weight = edges[i].weight;
             // insert in the beginning
-            adjNode<T>* newNode = getAdjListNode(end_ver, weight, head[start_ver]);
-
-            // point head pointer to new node
-            head[start_ver] = newNode;
+            head[start_ver].adj = addAdjListNode(end_ver, weight, head[start_ver].adj);
         }
-    }
-
-    DiaGraph(graphEdge<T> edges[], T* payloads, T compute_weight(T, T), int n, int N){
-        // allocate new node
-        head = new adjNode<T>*[N]();
-        this->N = N;
-        // initialize head pointer for all vertices
-        for (int i = 0; i < N; ++i)
-            head[i] = nullptr;
-        // construct directed graph by adding edges to it
-        for (unsigned i = 0; i < n; ++i)  {
-            int start_ver = edges[i].start_ver;
-            int end_ver = edges[i].end_ver;
-            T weight = edges[i].weight;
-            // insert in the beginning
-            adjNode<T>* newNode = getAdjListNode(end_ver, weight, payloads[start_ver], head[start_ver]);
-
-            // point head pointer to new node
-            head[start_ver] = newNode;
-        }
-        for (unsigned i = 0; i < N; ++i)  {
-            adjNode<T>* ptr=head[i];
-            while (ptr != nullptr) {
-                ptr->cost = compute_weight(head[i]->payload, ptr->payload);
-                ptr = ptr->next;
-            }
-
-        }
-
     }
     // Destructor
     ~DiaGraph() {
-        for (int i = 0; i < N; i++)
-            delete[] head[i];
+        for (int i = 0; i < N; i++){
+            adjEdge<Tw>* ptr = head[i].adj;
+            adjEdge<Tw>* ptr_next;
+            while (ptr != nullptr) {
+                ptr_next = ptr->next;
+                delete ptr;
+                ptr = ptr_next;
+            }
+        }
         delete[] head;
+    }
+    //adjEdge<Tw> **head;                //adjacency list as array of pointers
+    graphNode<Tw, Tp> *head;
+private:
+    int N;  // number of nodes in the graph
+    // insert new nodes into adjacency list from given graph
+    adjEdge<Tw>* addAdjListNode(int pointed_ver, Tw weight, adjEdge<Tw>* head)   {
+        return new adjEdge<Tw>({pointed_ver, weight, head});
+    }
+
+public:
+    friend std::ostream& operator<<(std::ostream& os, const DiaGraph<Tw, Tp>& gr)
+    {
+        for(int ii=0; ii<gr.N; ++ii) {
+            adjEdge<Tw>* ptr = gr.head[ii].adj;
+            while (ptr != nullptr) {
+                os << "(" << ii << ", " << ptr->pointed_ver
+                          << ", " << ptr->weight << " , " << gr.head[ii].payload << ") ";
+                ptr = ptr->next;
+            }
+            os << std::endl;
+        }
+        return os;
     }
 };
 

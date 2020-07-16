@@ -57,12 +57,18 @@ ROOT_GENERATE_DICTIONARY(G__RunSelector RunSelector.h LINKDEF RunSelectorLinkDef
 add_library(RunSelector STATIC RunSelector.cxx G__RunSelector.cxx)
 target_link_libraries(RunSelector ${ROOT_LIBRARIES} Selector)
 
+add_library(Units STATIC Units.h)
+set_target_properties(Units PROPERTIES LINKER_LANGUAGE CXX)
+
 add_library(DiaGraph STATIC DiaGraph.h)
 set_target_properties(DiaGraph PROPERTIES LINKER_LANGUAGE CXX)
 
+add_library(LevelScheme STATIC LevelScheme.h LevelScheme.cxx)
+target_link_libraries(LevelScheme DiaGraph Units)
+
 ROOT_GENERATE_DICTIONARY(G__SpectrumAnalyzer SpectrumAnalyzer.h LINKDEF SpectrumAnalyzerLinkDef.h)
 add_library(SpectrumAnalyzer STATIC SpectrumAnalyzer.cxx G__SpectrumAnalyzer.cxx)
-target_link_libraries(SpectrumAnalyzer ${ROOT_LIBRARIES} DiaGraph)
+target_link_libraries(SpectrumAnalyzer ${ROOT_LIBRARIES} DiaGraph LevelScheme)
 
 #linking to main
 add_executable(effanalysis main.cxx)
