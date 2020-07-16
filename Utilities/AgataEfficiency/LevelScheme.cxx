@@ -112,6 +112,15 @@ void LevelScheme::ReadFile(const std::string & input_file_name) {
             levels.size()
             );
     std::cout << *scheme;
+
+    std::cout << "----------------------------------------------\n";
+    for (int ii=0; ii<scheme->GetNumberNodes(); ++ii) {
+        auto nod = scheme->getConsecutiveEdges(ii);
+        for (const auto & it: nod){
+
+            std::cout <<"~~" << *it.first <<" -> "<< *it.second<< std::endl;
+        }
+    }
 }
 
 std::pair<double, double> LevelScheme::GetEnergyandError(const std::string & st) {

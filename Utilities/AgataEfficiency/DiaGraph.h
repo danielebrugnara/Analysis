@@ -2,18 +2,28 @@
 #define EFFANALYSIS_DIAGRAPH_H
 
 #include <iostream>
+#include <vector>
 // stores adjacency list items
 template <typename Tw>
 struct adjEdge {
     int pointed_ver;
     Tw weight;
     adjEdge<Tw>* next;
+    friend std::ostream& operator<<(std::ostream& os, const adjEdge<Tw>& ed){
+        os << "(edg pts. to : " << ed.pointed_ver << " , contains : {"<< ed.weight <<"} )";
+        return os;
+    }
+
 };
 
 template <typename Tw, typename Tp>
 struct graphNode{
     Tp payload;
     adjEdge<Tw>* adj;
+    friend std::ostream& operator<<(std::ostream& os, const graphNode<Tw, Tp>& nd){
+        os << "---->(node contains : {"<< nd.payload <<"} )-->";
+        return os;
+    }
 };
 
 // structure to store edges
@@ -54,26 +64,41 @@ public:
         }
         delete[] head;
     }
-    //adjEdge<Tw> **head;                //adjacency list as array of pointers
-    graphNode<Tw, Tp> *head;
+
+    int GetNumberNodes(){return N;}
+
+    std::vector<std::pair<const adjEdge<Tw>*,const adjEdge<Tw>*>> getConsecutiveEdges(const int& startNodeidx){
+        std::vector<std::pair<const adjEdge<Tw>*,const adjEdge<Tw>*>> list;
+        auto* gamma1 = head[startNodeidx].adj;
+        while(gamma1 != nullptr){
+            auto* gamma2 = head[gamma1->pointed_ver].adj;
+            while(gamma2 != nullptr){
+                list.emplace_back(gamma1, gamma2);
+                gamma2 = gamma2->next;
+            }
+            gamma1 = gamma1->next;
+        }
+        return list;
+    }
 private:
+    graphNode<Tw, Tp> *head;
     int N;  // number of nodes in the graph
     // insert new nodes into adjacency list from given graph
     adjEdge<Tw>* addAdjListNode(int pointed_ver, Tw weight, adjEdge<Tw>* head)   {
         return new adjEdge<Tw>({pointed_ver, weight, head});
     }
 
-public:
+
     friend std::ostream& operator<<(std::ostream& os, const DiaGraph<Tw, Tp>& gr)
     {
         for(int ii=0; ii<gr.N; ++ii) {
             adjEdge<Tw>* ptr = gr.head[ii].adj;
+            os <<"idx. " << ii <<" : "<<gr.head[ii];
             while (ptr != nullptr) {
-                os << "(" << ii << ", " << ptr->pointed_ver
-                          << ", " << ptr->weight << " , " << gr.head[ii].payload << ") ";
+                os<< *ptr << "-->";
                 ptr = ptr->next;
             }
-            os << std::endl;
+            os << " nullptr "<< std::endl;
         }
         return os;
     }
