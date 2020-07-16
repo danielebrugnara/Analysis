@@ -74,6 +74,8 @@ public:
 class LevelScheme {
 public:
     explicit LevelScheme(const std::string &);
+    ~LevelScheme();
+    std::vector<std::pair<const Gamma*, const Gamma*>> GetGammaGamma();
 private:
     void ReadFile(const std::string &);
     static std::vector<std::string> ReadCSVRow(const std::string &);
@@ -85,6 +87,7 @@ private:
     static std::vector<std::pair<double, Level::Parity>> GetSpinParity(const std::string &);
     static std::vector<std::pair<double, double>> ComputeBranching(const std::vector<std::pair<double, double>> &);
     DiaGraph<Gamma, Level>* scheme;
+    std::vector<std::pair<const Gamma*, const Gamma*>> gamma_gamma;
 };
 
 

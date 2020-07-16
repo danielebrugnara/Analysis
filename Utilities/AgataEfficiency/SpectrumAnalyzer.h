@@ -13,28 +13,26 @@
 #include <TFile.h>
 #include <TH1D.h>
 #include <TH2D.h>
+#include <TGraph.h>
+#include <TF1.h>
+#include <TFitResult.h>
 
 
 class SpectrumAnalyzer {
 public:
     explicit SpectrumAnalyzer(const std::string &);
+    ~SpectrumAnalyzer();
+    void Analyze();
 private:
     TH2D gg;
-    void SetupLevelSchemes();
-
-    struct Gamma{
-        double egamma;
-        double br;
-//        static Gamma FromLevels(const Gamma & g1, const double&e1, const Gamma& g2, const double& e2){
-//            return Gamma{e1-e2, g1.br};
-//        }
-    };
-
-    friend std::ostream& operator<<(std::ostream& os, const Gamma& g)
-    {
-        os << "("<<g.egamma<<" , "<<g.br<<")";
-        return os;
-    }
+    TGraph effgraph;
+    //void SetupLevelSchemes();
+    LevelScheme levelscheme;
+    std::vector<std::pair<const Gamma*,const Gamma*>> gamma_gamma;
+    const double fit_interval;
+    const double proj_interval;
+    unsigned fit_counter;
+    double GetPeakIntegral(TH1D&, const double&);
 };
 
 

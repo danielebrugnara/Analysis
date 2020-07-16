@@ -67,13 +67,13 @@ public:
 
     int GetNumberNodes(){return N;}
 
-    std::vector<std::pair<const adjEdge<Tw>*,const adjEdge<Tw>*>> getConsecutiveEdges(const int& startNodeidx){
-        std::vector<std::pair<const adjEdge<Tw>*,const adjEdge<Tw>*>> list;
+    std::vector<std::pair<const Tw*,const Tw*>> getConsecutiveEdgeWeights(const int& startNodeidx){
+        std::vector<std::pair<const Tw*,const Tw*>> list;
         auto* gamma1 = head[startNodeidx].adj;
         while(gamma1 != nullptr){
             auto* gamma2 = head[gamma1->pointed_ver].adj;
             while(gamma2 != nullptr){
-                list.emplace_back(gamma1, gamma2);
+                list.emplace_back(&gamma1->weight, &gamma2->weight);
                 gamma2 = gamma2->next;
             }
             gamma1 = gamma1->next;
