@@ -33,6 +33,7 @@ private:
     const double proj_interval;
     unsigned fit_counter;
     double GetPeakIntegral(TH1D&, const double&);
+    static void UpdateErrors(TH1D&);
 };
 
 
