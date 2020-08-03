@@ -57,7 +57,7 @@ void Selector::SlaveBegin(TTree * /*tree*/)
     fOutput->Add(core_spec_DC_pos_1);
     core_spec_DC_pos_2  = new TH1D("core_spec_DC_pos_2", "core_spec_DC_pos_2", 3000, 0, 3000);
     fOutput->Add(core_spec_DC_pos_2);
-    core_gg   = new TH2D("core_gg", "core_gg", 3000, 0, 3000, 3000, 0, 3000);
+    core_gg   = new TH2D("mgamma_gamma", "core_gg", 3000, 0, 3000, 3000, 0, 3000);
     fOutput->Add(core_gg);
     core_gg_DC   = new TH2D("core_gg_DC", "core_gg_DC", 3000, 0, 3000, 3000, 0, 3000);
     fOutput->Add(core_gg_DC);

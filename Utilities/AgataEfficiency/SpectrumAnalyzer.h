@@ -9,8 +9,10 @@
 
 #include "DiaGraph.h"
 #include "LevelScheme.h"
+#include "Plotter.h"
 
 #include <TFile.h>
+#include <TCanvas.h>
 #include <TH1D.h>
 #include <TH2D.h>
 #include <TGraph.h>
@@ -21,20 +23,37 @@
 class SpectrumAnalyzer {
 public:
     explicit SpectrumAnalyzer(const std::string &);
+
     ~SpectrumAnalyzer();
+
     void Analyze();
+
 private:
+    typedef std::vector<std::pair<double, double>> IntensityData;
+
     TH2D gg;
+    Plotter plotter;
     TGraph effgraph;
+    TGraph relative_effgraph;
     //void SetupLevelSchemes();
     LevelScheme levelscheme;
-    std::vector<std::pair<const Gamma*,const Gamma*>> gamma_gamma;
+    IntensityData eu152_intensities;
+    std::vector<std::pair<const Gamma *, const Gamma *>> gamma_gamma;
     const double fit_interval;
     const double proj_interval;
     unsigned fit_counter;
-    double GetPeakIntegral(TH1D&, const double&);
-    static void UpdateErrors(TH1D&);
+
+    double GetPeakIntegral(TH1D &, const double &);
+    static IntensityData ReadIntensities(const std::string&);
+    TGraph GenerateRelativeEffGraph();
+
+    static void UpdateErrors(TH1D &);
+
+    static TH1D* ProjectAndSubtract(const TH2D &,
+                             const double &, const double &,
+                             const double &, const double &,
+                             const double &, const double &);
+    static TH1D* Subtract(TH1D&);
+
 };
-
-
 #endif //EFFANALYSIS_SPECTRUMANALYZER_H

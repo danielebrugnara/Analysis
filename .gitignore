@@ -19,3 +19,7 @@ cmake_install.cmake
 G__*
 *.rootmap
 lib*.a
+effanalysis
+*.cbp
+.run
+
