@@ -218,7 +218,7 @@ std::vector<std::pair<double, double>> SpectrumAnalyzer::GetPeaksIntegral(TH1D &
     std::vector<double> heights;
     const double MIN_VARIANCE{0.8};
     const double MAX_VARIANCE{4.0};
-    if (energies.front().first<1080) return std::vector<std::pair<double, double>>();
+    //if (energies.front().first<1080) return std::vector<std::pair<double, double>>();
 
     for (const auto& it_en: energies) {
         TF1 fitfunc(Form("gaussian_%f_%i", it_en.first, fit_counter),
@@ -255,31 +255,36 @@ std::vector<std::pair<double, double>> SpectrumAnalyzer::GetPeaksIntegral(TH1D &
     }
 
     int number_of_gaussians = energies.size();
+    const int npars = 4;
     TF1 fitfunc(Form("gaussians_%f_%i", energies.front().first, fit_counter),
                 [number_of_gaussians](const double *x, const double *par) {
                     double result{0};
                     for(int ii=0; ii<number_of_gaussians; ++ii){
-                        result += par[0+ii*3] * exp(-pow((x[0] - par[1+ii*3]) / (par[2+ii*3]), 2));
+                        result += par[0+ii*npars] *
+                                1./(2.*par[3+ii*npars])*
+                                exp((x[0]-par[1+ii*npars])/par[3+ii*npars]+pow(par[2+ii*npars], 2)/(4*pow(par[3+ii*npars],2)))*
+                                (1-TMath::Erf((x[0]-par[1+ii*npars])/par[2+ii*npars]+par[2+ii*npars]/(2*par[3+ii*npars])));
                     };
-                    return result*par[number_of_gaussians*3];
+                    return result*par[number_of_gaussians*npars];
                 },
                 energies.front().first - 2*fit_interval,
                 energies.back().first + fit_interval,
-                3*number_of_gaussians+1,
+                npars*number_of_gaussians+1,
                 1);
-    fitfunc.SetNpx(400);
+    fitfunc.SetNpx(200);
 
     for(int ii=0; ii<number_of_gaussians; ++ii) {
-        //fitfunc.SetParameter(0+3*ii, heights[ii]);
-        fitfunc.SetParameter(1+3*ii, energies[ii].first);
-        fitfunc.SetParameter(2+3*ii, 1.8);
+        fitfunc.SetParameter(1+npars*ii, energies[ii].first);
+        fitfunc.SetParameter(2+npars*ii, 1.8);
+        fitfunc.SetParameter(3+npars*ii, 1.8);
 
         //fitfunc.SetParLimits(0+3*ii, std::max(1.,heights[ii]*0.1), std::max(heights[ii]*10, 100.));
         //fitfunc.SetParLimits(1+3*ii, energies[ii].first - 10, energies[ii].first + 10);
-        fitfunc.SetParLimits(2+3*ii, MIN_VARIANCE, MAX_VARIANCE);
+        fitfunc.SetParLimits(2+npars*ii, MIN_VARIANCE, MAX_VARIANCE);
+        fitfunc.SetParLimits(3+npars*ii, 0., 3*MAX_VARIANCE);
 
-        fitfunc.FixParameter(0+3*ii, energies[ii].second);
-        fitfunc.FixParameter(1+3*ii, energies[ii].first);
+        fitfunc.FixParameter(0+npars*ii, energies[ii].second);
+        fitfunc.FixParameter(1+npars*ii, energies[ii].first);
     }
     int max_idx = 0;
     for (int ii=0; ii<heights.size(); ++ii){
@@ -287,16 +292,16 @@ std::vector<std::pair<double, double>> SpectrumAnalyzer::GetPeaksIntegral(TH1D &
             max_idx = ii;
     }
 
-    fitfunc.SetParameter(number_of_gaussians*3, heights[max_idx]/energies[max_idx].second);
-    fitfunc.SetParLimits(number_of_gaussians*3,
-                         std::max(0.,fitfunc.GetParameter(number_of_gaussians*3)*0.1),
-                         std::max(1.,fitfunc.GetParameter(number_of_gaussians*3)*10.) );
+    fitfunc.SetParameter(number_of_gaussians*npars, heights[max_idx]/energies[max_idx].second);
+    fitfunc.SetParLimits(number_of_gaussians*npars,
+                         std::max(0.,fitfunc.GetParameter(number_of_gaussians*npars)*0.1),
+                         std::max(1.,fitfunc.GetParameter(number_of_gaussians*npars)*10.) );
 
     if (debug_canvas)
         plotter.PlotOnCanvas<TH1D>(spec, "histo");
     TFitResultPtr fit_res_ptr(0);
     fit_res_ptr = spec.Fit( &fitfunc,
-                            "S",
+                            "SMER",
                             "",
                             fitfunc.GetXmin(),
                             fitfunc.GetXmax());
@@ -306,19 +311,12 @@ std::vector<std::pair<double, double>> SpectrumAnalyzer::GetPeaksIntegral(TH1D &
 
     std::vector<std::pair<double, double>> integrals;
     for(int ii=0; ii<number_of_gaussians; ++ii) {
-        double integral =   fitfunc.GetParameter(0+3*ii)*fitfunc.GetParameter(number_of_gaussians*3) *
-                            sqrt(UNITS::CONSTANTS::pi) *
-                            fitfunc.GetParameter(2+3*ii);
-        double variance = fitfunc.GetParameter(2+3*ii);
+        double integral =   fitfunc.GetParameter(0+npars*ii)*fitfunc.GetParameter(number_of_gaussians*npars);
+        double variance = fitfunc.GetParameter(2+npars*ii);
+        double tail = fitfunc.GetParameter(3+npars*ii);
         if (abs(variance-MAX_VARIANCE)<0.02 || abs(variance-MIN_VARIANCE)<0.02)
             integral = 0;
-        double error =      sqrt(pow(fitfunc.GetParameter(0+3*ii)*fitfunc.GetParError(number_of_gaussians*3) *
-                            sqrt(UNITS::CONSTANTS::pi) *
-                            fitfunc.GetParameter(2+3*ii), 2)+
-                            pow(fitfunc.GetParameter(0+3*ii)*fitfunc.GetParameter(number_of_gaussians*3) *
-                            sqrt(UNITS::CONSTANTS::pi) *
-                            fitfunc.GetParError(2+3*ii), 2)+
-                            2*fitfunc.GetParameter(0+3*ii)*sqrt(UNITS::CONSTANTS::pi)*cov(2+3*ii, number_of_gaussians*3));
+        double error =  fitfunc.GetParameter(0+npars*ii)*fitfunc.GetParError(number_of_gaussians*npars);
         integrals.emplace_back(integral, error);
     }
 
@@ -335,7 +333,7 @@ std::vector<std::pair<double, double>> SpectrumAnalyzer::GetPeaksIntegral(TH1D &
             sigma_string+=std::string("en :")+
                              std::to_string(energies[ii].first)+
                              " var-> "+
-                             std::to_string(fitfunc.GetParameter(2+3*ii))+"; ";
+                             std::to_string(fitfunc.GetParameter(2+npars*ii))+"; ";
         }
         plotter.WriteOnCanvas(integral_string,
                           46);

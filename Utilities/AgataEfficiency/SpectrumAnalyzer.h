@@ -13,6 +13,7 @@
 #include "Plotter.h"
 
 #include <TFile.h>
+#include <TMath.h>
 #include <TCanvas.h>
 #include <TH1D.h>
 #include <TH2D.h>
