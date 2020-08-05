@@ -72,6 +72,7 @@ public :
    virtual void    Terminate();
 
    TH1D* hspec;
+   TH2D* mspec_core;
    TH2D* mgamma_gamma;
 
    ClassDef(Selector,0);

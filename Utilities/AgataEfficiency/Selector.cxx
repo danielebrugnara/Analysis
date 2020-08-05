@@ -46,9 +46,16 @@ void Selector::SlaveBegin(TTree * /*tree*/)
 
    TString option = GetOption();
 
-   hspec = new TH1D("hspec", "hspec", 4000, 0, 4000);
+   hspec = new TH1D("hspec", "hspec",
+                    4000, 0, 4000);
    fOutput->Add(hspec);
-   mgamma_gamma = new TH2D("mgamma_gamma", "mgamma_gamma", 4000, 0, 4000, 4000, 0, 4000);
+   mspec_core = new TH2D("mspec_core", "mspec_core",
+                           50, 0, 50,
+                           4000, 0, 4000);
+   fOutput->Add(mspec_core);
+   mgamma_gamma = new TH2D("mgamma_gamma", "mgamma_gamma",
+                           4000, 0, 4000,
+                           4000, 0, 4000);
    fOutput->Add(mgamma_gamma);
 
 }
@@ -81,8 +88,10 @@ Bool_t Selector::Process(Long64_t entry)
            mgamma_gamma->Fill(en2, en1);
        }
    }
-
-   return kTRUE;
+   for (unsigned long ii=0; ii<coreE0.GetSize(); ++ii) {
+       mspec_core->Fill(coreId[ii], coreE0[ii]);
+   }
+    return kTRUE;
 }
 
 void Selector::SlaveTerminate()

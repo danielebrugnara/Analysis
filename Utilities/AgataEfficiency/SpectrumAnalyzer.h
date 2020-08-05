@@ -6,6 +6,7 @@
 #define EFFANALYSIS_SPECTRUMANALYZER_H
 
 #include <string>
+#include <algorithm>
 
 #include "DiaGraph.h"
 #include "LevelScheme.h"
@@ -16,13 +17,15 @@
 #include <TH1D.h>
 #include <TH2D.h>
 #include <TGraph.h>
+#include <TVector2.h>
+#include <TGraphErrors.h>
 #include <TF1.h>
 #include <TFitResult.h>
 
 
 class SpectrumAnalyzer {
 public:
-    explicit SpectrumAnalyzer(const std::string &);
+    explicit SpectrumAnalyzer(const std::string &, const bool&);
 
     ~SpectrumAnalyzer();
 
@@ -31,10 +34,16 @@ public:
 private:
     typedef std::vector<std::pair<double, double>> IntensityData;
 
+    bool debug_canvas;
     TH2D gg;
+    TH1D hspec;
+    TVector2 start_stop;
     Plotter plotter;
     TGraph effgraph;
-    TGraph relative_effgraph;
+    TGraphErrors relative_effgraph;
+    TGraphErrors scaled_relative_effgraph;
+    TGraphErrors relative_integralgraph;
+    TGraph relative_intgraph;
     //void SetupLevelSchemes();
     LevelScheme levelscheme;
     IntensityData eu152_intensities;
@@ -44,8 +53,9 @@ private:
     unsigned fit_counter;
 
     double GetPeakIntegral(TH1D &, const double &);
+    std::vector<std::pair<double,double>> GetPeaksIntegral(TH1D &, const std::vector<std::pair<double, double>> &);
     static IntensityData ReadIntensities(const std::string&);
-    TGraph GenerateRelativeEffGraph();
+    void GenerateRelativeEffGraph();
 
     static void UpdateErrors(TH1D &);
 
