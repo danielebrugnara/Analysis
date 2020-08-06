@@ -7,14 +7,16 @@
 
 #include <string>
 #include <algorithm>
+#include <cmath>
 
 #include "DiaGraph.h"
 #include "LevelScheme.h"
 #include "Plotter.h"
 
 #include <TFile.h>
-#include <TMath.h>
+#include <TVirtualFitter.h>
 #include <TCanvas.h>
+#include <Math/MinimizerOptions.h>
 #include <TH1D.h>
 #include <TH2D.h>
 #include <TGraph.h>
