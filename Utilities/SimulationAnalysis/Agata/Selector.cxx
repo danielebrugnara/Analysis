@@ -65,6 +65,8 @@ void Selector::SlaveBegin(TTree * /*tree*/)
     fOutput->Add(core_gg_DC_pos_1);
     core_gg_DC_pos_2  = new TH2D("core_gg_DC_pos_2", "core_gg_DC_pos_2", 3000, 0, 3000, 3000, 0, 3000);
     fOutput->Add(core_gg_DC_pos_2);
+    coreID_coreID   = new TH2D("coreID_coreID", "coreID_coreID", 100, 0, 100, 100, 0, 100);
+    fOutput->Add(coreID_coreID);
 //    addb_spec   = new TH1D("addb_spec", "addb_spec", 3000, 0, 3000);
 //    fOutput->Add(addb_spec);
 //    addb_spec_DC        = new TH1D("addb_spec", "addb_spec", 3000, 0, 3000);
@@ -75,6 +77,12 @@ void Selector::SlaveBegin(TTree * /*tree*/)
 //    fOutput->Add(addb_spec_DC_pos_2);
     dist        = new TH1D("dist_spec", "dist_spec", 3000, 0, 300);
     fOutput->Add(dist);
+    dist_coreID        = new TH2D("dist_cireID", "dist_coreID", 3000, 0, 300, 60, 0, 60);
+    fOutput->Add(dist_coreID);
+    for (int ii=0; ii<60; ++ii){
+        core_dist[ii] = new TH2D(Form("core_%i", ii), Form("core_%i", ii), 60, 0, 60, 3000, 0, 300);
+        fOutput->Add(core_dist.at(ii));
+    }
 
 }
 
@@ -130,6 +138,11 @@ Bool_t Selector::Process(Long64_t entry)
             if (hh.first == hh2.first) continue;
             TVector3 vec2(hh2.second.GetX(),hh2.second.GetY(),hh2.second.GetZ());
             double distance = (vec-vec2).Mag();
+            dist->Fill(distance);
+            dist_coreID->Fill(distance, (double)hh.first);
+            coreID_coreID->Fill((double)hh.first,(double)hh2.first);
+            core_dist[hh.first]->Fill(hh2.first, distance);
+
             core_gg->Fill(hh.second.GetEnergy(), hh2.second.GetEnergy());
             core_gg_DC->Fill(ComputeDoppler(vec,hh.second.GetEnergy()), 
                                 ComputeDoppler(vec2, hh2.second.GetEnergy()));

@@ -23,6 +23,7 @@
 #include <TVector2.h>
 #include <TGraphErrors.h>
 #include <TF1.h>
+#include <TF1Convolution.h>
 #include <TFitResult.h>
 
 

@@ -20,6 +20,9 @@ G__*
 *.rootmap
 lib*.a
 effanalysis
-*.cbp
 .run
-
+GammaEvents*
+effanalysis
+simulationanalysis
+*.cbp
+Runs.txt

@@ -67,11 +67,14 @@ public :
     TH2D * core_gg_DC;
     TH2D * core_gg_DC_pos_1;
     TH2D * core_gg_DC_pos_2;
+    TH2D * coreID_coreID;
 //    TH1D * addb_spec;
 //    TH1D * addb_spec_DC;
 //    TH1D * addb_spec_DC_pos_1;
 //    TH1D * addb_spec_DC_pos_2;
     TH1D * dist;
+    TH2D * dist_coreID;
+    std::unordered_map<int, TH2D*> core_dist;
 
     const double beta;
     const double velocity; //mm/ns

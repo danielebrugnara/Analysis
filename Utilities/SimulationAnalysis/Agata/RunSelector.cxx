@@ -27,4 +27,5 @@ RunSelector::RunSelector(std::string file_name){
         obj->Write();
     }
     out_file->Close();
+    delete selector;
 }   

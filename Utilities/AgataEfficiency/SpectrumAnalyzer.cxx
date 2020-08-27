@@ -262,16 +262,71 @@ std::vector<std::pair<double, double>> SpectrumAnalyzer::GetPeaksIntegral(TH1D &
     const int npars = 4;
     double lim_inf = energies.front().first - fit_interval;
     double lim_sup = energies.back().first + fit_interval;
-    //https://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution
+//    //https://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution
+//    TF1 fitfunc(Form("gaussians_%f_%i", energies.front().first, fit_counter),
+//                [number_of_gaussians](const double *x, const double *par) {
+//                    long double result{0};
+//                    for(int ii=0; ii<number_of_gaussians; ++ii){
+//                        double argument = 1./sqrt(2)*(par[2+ii*npars]/par[3+ii*npars]+(x[0]-par[1+ii*npars])/par[2+ii*npars]);
+//                        result +=   par[0+ii*npars] *
+//                                    exp(-1./2.*pow((x[0]-par[1+ii*npars])/par[2+ii*npars],2))*
+//                                    0.5/par[3+ii*npars]*
+//                                    exp(pow(argument,2))*erfc(argument);
+//                    };
+//                    return static_cast<double>(result*par[number_of_gaussians*npars]);
+//                },
+//                lim_inf,
+//                lim_sup,
+//                npars*number_of_gaussians+1,
+//                1);
+//    fitfunc.SetNpx(200);
+
+    std::vector<TF1Convolution> tailed_peaks_conv;
+    std::vector<TF1> tailed_peaks;
+    std::vector<TF1> gaussian_peaks;
+    std::vector<TF1> tails;
+    tailed_peaks_conv.reserve(number_of_gaussians);
+    tailed_peaks.reserve(number_of_gaussians);
+    gaussian_peaks.reserve(number_of_gaussians);
+    tails.reserve(number_of_gaussians);
+    for(int ii=0; ii<number_of_gaussians; ++ii) {
+        tails.emplace_back(Form("Tail_%i", ii),
+                           [](const double*x, const double*par){
+                                if(x[0]<0)
+                                    return exp(-x[0]*par[0]);
+                                else
+                                    return 0.;
+                            },
+                            lim_inf,
+                            lim_sup,
+                            1,
+                            1);
+        gaussian_peaks.emplace_back(Form("Tail_%i", ii),
+                                    [](const double*x, const double*par){
+                                        return par[0]*exp(-pow((x[0]-par[1])/par[2],2));
+                                    },
+                                    lim_inf,
+                                    lim_sup,
+                                    3,
+                                    1);
+        tailed_peaks_conv.emplace_back( &gaussian_peaks.back(),
+                                        &tails.back(),
+                                        lim_inf,
+                                        lim_sup,
+                                        true);
+        tailed_peaks_conv.back().SetNofPointsFFT(1000);
+
+        tailed_peaks.emplace_back(Form("Tailed_peak_%i", ii),
+                                  tailed_peaks_conv.back(),
+                                  lim_sup,
+                                  lim_inf,
+                                  tailed_peaks_conv.back().GetNpar());
+    }
     TF1 fitfunc(Form("gaussians_%f_%i", energies.front().first, fit_counter),
-                [number_of_gaussians](const double *x, const double *par) {
+                [number_of_gaussians, &tailed_peaks](const double *x, const double *par) {
                     long double result{0};
                     for(int ii=0; ii<number_of_gaussians; ++ii){
-                        double argument = 1./sqrt(2)*(par[2+ii*npars]/par[3+ii*npars]+(x[0]-par[1+ii*npars])/par[2+ii*npars]);
-                        result +=   par[0+ii*npars] *
-                                    exp(-1./2.*pow((x[0]-par[1+ii*npars])/par[2+ii*npars],2))*
-                                    0.5/par[3+ii*npars]*
-                                    exp(pow(argument,2))*erfc(argument);
+                        result += tailed_peaks[ii].Eval(x[0]);
                     };
                     return static_cast<double>(result*par[number_of_gaussians*npars]);
                 },
@@ -279,7 +334,7 @@ std::vector<std::pair<double, double>> SpectrumAnalyzer::GetPeaksIntegral(TH1D &
                 lim_sup,
                 npars*number_of_gaussians+1,
                 1);
-    fitfunc.SetNpx(200);
+
 
     for(int ii=0; ii<number_of_gaussians; ++ii) {
         fitfunc.SetParameter(1+npars*ii, energies[ii].first);
@@ -318,7 +373,7 @@ std::vector<std::pair<double, double>> SpectrumAnalyzer::GetPeaksIntegral(TH1D &
                             fitfunc.GetXmin(),
                             fitfunc.GetXmax());
 
-    std:: cout << "===== Multi fit 2:\n";
+    //std:: cout << "===== Multi fit 2:\n";
    // fit_res_ptr = spec.Fit( &fitfunc,
    //                         "SMERI",
    //                         "",

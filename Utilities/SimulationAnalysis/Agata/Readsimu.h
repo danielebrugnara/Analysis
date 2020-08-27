@@ -123,7 +123,7 @@ void readsimu(std::string inputfile, std::string rootoutput, bool SMEARING=false
 							 break;
 						 }
 				case AGATA_HIT:{//Hit on Agata
-						       oneline >> segment >> Energy >> posX >> posY >> posZ >> crystal;
+						       oneline >> crystal >> Energy >> posX >> posY >> posZ >> segment;
 						       if (SMEARING && Energy>0){
                                    // std::cout << "before : " << Energy << std::endl;
 							       Energy =randm->Gaus(Energy, Resolution_AGATA*Energy);
