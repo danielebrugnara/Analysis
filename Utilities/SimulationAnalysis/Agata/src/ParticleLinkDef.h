@@ -5,7 +5,8 @@
 #pragma link off all functions;            
 #pragma link C++ nestedclasses;            
                                            
-#pragma link C++ defined_in "Hit.h";  
-#pragma link C++ class vector<std::vector<Hit>>+; 
+#pragma link C++ defined_in "Particle.h";  
+#pragma link C++ class Particle+; 
+#pragma link C++ class vector<std::vector<Particle>>+; 
                                            
 #endif // __CINT__                         

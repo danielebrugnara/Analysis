@@ -7,6 +7,14 @@ link_directories($ENV{NPTOOL}/NPLib/lib)
 add_library(Units SHARED Units.cxx)
 set_target_properties(Units PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
 
+add_library(DiaGraph SHARED DiaGraph.cxx)
+set_target_properties(DiaGraph PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
+
+add_library(LevelScheme SHARED LevelScheme.cxx)
+set_target_properties(LevelScheme PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
+target_link_libraries(LevelScheme DiaGraph Units)
+
+
 #Building root dictinaries
 ROOT_GENERATE_DICTIONARY(G__Interpolation Interpolation.h LINKDEF ${analysis_SOURCE_DIR}/Lib/inc/InterpolationLinkDef.h)
 add_library(Interpolation SHARED Interpolation.cxx G__Interpolation.cxx)
@@ -64,13 +72,3 @@ add_library(Analysis SHARED Analysis.cxx G__Analysis.cxx)
 set_target_properties(Analysis PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
 target_link_libraries(Analysis ${ROOT_LIBRARIES} Selector)
 
-
-#file(GLOB ROOT_PCM ${CMAKE_CURRENT_BINARY_DIR}/"*.pcm")
-#file(GLOB ROOT_MAPS ${CMAKE_CURRENT_BINARY_DIR}/"*.rootmap")
-#
-#message("test")
-#message(${CMAKE_CURRENT_BINARY_DIR})
-##message(${ROOT_PCM})
-#
-#file(COPY ${ROOT_PCM} DESTINATION ${LIBRARY_OUTPUT_PATH})
-#file(COPY ${ROOT_MAPS} DESTINATION ${LIBRARY_OUTPUT_PATH})

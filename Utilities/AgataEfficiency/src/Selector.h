@@ -1,8 +1,8 @@
 //////////////////////////////////////////////////////////
 // This class has been automatically generated on
-// Mon Jul  6 12:53:07 2020 by ROOT version 6.20/04
-// from TTree SimulatedAgata/SimulatedAgata
-// found on file: Gamma1.root
+// Fri Jul 10 16:26:18 2020 by ROOT version 6.20/04
+// from TTree TreeMaster/TreeMaster
+// found on file: ../../Data/AgataStandalone/Tree_0000.root
 //////////////////////////////////////////////////////////
 
 #ifndef Selector_h
@@ -16,16 +16,10 @@
 #include <TTreeReaderValue.h>
 #include <TTreeReaderArray.h>
 
-#include <TVector3.h>
 #include <TH1D.h>
 #include <TH2D.h>
 
 // Headers needed by this particular selector
-#include <vector>
-#include <unordered_map>
-#include "Particle.h"
-#include "Hit.h"
-
 
 
 class Selector : public TSelector {
@@ -34,11 +28,34 @@ public :
    TTree          *fChain = 0;   //!pointer to the analyzed TTree or TChain
 
    // Readers to access the data (delete the ones you do not need).
-   TTreeReaderArray<Particle> Part = {fReader, "Particle"};
-   TTreeReaderArray<Hit> Hits = {fReader, "Hits"};
+   TTreeReaderValue<Int_t> nbHits = {fReader, "nbHits"};
+   TTreeReaderArray<Float_t> hitE = {fReader, "hitE"};
+   TTreeReaderArray<Float_t> hitX = {fReader, "hitX"};
+   TTreeReaderArray<Float_t> hitY = {fReader, "hitY"};
+   TTreeReaderArray<Float_t> hitZ = {fReader, "hitZ"};
+   TTreeReaderArray<Float_t> hitGX = {fReader, "hitGX"};
+   TTreeReaderArray<Float_t> hitGY = {fReader, "hitGY"};
+   TTreeReaderArray<Float_t> hitGZ = {fReader, "hitGZ"};
+   TTreeReaderArray<Int_t> hitId = {fReader, "hitId"};
+   TTreeReaderArray<Int_t> hitSg = {fReader, "hitSg"};
+   TTreeReaderValue<Int_t> nbCores = {fReader, "nbCores"};
+   TTreeReaderArray<Int_t> nbHitsperCry = {fReader, "nbHitsperCry"};
+   TTreeReaderArray<Int_t> coreId = {fReader, "coreId"};
+   TTreeReaderArray<Float_t> coreE0 = {fReader, "coreE0"};
+   TTreeReaderArray<Float_t> coreE1 = {fReader, "coreE1"};
+   TTreeReaderArray<Float_t> coreT0 = {fReader, "coreT0"};
+   TTreeReaderArray<ULong64_t> coreTS = {fReader, "coreTS"};
+   TTreeReaderValue<Int_t> nbAdd = {fReader, "nbAdd"};
+   TTreeReaderArray<Int_t> AddId = {fReader, "AddId"};
+   TTreeReaderArray<Float_t> AddE = {fReader, "AddE"};
+   TTreeReaderArray<Float_t> AddX = {fReader, "AddX"};
+   TTreeReaderArray<Float_t> AddY = {fReader, "AddY"};
+   TTreeReaderArray<Float_t> AddZ = {fReader, "AddZ"};
+   TTreeReaderArray<ULong64_t> AddTS = {fReader, "AddTS"};
+   TTreeReaderValue<ULong64_t> TSHit = {fReader, "TSHit"};
 
 
-   Selector(TTree * /*tree*/ =0):beta(0.117769),velocity(35.3), t12_1(1.1), t12_2(6.3+t12_1), em_position_1(0., 0., velocity*t12_1), em_position_2(0., 0., velocity*t12_2) { }
+   Selector(TTree * /*tree*/ =0) { }
    virtual ~Selector() { }
    virtual Int_t   Version() const { return 2; }
    virtual void    Begin(TTree *tree);
@@ -54,34 +71,11 @@ public :
    virtual void    SlaveTerminate();
    virtual void    Terminate();
 
-    double ComputeDoppler(const TVector3 &, const double &);
-    double ComputeDoppler(const TVector3 &, const TVector3 &, const double &);
-   ClassDef(Selector,0);
+   TH1D* hspec;
+   TH2D* mspec_core;
+   TH2D* mgamma_gamma;
 
-    TH1D * cal_spec;
-    TH1D * core_spec;
-    TH1D * core_spec_DC;
-    TH1D * core_spec_DC_pos_1;
-    TH1D * core_spec_DC_pos_2;
-    TH2D * core_gg;
-    TH2D * core_gg_DC;
-    TH2D * core_gg_DC_pos_1;
-    TH2D * core_gg_DC_pos_2;
-    TH2D * coreID_coreID;
-//    TH1D * addb_spec;
-//    TH1D * addb_spec_DC;
-//    TH1D * addb_spec_DC_pos_1;
-//    TH1D * addb_spec_DC_pos_2;
-    TH1D * dist;
-    TH2D * dist_coreID;
-    std::unordered_map<int, TH2D*> core_dist;
-
-    const double beta;
-    const double velocity; //mm/ns
-    const double t12_1; //ns
-    const double t12_2; //ns
-    const TVector3 em_position_1; //mm/ns
-    const TVector3 em_position_2; //mm/ns
+   //ClassDef(Selector,0);
 
 };
 

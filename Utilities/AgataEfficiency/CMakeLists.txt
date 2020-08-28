@@ -31,9 +31,9 @@ include(${ROOT_USE_FILE})
 include_directories(${CMAKE_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
 add_definitions(${ROOT_CXX_FLAGS})
 
-include_directories("${CMAKE_BINARY_DIR}/../../Lib/inc/")
-include_directories("${CMAKE_BINARY_DIR}")
-link_directories("${CMAKE_BINARY_DIR}/../../Build/Lib/bin/")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../Lib/inc/")
+link_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../Build/Lib/bin/")
 link_directories("${CMAKE_BINARY_DIR}")
 
 
@@ -48,39 +48,5 @@ foreach(dir ${dirs})
 	  message(STATUS "selected linking dir='${dir}'")
 endforeach()
 
-
-
-
-#static library for selector
-ROOT_GENERATE_DICTIONARY(G__Globals Globals.h LINKDEF GlobalsLinkDef.h)
-add_library(Globals STATIC G__Globals.cxx)
-target_link_libraries(Globals ${ROOT_LIBRARIES})
-
-ROOT_GENERATE_DICTIONARY(G__Plotter Plotter.h LINKDEF PlotterLinkDef.h)
-add_library(Plotter STATIC Plotter.cxx G__Plotter.cxx)
-target_link_libraries(Plotter ${ROOT_LIBRARIES})
-
-ROOT_GENERATE_DICTIONARY(G__Selector Selector.h LINKDEF SelectorLinkDef.h)
-add_library(Selector STATIC Selector.cxx G__Selector.cxx)
-target_link_libraries(Selector ${ROOT_LIBRARIES})
-
-ROOT_GENERATE_DICTIONARY(G__RunSelector RunSelector.h LINKDEF RunSelectorLinkDef.h)
-add_library(RunSelector STATIC RunSelector.cxx G__RunSelector.cxx)
-target_link_libraries(RunSelector ${ROOT_LIBRARIES} Selector)
-
-add_library(Units STATIC Units.h)
-set_target_properties(Units PROPERTIES LINKER_LANGUAGE CXX)
-
-add_library(DiaGraph STATIC DiaGraph.h)
-set_target_properties(DiaGraph PROPERTIES LINKER_LANGUAGE CXX)
-
-add_library(LevelScheme STATIC LevelScheme.h LevelScheme.cxx)
-target_link_libraries(LevelScheme DiaGraph Units)
-
-ROOT_GENERATE_DICTIONARY(G__SpectrumAnalyzer SpectrumAnalyzer.h LINKDEF SpectrumAnalyzerLinkDef.h)
-add_library(SpectrumAnalyzer STATIC SpectrumAnalyzer.cxx G__SpectrumAnalyzer.cxx)
-target_link_libraries(SpectrumAnalyzer ${ROOT_LIBRARIES} DiaGraph LevelScheme Plotter)
-
-#linking to main
-add_executable(effanalysis main.cxx)
-target_link_libraries(effanalysis RunSelector SpectrumAnalyzer)
+add_subdirectory(src)
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/files DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

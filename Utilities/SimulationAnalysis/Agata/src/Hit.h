@@ -1,7 +1,9 @@
 #ifndef __Hit__
 #define __Hit__
 
-class Hit{
+#include "TObject.h"
+
+class Hit: public TObject{
     public:
         Hit(){};
         Hit(int crystal, double Energy, double x, double y, double z, int segment, int detector){
@@ -29,7 +31,7 @@ class Hit{
         int segment;
         int detector;
     
- //   ClassDef(Hit, 1);
+    ClassDef(Hit, 1);
 };
 
 #endif

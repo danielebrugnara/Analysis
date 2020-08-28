@@ -2,8 +2,9 @@
 #define __Particle__
 
 #include "Hit.h"
+#include "TObject.h"
 
-class Particle{
+class Particle: public TObject{
     public:
     Particle(){};
     Particle(int type, double Energy, double x, double y, double z, int nr){
@@ -14,7 +15,6 @@ class Particle{
         this->z=z;
         this->nr=nr;
     };
- //   ~Particle(){hits_number=hits.size();};
  //   std::vector <Hit> hits;
     private:
     int type;
@@ -25,7 +25,7 @@ class Particle{
     double z;
     int nr;
     
-  //  ClassDef(Particle, 1);
+    ClassDef(Particle, 1);
 }; 
 
 #endif

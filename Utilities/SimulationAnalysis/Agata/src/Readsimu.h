@@ -14,6 +14,7 @@
 #include <TF1.h>
 
 #include "Particle.h"
+#include "Hit.h"
 //#include "loader.C"
 
 enum LineType {
