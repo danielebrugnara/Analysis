@@ -21,7 +21,9 @@
 #include <TH2D.h>
 
 // Headers needed by this particular selector
+#include <utility>
 #include <vector>
+#include <sstream>
 #include <unordered_map>
 
 #include "Particle.h"
@@ -29,7 +31,7 @@
 #include <TH2.h>
 #include <TStyle.h>
 
-//#include <DiaGraph.h>
+#include <DiaGraph.h>
 
 class Selector : public TSelector {
 public :
@@ -42,7 +44,7 @@ public :
 
 
    Selector(TTree * /*tree*/ =0):beta(0.117769),velocity(35.3), t12_1(1.1), t12_2(6.3+t12_1), em_position_1(0., 0., velocity*t12_1), em_position_2(0., 0., velocity*t12_2) { }
-   virtual ~Selector() { }
+   virtual ~Selector() {delete addback_graph; }//Do not delete histograms
    virtual Int_t   Version() const { return 2; }
    virtual void    Begin(TTree *tree);
    virtual void    SlaveBegin(TTree *tree);
@@ -70,12 +72,16 @@ public :
     TH2D * core_gg_DC;
     TH2D * core_gg_DC_pos_1;
     TH2D * core_gg_DC_pos_2;
-    TH2D * coreID_coreID;
-//    TH1D * addb_spec;
-//    TH1D * addb_spec_DC;
-//    TH1D * addb_spec_DC_pos_1;
-//    TH1D * addb_spec_DC_pos_2;
+    TH1D * addb_spec;
+    TH1D * addb_spec_DC;
+    TH1D * addb_spec_DC_pos_1;
+    TH1D * addb_spec_DC_pos_2;
+    TH2D * addb_gg;
+    TH2D * addb_gg_DC;
+    TH2D * addb_gg_DC_pos_1;
+    TH2D * addb_gg_DC_pos_2;
     TH1D * dist;
+    TH2D * coreID_coreID;
     TH2D * dist_coreID;
     std::unordered_map<int, TH2D*> core_dist;
 
@@ -86,9 +92,21 @@ public :
     const TVector3 em_position_1; //mm/ns
     const TVector3 em_position_2; //mm/ns
 
+    struct Crystal{
+        int ID;
+        std::string name;
+        Crystal(int ID, std::string name): ID(ID), name(std::move(name)){};
+        Crystal(): ID(-1){};
+        friend std::ostream& operator<<(std::ostream& os, const Crystal& cr)
+        {
+            os << "{" << cr.ID << ", " << cr.name << "}";
+            return os;
+        }
+    };
+    DiaGraph<bool,Crystal>* addback_graph;
+
 };
 
-#endif
 
 #ifdef Selector_cxx
 void Selector::Init(TTree *tree)
@@ -113,6 +131,7 @@ Bool_t Selector::Notify()
 
    return kTRUE;
 }
+#endif
 
 
 #endif // #ifdef Selector_cxx

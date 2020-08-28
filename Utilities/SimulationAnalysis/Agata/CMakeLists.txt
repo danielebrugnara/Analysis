@@ -32,8 +32,8 @@ include_directories(${CMAKE_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
 add_definitions(${ROOT_CXX_FLAGS})
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../../../Lib/inc/")
-link_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../../../Build/Lib/bin/")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../../Lib/inc/")
+link_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../../Build/Lib/bin/")
 link_directories("${CMAKE_BINARY_DIR}/src/")
 
 

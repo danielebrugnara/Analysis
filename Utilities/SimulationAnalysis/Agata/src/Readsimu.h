@@ -32,25 +32,25 @@ enum LineType {
 	UNKNOWN_EVENT
 };
 
-enum LineType Classify(std::string, bool);
+enum LineType Classify(const std::string&, bool);
 
 
-void readsimu(std::string inputfile, std::string rootoutput, bool SMEARING=false, int it_max=-1, bool gun=false)
+void readsimu(const std::string& inputfile, const std::string& rootoutput, bool SMEARING=false, int it_max=-1, bool gun=false)
 {
 
 	Particle* tmp_particle=0;
 	std::vector <Particle> particles;
 	std::vector <Hit> hits;
 
-	TFile *output = new TFile(rootoutput.c_str(),"recreate");
-	TTree *theTree = new TTree("SimulatedAgata","SimulatedAgata");
+	auto *output = new TFile(rootoutput.c_str(),"recreate");
+	auto *theTree = new TTree("SimulatedAgata","SimulatedAgata");
 	TBranch *branch_particle = theTree->Branch("Particle", &particles);
 	TBranch *branch_hit = theTree->Branch("Hits", &hits);
 	std::string aLine;
 	bool Line_skip=true;
-	std::istringstream oneline;
+    std::istringstream();
 
-	TRandom *randm=new TRandom();
+	auto *randm=new TRandom();
 	double Resolution_DIAMANT=0.021;
 	//double Resolution_AGATA=0.002;
 	double Resolution_AGATA=0.003/2.355;//numerator is FWHM
@@ -83,27 +83,30 @@ void readsimu(std::string inputfile, std::string rootoutput, bool SMEARING=false
 						 }
 				case GAMMA_EVENT:{//Gamma original event
 							 oneline >> type >> Energy >> posX >> posY >> posZ >> nr;
-							 if (tmp_particle!=0){
+							 if (tmp_particle!=nullptr){
 								 particles.push_back(*tmp_particle);
 								 delete tmp_particle;
+								 tmp_particle = nullptr;
 							 }
 							 tmp_particle= new Particle(1, Energy, posX, posY, posZ, nr);                  
 							 break;
 						 }
 				case POSITRON_EVENT:{//Positron original event
 							    oneline >> type >> Energy >> posX >> posY >> posZ >> nr;
-							    if (tmp_particle!=0){
+							    if (tmp_particle!= nullptr){
 								    particles.push_back(*tmp_particle);
 								    delete tmp_particle;
+								    tmp_particle = nullptr;
 							    }
 							    tmp_particle= new Particle(98, Energy, posX, posY, posZ, nr);                  
 							    break;
 						    }
 				case ELECTRON_EVENT:{//Electron original event
 							    oneline >> type >> Energy >> posX >> posY >> posZ >> nr;
-							    if (tmp_particle!=0){
+							    if (tmp_particle!= nullptr){
 								    particles.push_back(*tmp_particle);
 								    delete tmp_particle;
+								    tmp_particle = nullptr;
 							    }
 							    tmp_particle= new Particle(97, Energy, posX, posY, posZ, nr);                  
 							    break;
@@ -161,7 +164,7 @@ void readsimu(std::string inputfile, std::string rootoutput, bool SMEARING=false
 
 }
 
-enum LineType Classify(std::string Line, bool gun){
+enum LineType Classify(const std::string& Line, bool gun){
 	if(!Line.compare(0, 4, "-100"))
 		return EVENT_START;
 	if(!Line.compare(0, 5, " -101")||!Line.compare(0, 5, " -102"))

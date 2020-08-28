@@ -10,11 +10,11 @@ RunSelector::RunSelector(std::string file_name){
         readsimu(file_name, file_name+".root", smearing, it_max);
         file_name = file_name+".root";
     }
-	TFile* file = new TFile(file_name.c_str());
+	auto* file = new TFile(file_name.c_str());
     if (!file) throw std::runtime_error("File not valid\n");
-    TTree* tree = (TTree*)file->Get("SimulatedAgata");
+    auto* tree = (TTree*)file->Get("SimulatedAgata");
     if (!tree) throw std::runtime_error("Tree not valid\n");
-	Selector* selector = new Selector();
+	auto* selector = new Selector();
 	tree->Process(selector, "option");
     std::string file_out_name (file->GetName());
     file->Close();
@@ -22,7 +22,7 @@ RunSelector::RunSelector(std::string file_name){
     file_out_name.insert(0, "spectra_");
     TIter iter (selector->GetOutputList());
     TObject *obj;
-    TFile * out_file = new TFile(file_out_name.c_str(), "recreate");
+    auto* out_file = new TFile(file_out_name.c_str(), "recreate");
     while ((obj=iter())){
         obj->Write();
     }

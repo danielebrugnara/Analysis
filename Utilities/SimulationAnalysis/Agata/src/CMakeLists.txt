@@ -14,7 +14,7 @@ target_link_libraries(Readsimu ${ROOT_LIBRARIES} Hit Particle)
 
 ROOT_GENERATE_DICTIONARY(G__Selector Selector.h LINKDEF SelectorLinkDef.h)
 add_library(Selector STATIC Selector.cxx G__Selector.cxx)
-target_link_libraries(Selector ${ROOT_LIBRARIES} Hit Particle)
+target_link_libraries(Selector ${ROOT_LIBRARIES} Hit Particle DiaGraph)
 
 ROOT_GENERATE_DICTIONARY(G__RunSelector RunSelector.h LINKDEF RunSelectorLinkDef.h)
 add_library(RunSelector STATIC RunSelector.cxx G__RunSelector.cxx)

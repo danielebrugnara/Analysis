@@ -26,8 +26,6 @@
 
 
 #include "Selector.h"
-#include <TH2.h>
-#include <TStyle.h>
 
 void Selector::Begin(TTree * /*tree*/)
 {
@@ -46,9 +44,11 @@ void Selector::SlaveBegin(TTree * /*tree*/)
 
     TString option = GetOption();
 
-    
+
     cal_spec    = new TH1D("cal_spec", "cal_spec", 3000, 0, 3000);
     fOutput->Add(cal_spec);
+
+    //Core graphs
     core_spec   = new TH1D("core_spec", "core_spec", 3000, 0, 3000);
     fOutput->Add(core_spec);
     core_spec_DC   = new TH1D("core_spec_DC", "core_spec_DC", 3000, 0, 3000);
@@ -57,7 +57,7 @@ void Selector::SlaveBegin(TTree * /*tree*/)
     fOutput->Add(core_spec_DC_pos_1);
     core_spec_DC_pos_2  = new TH1D("core_spec_DC_pos_2", "core_spec_DC_pos_2", 3000, 0, 3000);
     fOutput->Add(core_spec_DC_pos_2);
-    core_gg   = new TH2D("mgamma_gamma", "core_gg", 3000, 0, 3000, 3000, 0, 3000);
+    core_gg   = new TH2D("core_gg", "core_gg", 3000, 0, 3000, 3000, 0, 3000);
     fOutput->Add(core_gg);
     core_gg_DC   = new TH2D("core_gg_DC", "core_gg_DC", 3000, 0, 3000, 3000, 0, 3000);
     fOutput->Add(core_gg_DC);
@@ -65,25 +65,98 @@ void Selector::SlaveBegin(TTree * /*tree*/)
     fOutput->Add(core_gg_DC_pos_1);
     core_gg_DC_pos_2  = new TH2D("core_gg_DC_pos_2", "core_gg_DC_pos_2", 3000, 0, 3000, 3000, 0, 3000);
     fOutput->Add(core_gg_DC_pos_2);
-    coreID_coreID   = new TH2D("coreID_coreID", "coreID_coreID", 100, 0, 100, 100, 0, 100);
-    fOutput->Add(coreID_coreID);
-//    addb_spec   = new TH1D("addb_spec", "addb_spec", 3000, 0, 3000);
-//    fOutput->Add(addb_spec);
-//    addb_spec_DC        = new TH1D("addb_spec", "addb_spec", 3000, 0, 3000);
-//    fOutput->Add(addb_spec_DC);
-//    addb_spec_DC_pos_1  = new TH1D("addb_spec_pos_1", "addb_spec_pos_1", 3000, 0, 3000);
-//    fOutput->Add(addb_spec_DC_pos_1);
-//    addb_spec_DC_pos_2  = new TH1D("addb_spec_pos_2", "addb_spec_pos_2", 3000, 0, 3000);
-//    fOutput->Add(addb_spec_DC_pos_2);
+
+    //Addback graphs
+    addb_spec   = new TH1D("addb_spec", "addb_spec", 3000, 0, 3000);
+    fOutput->Add(addb_spec);
+    addb_spec_DC        = new TH1D("addb_spec_DC", "addb_spec_DC", 3000, 0, 3000);
+    fOutput->Add(addb_spec_DC);
+    addb_spec_DC_pos_1  = new TH1D("addb_spec_pos_1", "addb_spec_pos_1", 3000, 0, 3000);
+    fOutput->Add(addb_spec_DC_pos_1);
+    addb_spec_DC_pos_2  = new TH1D("addb_spec_pos_2", "addb_spec_pos_2", 3000, 0, 3000);
+    fOutput->Add(addb_spec_DC_pos_2);
+    addb_gg   = new TH2D("addb_gg", "addb_gg", 3000, 0, 3000, 3000, 0, 3000);
+    fOutput->Add(addb_gg);
+    addb_gg_DC   = new TH2D("addb_gg_DC", "addb_gg_DC", 3000, 0, 3000, 3000, 0, 3000);
+    fOutput->Add(addb_gg_DC);
+    addb_gg_DC_pos_1  = new TH2D("addb_gg_DC_pos_1", "addb_gg_DC_pos_1", 3000, 0, 3000, 3000, 0, 3000);
+    fOutput->Add(addb_gg_DC_pos_1);
+    addb_gg_DC_pos_2  = new TH2D("addb_gg_DC_pos_2", "addb_gg_DC_pos_2", 3000, 0, 3000, 3000, 0, 3000);
+    fOutput->Add(addb_gg_DC_pos_2);
+
+    //Other Graphs
     dist        = new TH1D("dist_spec", "dist_spec", 3000, 0, 300);
     fOutput->Add(dist);
+    coreID_coreID   = new TH2D("coreID_coreID", "coreID_coreID", 100, 0, 100, 100, 0, 100);
+    fOutput->Add(coreID_coreID);
     dist_coreID        = new TH2D("dist_cireID", "dist_coreID", 3000, 0, 300, 60, 0, 60);
     fOutput->Add(dist_coreID);
     for (int ii=0; ii<60; ++ii){
         core_dist[ii] = new TH2D(Form("core_%i", ii), Form("core_%i", ii), 60, 0, 60, 3000, 0, 300);
-        fOutput->Add(core_dist.at(ii));
+        //fOutput->Add(core_dist.at(ii));
     }
 
+    std::unordered_map<int, std::vector<int>> nearby_det;
+    nearby_det.reserve(35);
+
+    nearby_det[0] = {1, 2, 3, 12, 13};
+    nearby_det[1] = {0, 2, 3, 5, 20, 22};
+    nearby_det[2] = {1, 2, 13, 16, 17, 20};
+    nearby_det[3] = {0, 1, 4, 5, 6};
+    nearby_det[4] = {3, 5, 6, 8};
+    nearby_det[5] = {1, 3, 4, 22, 23};
+    nearby_det[6] = {3, 4, 7, 8, 9};
+    nearby_det[7] = {6, 8, 9, 11};
+    nearby_det[8] = {4, 6, 7, 26};
+    nearby_det[9] = {6, 7, 10, 11, 12};
+    nearby_det[10] = {9, 11, 12, 14, 29, 31};
+    nearby_det[11] = {7, 9, 10, 29};
+    nearby_det[12] = {0, 9, 10, 13, 14};
+    nearby_det[13] = {0, 2, 12, 14, 16, 13};
+    nearby_det[14] = {10, 12, 13, 31, 32, 35};
+    nearby_det[15] = {};
+    nearby_det[16] = {2, 13, 17, 35};
+    nearby_det[17] = {2, 16, 20};
+    nearby_det[18] = {};
+    nearby_det[19] = {};
+    nearby_det[20] = {1, 2, 17, 22};
+    nearby_det[21] = {};
+    nearby_det[22] = {1, 5, 20, 23};
+    nearby_det[23] = {5, 22};
+    nearby_det[24] = {};
+    nearby_det[25] = {};
+    nearby_det[26] = {7, 8};
+    nearby_det[27] = {};
+    nearby_det[28] = {};
+    nearby_det[29] = {10, 11, 31};
+    nearby_det[30] = {};
+    nearby_det[31] = {10, 14, 29, 23};
+    nearby_det[32] = {14, 31, 35};
+    nearby_det[33] = {};
+    nearby_det[34] = {};
+    nearby_det[35] = {13, 14, 16, 0};
+
+    std::vector<graphEdge<bool>> edges;
+    std::vector<Crystal> payloads;
+
+    std::unordered_map<int, std::string> dictionary_crystal_name;
+    dictionary_crystal_name[0] = "A";
+    dictionary_crystal_name[1] = "B";
+    dictionary_crystal_name[2] = "C";
+
+    payloads.resize(nearby_det.size());
+    for (const auto& it_start: nearby_det){
+        for (const auto& it_end: it_start.second){
+            edges.push_back({it_start.first,it_end,true});
+        }
+        std::stringstream str_tmp;
+        str_tmp << std::setw(2) << std::setfill('0') << it_start.first/3;
+        str_tmp << dictionary_crystal_name[it_start.first%3];
+        payloads[it_start.first] = {it_start.first,str_tmp.str()};
+    }
+
+    addback_graph = new DiaGraph<bool, Crystal>(edges,payloads);
+    //std::cout << *addback_graph;
 }
 
 Bool_t Selector::Process(Long64_t entry)
@@ -106,24 +179,58 @@ Bool_t Selector::Process(Long64_t entry)
 
     fReader.SetLocalEntry(entry);
 
+    //Merge hits in the same crystal
     std::unordered_map<int,Hit> hits_analyzed;
-    std::unordered_map<int,Hit>::iterator it;
-    double cr;
+    std::unordered_map<int,Hit>::iterator hits_analyzed_it;
+    int cr;
     for (const auto & h: Hits){
-        if ((it = hits_analyzed.find(cr = h.GetCrystal()))== hits_analyzed.end()){
+        if ((hits_analyzed_it = hits_analyzed.find(cr = h.GetCrystal()))== hits_analyzed.end()){
             hits_analyzed.emplace(cr, h);
         }else{
-            it->second = Hit(cr,
-                             h.GetEnergy()+it->second.GetEnergy(),
-                             (h.GetX()*h.GetEnergy()+it->second.GetX()*it->second.GetEnergy())/(h.GetEnergy()+it->second.GetEnergy()),
-                             (h.GetY()*h.GetEnergy()+it->second.GetY()*it->second.GetEnergy())/(h.GetEnergy()+it->second.GetEnergy()),
-                             (h.GetZ()*h.GetEnergy()+it->second.GetZ()*it->second.GetEnergy())/(h.GetEnergy()+it->second.GetEnergy()),
-                             h.GetDetector(),
-                             h.GetEnergy()>it->second.GetEnergy() ? h.GetSegment() : it->second.GetSegment());
+            hits_analyzed_it->second = Hit(cr,
+                                           h.GetEnergy()+hits_analyzed_it->second.GetEnergy(),
+                                           (h.GetX()*h.GetEnergy()+hits_analyzed_it->second.GetX()*hits_analyzed_it->second.GetEnergy())/(h.GetEnergy()+hits_analyzed_it->second.GetEnergy()),
+                                           (h.GetY()*h.GetEnergy()+hits_analyzed_it->second.GetY()*hits_analyzed_it->second.GetEnergy())/(h.GetEnergy()+hits_analyzed_it->second.GetEnergy()),
+                                           (h.GetZ()*h.GetEnergy()+hits_analyzed_it->second.GetZ()*hits_analyzed_it->second.GetEnergy())/(h.GetEnergy()+hits_analyzed_it->second.GetEnergy()),
+                                           h.GetEnergy()>hits_analyzed_it->second.GetEnergy() ? h.GetSegment() : hits_analyzed_it->second.GetSegment(),
+                                           h.GetDetector());
         }
     }
 
-    
+    //Compute addback
+    std::unordered_map<int, Hit> addback = hits_analyzed;
+    std::unordered_map<int, Hit>::iterator addback_it1;
+    std::unordered_map<int, Hit>::iterator addback_it2;
+    for (addback_it1 = addback.begin(); addback_it1 != addback.end(); ++addback_it1){
+        if (addback.find(addback_it1->first) == addback.end()) continue;
+        auto near_crystals = addback_graph->getAdjacent(addback_it1->first);
+        for (addback_it2 = addback.begin(); addback_it2 != addback.end(); ++addback_it2){
+            if (addback.find(addback_it1->first) == addback.end()) break;
+            bool present = false;
+            for (const auto& it: near_crystals){
+                if (it.second->ID == addback_it2->first)
+                    present = true;
+            }
+            if(present) {
+                int new_key = addback_it1->second.GetEnergy() > addback_it2->second.GetEnergy() ? addback_it1->first
+                                                                                                : addback_it2->first;
+                int delete_key = addback_it1->second.GetEnergy() < addback_it2->second.GetEnergy() ? addback_it1->first
+                                                                                                   : addback_it2->first;
+
+                addback[new_key] = Hit(new_key,
+                                       addback[new_key].GetEnergy() + addback[delete_key].GetEnergy(),
+                                       addback[new_key].GetX(),
+                                       addback[new_key].GetY(),
+                                       addback[new_key].GetZ(),
+                                       addback[new_key].GetSegment(),
+                                       addback[new_key].GetDetector());
+                addback.erase(delete_key);
+            }
+        }
+    }
+
+
+
     double tot_en = 0;
     for (const auto & hh: hits_analyzed){
         tot_en += hh.second.GetEnergy();
@@ -144,13 +251,39 @@ Bool_t Selector::Process(Long64_t entry)
             core_dist[hh.first]->Fill(hh2.first, distance);
 
             core_gg->Fill(hh.second.GetEnergy(), hh2.second.GetEnergy());
-            core_gg_DC->Fill(ComputeDoppler(vec,hh.second.GetEnergy()), 
-                                ComputeDoppler(vec2, hh2.second.GetEnergy()));
-            core_gg_DC_pos_1->Fill(  ComputeDoppler(vec,em_position_1,hh.second.GetEnergy()), 
-                                        ComputeDoppler(vec2,em_position_1,hh2.second.GetEnergy()));
-            core_gg_DC_pos_2->Fill(  ComputeDoppler(vec,em_position_2,hh.second.GetEnergy()), 
-                                        ComputeDoppler(vec2,em_position_2,hh2.second.GetEnergy()));
+            core_gg_DC->Fill(ComputeDoppler(vec,hh.second.GetEnergy()),
+                             ComputeDoppler(vec2, hh2.second.GetEnergy()));
+            core_gg_DC_pos_1->Fill(  ComputeDoppler(vec,em_position_1,hh.second.GetEnergy()),
+                                     ComputeDoppler(vec2,em_position_1,hh2.second.GetEnergy()));
+            core_gg_DC_pos_2->Fill(  ComputeDoppler(vec,em_position_2,hh.second.GetEnergy()),
+                                     ComputeDoppler(vec2,em_position_2,hh2.second.GetEnergy()));
         }
+    }
+
+    for (const auto& hh: addback){
+        tot_en += hh.second.GetEnergy();
+        TVector3 vec(hh.second.GetX(),hh.second.GetY(),hh.second.GetZ());
+
+        addb_spec->Fill(hh.second.GetEnergy());
+        addb_spec_DC->Fill( ComputeDoppler(vec, hh.second.GetEnergy()));
+        addb_spec_DC_pos_1->Fill( ComputeDoppler(vec,em_position_1, hh.second.GetEnergy()));
+        addb_spec_DC_pos_2->Fill( ComputeDoppler(vec,em_position_2, hh.second.GetEnergy()));
+
+        for (const auto & hh2: addback){
+            if (hh.first == hh2.first) continue;
+            TVector3 vec2(hh2.second.GetX(),hh2.second.GetY(),hh2.second.GetZ());
+            double distance = (vec-vec2).Mag();
+            dist->Fill(distance);
+
+            addb_gg->Fill(hh.second.GetEnergy(), hh2.second.GetEnergy());
+            addb_gg_DC->Fill(ComputeDoppler(vec,hh.second.GetEnergy()),
+                             ComputeDoppler(vec2, hh2.second.GetEnergy()));
+            addb_gg_DC_pos_1->Fill(  ComputeDoppler(vec,em_position_1,hh.second.GetEnergy()),
+                                     ComputeDoppler(vec2,em_position_1,hh2.second.GetEnergy()));
+            addb_gg_DC_pos_2->Fill(  ComputeDoppler(vec,em_position_2,hh.second.GetEnergy()),
+                                     ComputeDoppler(vec2,em_position_2,hh2.second.GetEnergy()));
+        }
+
     }
 
     cal_spec->Fill(tot_en);
