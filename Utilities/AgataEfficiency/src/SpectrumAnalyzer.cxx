@@ -2,25 +2,40 @@
 
 SpectrumAnalyzer::SpectrumAnalyzer(const std::string & file_name, const bool& debug_canvas):
         debug_canvas(debug_canvas),
+        simulation(false),
         effgraph(),
+        sigmagraph(),
         relative_effgraph(),
         relative_integralgraph(),
         relative_intgraph(),
-        levelscheme("adoptedLevels152Sm.csv"),
+        levelscheme("files/adoptedLevels152Sm.csv"),
         fit_interval(15.),
         proj_interval(30.),
         fit_counter(0){
 
-    eu152_intensities = ReadIntensities("intensity152Eu.txt");
+    eu152_intensities = ReadIntensities("files/intensity152Eu.txt");
 
     auto* file = new TFile(file_name.c_str());
+    if (!file->IsOpen())
+        throw std::runtime_error("File not found\n");
 
     auto gg_ptr = dynamic_cast<TH2D*>(file->Get("mgamma_gamma"));
     auto hspec_ptr = dynamic_cast<TH1D*>(file->Get("hspec"));
-    start_stop = *dynamic_cast<TVector2*>(file->Get("start_stop"));
 
-    if (gg_ptr == nullptr)
-        throw std::runtime_error("mgamma_gamma  not found\n");
+    if (gg_ptr == nullptr || hspec_ptr == nullptr) {
+        simulation = true;
+        gg_ptr = dynamic_cast<TH2D *>(file->Get("addb_gg"));
+        hspec_ptr = dynamic_cast<TH1D *>(file->Get("addb_spec"));
+    }
+
+    if (gg_ptr == nullptr || hspec_ptr == nullptr)
+        throw std::runtime_error("gamma_gamma or spec not found\n");
+
+    if (!simulation)
+        start_stop = *dynamic_cast<TVector2*>(file->Get("start_stop"));
+    else
+        start_stop = TVector2();
+
 
     gg = *gg_ptr;
     hspec = *hspec_ptr;

@@ -39,11 +39,13 @@ private:
     typedef std::vector<std::pair<double, double>> IntensityData;
 
     bool debug_canvas;
+    bool simulation;
     TH2D gg;
     TH1D hspec;
     TVector2 start_stop;
     Plotter plotter;
     TGraph effgraph;
+    TGraph sigmagraph;
     TGraphErrors relative_effgraph;
     TGraphErrors scaled_relative_effgraph;
     TGraphErrors relative_integralgraph;
