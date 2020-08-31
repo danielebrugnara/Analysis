@@ -55,7 +55,11 @@ void SpectrumAnalyzer::Analyze() {
 
     GenerateRelativeEffGraph();
     double acq_time = start_stop.Y()-start_stop.X();
-    double source_activity = 2.2E4;
+    double source_activity = 22296.;
+    double ndays = 2359.;
+    double t12 = 13.517 *365.2425; //t12 in years * ndays
+    double tau = t12 /log(2); //t12 in years * ndays
+    source_activity = source_activity * exp(-ndays/tau);
     scaled_relative_effgraph.SetName("scaled_relative_effgraph");
     scaled_relative_effgraph.SetTitle("scaled_relative_effgraph");
     scaled_relative_effgraph.SetMarkerColor(8);
@@ -147,7 +151,7 @@ void SpectrumAnalyzer::Analyze() {
 
     }
 
-    effgraph.SetName("effgraph");
+    sigmagraph.Write();
     relative_effgraph.Write();
     scaled_relative_effgraph.Write();
     relative_integralgraph.Write();
@@ -228,14 +232,16 @@ double SpectrumAnalyzer::GetPeakIntegral(TH1D& spec, const double& engamma){
     return integral;
 }
 
-std::vector<std::pair<double, double>> SpectrumAnalyzer::GetPeaksIntegral(TH1D &spec, const std::vector<std::pair<double,double>> &energies) {
+std::vector<SpectrumAnalyzer::FitRes> SpectrumAnalyzer::GetPeaksIntegral(TH1D &spec, const std::vector<std::pair<double,double>> &energies) {
 
     spec.GetXaxis()->UnZoom();
     std:: cout << "------------> Fitting new energies : " <<  energies.front().first << "<----------------------------------------------------------\n";
-    const double fit_interval = 8;
+    //const double fit_interval = 8;
+    const double fit_interval = 14;
     std::vector<double> heights;
+    std::vector<double> sigmas;
     const double MIN_VARIANCE{0.8};
-    const double MAX_VARIANCE{5.0};
+    const double MAX_VARIANCE{3.0};
     //if (energies.front().first<1080) return std::vector<std::pair<double, double>>();
 
     for (const auto& it_en: energies) {
@@ -254,7 +260,7 @@ std::vector<std::pair<double, double>> SpectrumAnalyzer::GetPeaksIntegral(TH1D &
         fitfunc.SetParameter(1, it_en.first);
         fitfunc.SetParameter(2, 1.8);
 
-        fitfunc.SetParLimits(0, std::max(0.,fitfunc.GetParameter(0) / 3.), std::max(fitfunc.GetParameter(0) * 3., 100.));
+        fitfunc.SetParLimits(0, std::max(0.,fitfunc.GetParameter(0) / 4.), std::max(fitfunc.GetParameter(0) * 3., 40.));
         fitfunc.SetParLimits(1, it_en.first - 10, it_en.first + 10);
         fitfunc.SetParLimits(2, MIN_VARIANCE, MAX_VARIANCE);
 
@@ -271,77 +277,36 @@ std::vector<std::pair<double, double>> SpectrumAnalyzer::GetPeaksIntegral(TH1D &
 
         heights.push_back(fitfunc.GetParameter(0));
 
+        if (fitfunc.GetParameter(2) < sqrt(MAX_VARIANCE) && fitfunc.GetParameter(2) > sqrt(MIN_VARIANCE))
+            sigmas.push_back(fitfunc.GetParameter(2));
+        else
+            sigmas.push_back((sqrt(MAX_VARIANCE) + sqrt(MIN_VARIANCE)) * 0.5);
+
     }
 
     int number_of_gaussians = energies.size();
     const int npars = 4;
     double lim_inf = energies.front().first - fit_interval;
     double lim_sup = energies.back().first + fit_interval;
-//    //https://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution
-//    TF1 fitfunc(Form("gaussians_%f_%i", energies.front().first, fit_counter),
-//                [number_of_gaussians](const double *x, const double *par) {
-//                    long double result{0};
-//                    for(int ii=0; ii<number_of_gaussians; ++ii){
-//                        double argument = 1./sqrt(2)*(par[2+ii*npars]/par[3+ii*npars]+(x[0]-par[1+ii*npars])/par[2+ii*npars]);
-//                        result +=   par[0+ii*npars] *
-//                                    exp(-1./2.*pow((x[0]-par[1+ii*npars])/par[2+ii*npars],2))*
-//                                    0.5/par[3+ii*npars]*
-//                                    exp(pow(argument,2))*erfc(argument);
-//                    };
-//                    return static_cast<double>(result*par[number_of_gaussians*npars]);
-//                },
-//                lim_inf,
-//                lim_sup,
-//                npars*number_of_gaussians+1,
-//                1);
-//    fitfunc.SetNpx(200);
+    //https://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution
+    // par[0+ii*npars] -> coeff (integral of distribution, since the rest is normalized)
+    // par[1+ii*npars] -> gaussian mean value
+    // par[2+ii*npars] -> gaussian sigma
+    // par[3+ii*npars] -> exponential tau  (exp(-x/tau))
 
-    std::vector<TF1Convolution> tailed_peaks_conv;
-    std::vector<TF1> tailed_peaks;
-    std::vector<TF1> gaussian_peaks;
-    std::vector<TF1> tails;
-    tailed_peaks_conv.reserve(number_of_gaussians);
-    tailed_peaks.reserve(number_of_gaussians);
-    gaussian_peaks.reserve(number_of_gaussians);
-    tails.reserve(number_of_gaussians);
-    for(int ii=0; ii<number_of_gaussians; ++ii) {
-        tails.emplace_back(Form("Tail_%i", ii),
-                           [](const double*x, const double*par){
-                                if(x[0]<0)
-                                    return exp(-x[0]*par[0]);
-                                else
-                                    return 0.;
-                            },
-                            lim_inf,
-                            lim_sup,
-                            1,
-                            1);
-        gaussian_peaks.emplace_back(Form("Tail_%i", ii),
-                                    [](const double*x, const double*par){
-                                        return par[0]*exp(-pow((x[0]-par[1])/par[2],2));
-                                    },
-                                    lim_inf,
-                                    lim_sup,
-                                    3,
-                                    1);
-        tailed_peaks_conv.emplace_back( &gaussian_peaks.back(),
-                                        &tails.back(),
-                                        lim_inf,
-                                        lim_sup,
-                                        true);
-        tailed_peaks_conv.back().SetNofPointsFFT(1000);
+    //integral: par[0+ii*npars] -> actual integral is par[0+ii*npars]*par[number_of_gaussians*npars]
+    //mean: par[1+ii*npars]-par[3+ii*npars]
+    //sigma: sqrt(par[1+ii*npars]^2 + par[3+ii*npars]^2)
 
-        tailed_peaks.emplace_back(Form("Tailed_peak_%i", ii),
-                                  tailed_peaks_conv.back(),
-                                  lim_sup,
-                                  lim_inf,
-                                  tailed_peaks_conv.back().GetNpar());
-    }
     TF1 fitfunc(Form("gaussians_%f_%i", energies.front().first, fit_counter),
-                [number_of_gaussians, &tailed_peaks](const double *x, const double *par) {
+                [number_of_gaussians](const double *x, const double *par) {
                     long double result{0};
                     for(int ii=0; ii<number_of_gaussians; ++ii){
-                        result += tailed_peaks[ii].Eval(x[0]);
+                        double argument = 1./sqrt(2.)*(par[2+ii*npars]/par[3+ii*npars]+(x[0]-par[1+ii*npars])/par[2+ii*npars]);
+                        result +=   par[0+ii*npars] *
+                                    exp(-0.5*pow((x[0]-par[1+ii*npars])/par[2+ii*npars],2))*
+                                    0.5/par[3+ii*npars]*
+                                    exp(pow(argument,2))*erfc(argument);
                     };
                     return static_cast<double>(result*par[number_of_gaussians*npars]);
                 },
@@ -349,32 +314,97 @@ std::vector<std::pair<double, double>> SpectrumAnalyzer::GetPeaksIntegral(TH1D &
                 lim_sup,
                 npars*number_of_gaussians+1,
                 1);
+    fitfunc.SetNpx(200);
 
+//    std::vector<TF1Convolution> tailed_peaks_conv;
+//    std::vector<TF1> tailed_peaks;
+//    std::vector<TF1> gaussian_peaks;
+//    std::vector<TF1> tails;
+//    tailed_peaks_conv.reserve(number_of_gaussians);
+//    tailed_peaks.reserve(number_of_gaussians);
+//    gaussian_peaks.reserve(number_of_gaussians);
+//    tails.reserve(number_of_gaussians);
+//    for(int ii=0; ii<number_of_gaussians; ++ii) {
+//        tails.emplace_back(Form("Tail_%i", ii),
+//                           [](const double*x, const double*par){
+//                                if(x[0]<0)
+//                                    return exp(-x[0]*par[0]);
+//                                else
+//                                    return 0.;
+//                            },
+//                            lim_inf,
+//                            lim_sup,
+//                            1,
+//                            1);
+//        gaussian_peaks.emplace_back(Form("Tail_%i", ii),
+//                                    [](const double*x, const double*par){
+//                                        return par[0]*exp(-pow((x[0]-par[1])/par[2],2));
+//                                    },
+//                                    lim_inf,
+//                                    lim_sup,
+//                                    3,
+//                                    1);
+//        tailed_peaks_conv.emplace_back( &gaussian_peaks.back(),
+//                                        &tails.back(),
+//                                        lim_inf,
+//                                        lim_sup,
+//                                        true);
+//        tailed_peaks_conv.back().SetNofPointsFFT(1000);
+//
+//        tailed_peaks.emplace_back(Form("Tailed_peak_%i", ii),
+//                                  tailed_peaks_conv.back(),
+//                                  lim_sup,
+//                                  lim_inf,
+//                                  tailed_peaks_conv.back().GetNpar());
+//    }
+//    TF1 fitfunc(Form("gaussians_%f_%i", energies.front().first, fit_counter),
+//                [number_of_gaussians, &tailed_peaks](const double *x, const double *par) {
+//                    long double result{0};
+//                    for(int ii=0; ii<number_of_gaussians; ++ii){
+//                        result += tailed_peaks[ii].Eval(x[0]);
+//                    };
+//                    return static_cast<double>(result*par[number_of_gaussians*npars]);
+//                },
+//                lim_inf,
+//                lim_sup,
+//                npars*number_of_gaussians+1,
+//                1);
+//
 
     for(int ii=0; ii<number_of_gaussians; ++ii) {
+        //fitfunc.SetParameter(1+npars*ii, energies[ii].first);
+        fitfunc.FixParameter(0+npars*ii, energies[ii].second);
+        fitfunc.SetParName(0+npars*ii, Form("IntAmpl_%i", ii));
+
         fitfunc.SetParameter(1+npars*ii, energies[ii].first);
-        fitfunc.SetParameter(2+npars*ii, sqrt(1.8));
-        fitfunc.SetParameter(3+npars*ii, 0.7);
+        fitfunc.SetParLimits(1+npars*ii, fitfunc.GetParameter(1+npars*ii)-2, fitfunc.GetParameter(1+npars*ii)+2);
+        fitfunc.FixParameter(1+npars*ii,fitfunc.GetParameter(1+npars*ii));
+        fitfunc.SetParName(1+npars*ii, Form("MeanGaus_%i", ii));
+
+        fitfunc.SetParameter(2+npars*ii, sigmas[ii]);
+        fitfunc.SetParLimits(2+npars*ii, sqrt(MIN_VARIANCE), sqrt(MAX_VARIANCE));
+        fitfunc.SetParName(2+npars*ii, Form("sigmaGaus_%i", ii));
+
+        fitfunc.SetParameter(3+npars*ii, 0.08);
+        fitfunc.SetParLimits(3+npars*ii, 0.04, 5*sqrt(MAX_VARIANCE));
+        fitfunc.SetParName(3+npars*ii, Form("ExpoDecay_%i", ii));
 
         //fitfunc.SetParLimits(0+3*ii, std::max(1.,heights[ii]*0.1), std::max(heights[ii]*10, 100.));
-        fitfunc.SetParLimits(1+3*ii, energies[ii].first - 0.2, energies[ii].first + 0.2 );
-        fitfunc.SetParLimits(2+npars*ii, sqrt(MIN_VARIANCE), sqrt(MAX_VARIANCE));
-        fitfunc.SetParLimits(3+npars*ii, 0.05, 3*sqrt(MAX_VARIANCE));
+        //fitfunc.SetParLimits(1+3*ii, energies[ii].first - 0.2, energies[ii].first + 0.2 );
 
 
-        fitfunc.FixParameter(1+npars*ii, energies[ii].first);
-        fitfunc.FixParameter(0+npars*ii, energies[ii].second);
     }
     int max_idx = 0;
-    for (int ii=0; ii<heights.size(); ++ii){
+    for (unsigned long int ii=0; ii<heights.size(); ++ii){
         if (heights[ii]>heights[max_idx])
             max_idx = ii;
     }
 
-    fitfunc.SetParameter(number_of_gaussians*npars, heights[max_idx]/energies[max_idx].second);
+    fitfunc.SetParameter(number_of_gaussians*npars, heights[max_idx]/energies[max_idx].second*1.2);
+    fitfunc.SetParName(number_of_gaussians*npars, "TotalAmpl");
     fitfunc.SetParLimits(number_of_gaussians*npars,
-                         std::max(0.,fitfunc.GetParameter(number_of_gaussians*npars)*0.1),
-                         std::max(1.,fitfunc.GetParameter(number_of_gaussians*npars)*10.) );
+                         std::max(0.,fitfunc.GetParameter(number_of_gaussians*npars)*0.8),
+                         std::max(1.,fitfunc.GetParameter(number_of_gaussians*npars)*7.) );
 
     if (debug_canvas)
         plotter.PlotOnCanvas<TH1D>(spec, "histo");
@@ -383,31 +413,76 @@ std::vector<std::pair<double, double>> SpectrumAnalyzer::GetPeaksIntegral(TH1D &
     //TVirtualFitter::SetDefaultFitter("Minuit2");
     //ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
     fit_res_ptr = spec.Fit( &fitfunc,
-                            "SMR",
+                            "SR",
                             "",
                             fitfunc.GetXmin(),
                             fitfunc.GetXmax());
 
-    //std:: cout << "===== Multi fit 2:\n";
-   // fit_res_ptr = spec.Fit( &fitfunc,
-   //                         "SMERI",
-   //                         "",
-   //                         fitfunc.GetXmin(),
-   //                         fitfunc.GetXmax());
-
     TFitResult fit_result = *fit_res_ptr;
     auto cov = fit_result.GetCovarianceMatrix();
-    auto aa  = fit_result.IsValid();
+    bool fit_is_valid  = fit_result.IsValid();
 
-    std::vector<std::pair<double, double>> integrals;
+    if (fit_is_valid) {//Try to improve precision
+        std:: cout << "===== Multi fit 2:\n";
+         fit_res_ptr = spec.Fit( &fitfunc,
+                                 "SMERI",
+                                 "",
+                                 fitfunc.GetXmin(),
+                                 fitfunc.GetXmax());
+        fit_result = *fit_res_ptr;
+        cov = fit_result.GetCovarianceMatrix();
+        fit_is_valid  = fit_result.IsValid();
+    }else{//change parameters
+        for(int ii=0; ii<number_of_gaussians; ++ii) {
+            fitfunc.ReleaseParameter(1+npars*ii);
+
+            fitfunc.SetParameter(3+npars*ii, 5.);
+            fitfunc.SetParLimits(3+npars*ii, 1, 8);
+        }
+        fitfunc.SetParLimits(number_of_gaussians*npars,
+                             std::max(0.,fitfunc.GetParameter(number_of_gaussians*npars)*0.5),
+                             std::max(1.,fitfunc.GetParameter(number_of_gaussians*npars)*5.) );
+
+        double a, b;
+        fitfunc.GetParLimits(4,a,b);
+        std::cout << "lims: " << a << "---"<<b <<std::endl;
+
+        std:: cout << "===== Trying again fit:\n";
+        fit_res_ptr = spec.Fit( &fitfunc,
+                                "S",
+                                "",
+                                fitfunc.GetXmin(),
+                                fitfunc.GetXmax());
+
+        fit_result = *fit_res_ptr;
+        cov = fit_result.GetCovarianceMatrix();
+        fit_is_valid  = fit_result.IsValid();
+    }
+
+    if (!fit_is_valid) std::cerr << "Fit is not valid\n";
+    std::vector<FitRes> results;
     for(int ii=0; ii<number_of_gaussians; ++ii) {
         double integral =   fitfunc.GetParameter(0+npars*ii)*fitfunc.GetParameter(number_of_gaussians*npars);
-        double variance = pow(fitfunc.GetParameter(2+npars*ii),2);
+        double integral_err =  fitfunc.GetParameter(0+npars*ii)*fitfunc.GetParError(number_of_gaussians*npars);
+
+        double sigma = sqrt(pow(fitfunc.GetParameter(2+npars*ii),2)+pow(fitfunc.GetParameter(3+npars*ii),2));
+        double sigma_err = 1./sigma*
+                                sqrt(pow(fitfunc.GetParameter(2+npars*ii)*fitfunc.GetParError(2+npars*ii),2)+
+                                        pow(fitfunc.GetParameter(3+npars*ii)*fitfunc.GetParError(3+npars*ii),2)+
+                                        2*fitfunc.GetParameter(2+npars*ii)*fitfunc.GetParameter(3+npars*ii)*cov[3+npars*ii][2+npars*ii]);
+                                        //0);
+
         double tail = fitfunc.GetParameter(3+npars*ii);
-        if (abs(variance-MAX_VARIANCE)<0.02 || abs(variance-MIN_VARIANCE)<0.02)
+        double tail_err = fitfunc.GetParError(3+npars*ii);
+
+        if (abs(pow(sigma,2)-MAX_VARIANCE)<0.02 || abs(pow(sigma,2)-MIN_VARIANCE)<0.02){
             integral = 0;
-        double error =  fitfunc.GetParameter(0+npars*ii)*fitfunc.GetParError(number_of_gaussians*npars);
-        integrals.emplace_back(integral, error);
+        }
+        results.emplace_back(
+                energies[ii].first,
+                integral, integral_err,
+                sigma, sigma_err,
+                tail, tail_err);
     }
 
     if (debug_canvas) {
@@ -415,11 +490,11 @@ std::vector<std::pair<double, double>> SpectrumAnalyzer::GetPeaksIntegral(TH1D &
         plotter.SetRange(fitfunc.GetXmin() , fitfunc.GetXmax() );
         std::string integral_string;
         std::string sigma_string;
-        for(int ii=0;ii<integrals.size();++ii){
+        for(int ii=0;ii<results.size();++ii){
             integral_string+=std::string("en :")+
                              std::to_string(energies[ii].first)+
                              " int-> "+
-                             std::to_string(integrals[ii].first)+"; ";
+                             std::to_string(results[ii].integral.first)+"; ";
             sigma_string+=std::string("en :")+
                           std::to_string(energies[ii].first)+
                           " var-> "+
@@ -432,7 +507,7 @@ std::vector<std::pair<double, double>> SpectrumAnalyzer::GetPeaksIntegral(TH1D &
                               "tl");
     }
 
-    return integrals;
+    return results;
 }
 
 void SpectrumAnalyzer::UpdateErrors(TH1D & spec) {
@@ -559,11 +634,11 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
         seen_transitions.push_back(tmp_vec);
     }
 
-    std::vector<double> X, Y, Xerr, Yerr, Y2, Y3, Y3err;
+    std::vector<double> X, Xerr, Y1, Y1err, Y2, Y3, Y3err, Y4, Y4err;
     //std::vector<double> blacklisted_energies;
     std::vector<double> blacklisted_energies = {
             //125.69, 443.96, 494.0, 493.508, 571.6, 586.264, 719.349,764.9,768.944,919.33, 926.317, 930.58, 937.05, 1457.643
-            919.33
+            //919.33
     };
 
     for (const auto& it_transition: seen_transitions){
@@ -572,12 +647,12 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
         for (const auto & it: it_transition){
             energies.push_back(eu152_intensities[it]);
         }
-        std::vector<std::pair<double, double>> counts = GetPeaksIntegral(*subtrprojx, energies);
+        auto results = GetPeaksIntegral(*subtrprojx, energies);
         //counts /= it_eff.second;
-        for (int ii=0; ii<counts.size(); ++ii){
+        for (int ii=0; ii<results.size(); ++ii){
             //if (counts[ii].first<2E3) continue;
             //if (counts[ii].second/energies[ii].second >1E4) continue;
-            if (counts[ii].first == 0) continue;
+            if (results[ii].integral.first == 0) continue;
             bool skip = false;
             for(const auto& it_blacklist: blacklisted_energies){
                 if (abs(energies[ii].first-it_blacklist)<0.1)
@@ -586,26 +661,43 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
             if (skip) continue;
             //if (counts[ii].second/intensities[ii]>1E4) continue;
             X.push_back(energies[ii].first);
-            Y.push_back(counts[ii].first/energies[ii].second);
-            Y3.push_back(counts[ii].first);
-            Yerr.push_back(counts[ii].second/energies[ii].second);
-            Y3err.push_back(counts[ii].second);
             Xerr.push_back(0);
-            Y2.push_back(energies[ii].second);
-        }
-        relative_effgraph = TGraphErrors(X.size(), &X[0], &Y[0], &Xerr[0], &Yerr[0]);
-        relative_integralgraph = TGraphErrors(X.size(), &X[0], &Y3[0], &Xerr[0], &Y3err[0]);
-        relative_intgraph = TGraph(X.size(), &X[0], &Y2[0]);
 
-        relative_effgraph.SetName("relative_eff_graoh");
-        relative_effgraph.SetTitle("Relative eff graoh");
+            Y1.push_back(results[ii].integral.first/energies[ii].second);
+            Y1err.push_back(results[ii].integral.second/energies[ii].second);
+
+            Y2.push_back(energies[ii].second);
+
+            Y3.push_back(results[ii].integral.first);
+            Y3err.push_back(results[ii].integral.second);
+
+            Y4.push_back(results[ii].sigma.first);
+            Y4err.push_back(results[ii].sigma.second);
+        }
+
+        relative_effgraph = TGraphErrors(X.size(), &X[0], &Y1[0], &Xerr[0], &Y1err[0]);
+        relative_effgraph.SetName("relative_eff_graph");
+        relative_effgraph.SetTitle("Relative eff graph");
         relative_effgraph.SetMarkerColor(4);
         relative_effgraph.SetMarkerStyle(21);
 
+        relative_intgraph = TGraph(X.size(), &X[0], &Y2[0]);
+        relative_intgraph.SetName("relative_int_graph");
+        relative_intgraph.SetTitle("Relative int graph");
+        relative_intgraph.SetMarkerColor(3);
+        relative_intgraph.SetMarkerStyle(21);
+
+        relative_integralgraph = TGraphErrors(X.size(), &X[0], &Y3[0], &Xerr[0], &Y3err[0]);
         relative_integralgraph.SetName("relative_integral_graoh");
         relative_integralgraph.SetTitle("Relative integral graoh");
         relative_integralgraph.SetMarkerColor(2);
         relative_integralgraph.SetMarkerStyle(21);
+
+        sigmagraph = TGraphErrors(X.size(), &X[0], &Y4[0], &Xerr[0], &Y4err[0]);
+        sigmagraph.SetName("sigma_graph");
+        sigmagraph.SetTitle("sigma_graph");
+        sigmagraph.SetMarkerColor(5);
+        sigmagraph.SetMarkerStyle(21);
         //if (canvas)
         //    plotter.WriteOnCanvas(std::string("energy : ")+
         //                        std::to_string(it_eff.first)+

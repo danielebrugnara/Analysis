@@ -37,6 +37,23 @@ public:
 
 private:
     typedef std::vector<std::pair<double, double>> IntensityData;
+    struct FitRes{
+        double energy;
+        std::pair<double, double> integral;
+        std::pair<double, double> sigma;
+        std::pair<double, double> tail;
+        FitRes(const double& energy,
+               const double& integral,
+               const double& integral_err,
+               const double& sigma,
+               const double& sigma_err,
+               const double& tail,
+               const double& tail_err):
+                    energy(energy),
+                    integral(std::make_pair(integral, integral_err)),
+                    sigma(std::make_pair(sigma, sigma_err)),
+                    tail(std::make_pair(tail, tail_err)){}
+    };
 
     bool debug_canvas;
     bool simulation;
@@ -45,7 +62,7 @@ private:
     TVector2 start_stop;
     Plotter plotter;
     TGraph effgraph;
-    TGraph sigmagraph;
+    TGraphErrors sigmagraph;
     TGraphErrors relative_effgraph;
     TGraphErrors scaled_relative_effgraph;
     TGraphErrors relative_integralgraph;
@@ -59,7 +76,7 @@ private:
     unsigned fit_counter;
 
     double GetPeakIntegral(TH1D &, const double &);
-    std::vector<std::pair<double,double>> GetPeaksIntegral(TH1D &, const std::vector<std::pair<double, double>> &);
+    std::vector<FitRes> GetPeaksIntegral(TH1D &, const std::vector<std::pair<double, double>> &);
     static IntensityData ReadIntensities(const std::string&);
     void GenerateRelativeEffGraph();
 
