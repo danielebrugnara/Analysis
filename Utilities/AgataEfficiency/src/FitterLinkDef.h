@@ -5,7 +5,7 @@
 #pragma link off all functions;            
 #pragma link C++ nestedclasses;            
                                            
-#pragma link C++ defined_in "Selector.h";  
-#pragma link C++ class Selector+; 
+#pragma link C++ defined_in "Fitter.h";  
+#pragma link C++ class Fitter+; 
                                            
 #endif // __CINT__                         

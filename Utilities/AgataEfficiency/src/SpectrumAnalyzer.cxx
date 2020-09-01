@@ -5,6 +5,7 @@ SpectrumAnalyzer::SpectrumAnalyzer(const std::string & file_name, const bool& de
         simulation(false),
         effgraph(),
         sigmagraph(),
+        sigmagaussgraph(),
         relative_effgraph(),
         relative_integralgraph(),
         relative_intgraph(),
@@ -152,6 +153,7 @@ void SpectrumAnalyzer::Analyze() {
     }
 
     sigmagraph.Write();
+    sigmagaussgraph.Write();
     relative_effgraph.Write();
     scaled_relative_effgraph.Write();
     relative_integralgraph.Write();
@@ -424,7 +426,7 @@ std::vector<SpectrumAnalyzer::FitRes> SpectrumAnalyzer::GetPeaksIntegral(TH1D &s
 
     if (fit_is_valid) {//Try to improve precision
         std:: cout << "===== Multi fit 2:\n";
-         fit_res_ptr = spec.Fit( &fitfunc,
+        fit_res_ptr = spec.Fit( &fitfunc,
                                  "SMERI",
                                  "",
                                  fitfunc.GetXmin(),
@@ -472,6 +474,9 @@ std::vector<SpectrumAnalyzer::FitRes> SpectrumAnalyzer::GetPeaksIntegral(TH1D &s
                                         2*fitfunc.GetParameter(2+npars*ii)*fitfunc.GetParameter(3+npars*ii)*cov[3+npars*ii][2+npars*ii]);
                                         //0);
 
+        double sigma_gauss = fitfunc.GetParameter(2+npars*ii);
+        double sigma_gauss_err = fitfunc.GetParError(2+npars*ii);
+
         double tail = fitfunc.GetParameter(3+npars*ii);
         double tail_err = fitfunc.GetParError(3+npars*ii);
 
@@ -482,6 +487,7 @@ std::vector<SpectrumAnalyzer::FitRes> SpectrumAnalyzer::GetPeaksIntegral(TH1D &s
                 energies[ii].first,
                 integral, integral_err,
                 sigma, sigma_err,
+                sigma_gauss, sigma_gauss_err,
                 tail, tail_err);
     }
 
@@ -634,11 +640,10 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
         seen_transitions.push_back(tmp_vec);
     }
 
-    std::vector<double> X, Xerr, Y1, Y1err, Y2, Y3, Y3err, Y4, Y4err;
+    std::vector<double> X, Xerr, Y1, Y1err, Y2, Y3, Y3err, Y4, Y4err, Y5, Y5err;
     //std::vector<double> blacklisted_energies;
     std::vector<double> blacklisted_energies = {
-            //125.69, 443.96, 494.0, 493.508, 571.6, 586.264, 719.349,764.9,768.944,919.33, 926.317, 930.58, 937.05, 1457.643
-            //919.33
+            329.425,330.54,503.474,764.9,768.944,926.317,930.58,937.05,1249.94,1457.64
     };
 
     for (const auto& it_transition: seen_transitions){
@@ -660,19 +665,29 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
             }
             if (skip) continue;
             //if (counts[ii].second/intensities[ii]>1E4) continue;
+
+            //
             X.push_back(energies[ii].first);
             Xerr.push_back(0);
 
+            //
             Y1.push_back(results[ii].integral.first/energies[ii].second);
             Y1err.push_back(results[ii].integral.second/energies[ii].second);
 
+            //
             Y2.push_back(energies[ii].second);
 
+            //
             Y3.push_back(results[ii].integral.first);
             Y3err.push_back(results[ii].integral.second);
 
+            //
             Y4.push_back(results[ii].sigma.first);
             Y4err.push_back(results[ii].sigma.second);
+
+            //
+            Y5.push_back(results[ii].sigma_gauss.first);
+            Y5err.push_back(results[ii].sigma_gauss.second);
         }
 
         relative_effgraph = TGraphErrors(X.size(), &X[0], &Y1[0], &Xerr[0], &Y1err[0]);
@@ -698,6 +713,12 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
         sigmagraph.SetTitle("sigma_graph");
         sigmagraph.SetMarkerColor(5);
         sigmagraph.SetMarkerStyle(21);
+
+        sigmagaussgraph = TGraphErrors(X.size(), &X[0], &Y5[0], &Xerr[0], &Y5err[0]);
+        sigmagaussgraph.SetName("sigmagauss_graph");
+        sigmagaussgraph.SetTitle("sigmagauss_graph");
+        sigmagaussgraph.SetMarkerColor(6);
+        sigmagaussgraph.SetMarkerStyle(21);
         //if (canvas)
         //    plotter.WriteOnCanvas(std::string("energy : ")+
         //                        std::to_string(it_eff.first)+

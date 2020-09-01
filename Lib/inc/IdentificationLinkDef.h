@@ -6,5 +6,6 @@
 #pragma link C++ nestedclasses;
 
 #pragma link C++ defined_in "Identification.h"; 
+#pragma link C++ class Identification+; 
 
 #endif // __CINT__

@@ -6,5 +6,6 @@
 #pragma link C++ nestedclasses;
 
 #pragma link C++ defined_in "Calibration.h"; 
+#pragma link C++ class Calibration+; 
 
 #endif // __CINT__

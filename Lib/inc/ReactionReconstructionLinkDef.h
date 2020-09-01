@@ -6,5 +6,6 @@
 #pragma link C++ nestedclasses;
 
 #pragma link C++ defined_in "ReactionReconstruction.h"; 
+#pragma link C++ class ReactionReconstruction+; 
 
 #endif // __CINT__

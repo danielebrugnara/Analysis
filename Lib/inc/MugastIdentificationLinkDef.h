@@ -6,5 +6,6 @@
 #pragma link C++ nestedclasses;
 
 #pragma link C++ defined_in "MugastIdentification.h"; 
+#pragma link C++ class MugastIdentification+; 
 
 #endif // __CINT__

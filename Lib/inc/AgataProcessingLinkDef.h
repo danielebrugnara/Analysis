@@ -6,5 +6,6 @@
 #pragma link C++ nestedclasses;
 
 #pragma link C++ defined_in "AgataProcessing.h"; 
+#pragma link C++ class AgataProcessing+; 
 
 #endif // __CINT__

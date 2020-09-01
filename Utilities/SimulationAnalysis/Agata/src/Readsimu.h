@@ -15,7 +15,6 @@
 
 #include "Particle.h"
 #include "Hit.h"
-//#include "loader.C"
 
 enum LineType {
 	EVENT_START,
