@@ -9,7 +9,7 @@ add_library(Plotter STATIC Plotter.cxx G__Plotter.cxx)
 target_link_libraries(Plotter ${ROOT_LIBRARIES})
 
 ROOT_GENERATE_DICTIONARY(G__Fitter Fitter.h LINKDEF FitterLinkDef.h)
-add_library(Fitter STATIC Plotter.cxx G__Fitter.cxx)
+add_library(Fitter STATIC Fitter.cxx G__Fitter.cxx)
 target_link_libraries(Fitter ${ROOT_LIBRARIES})
 
 ROOT_GENERATE_DICTIONARY(G__Selector Selector.h LINKDEF SelectorLinkDef.h)
@@ -23,7 +23,7 @@ target_link_libraries(RunSelector ${ROOT_LIBRARIES} Selector)
 
 ROOT_GENERATE_DICTIONARY(G__SpectrumAnalyzer SpectrumAnalyzer.h LINKDEF SpectrumAnalyzerLinkDef.h)
 add_library(SpectrumAnalyzer STATIC SpectrumAnalyzer.cxx G__SpectrumAnalyzer.cxx)
-target_link_libraries(SpectrumAnalyzer ${ROOT_LIBRARIES} DiaGraph LevelScheme Plotter)
+target_link_libraries(SpectrumAnalyzer ${ROOT_LIBRARIES} DiaGraph LevelScheme Plotter Fitter)
 
 #linking to main
 add_executable(effanalysis main.cxx)

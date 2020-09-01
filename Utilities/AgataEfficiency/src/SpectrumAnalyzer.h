@@ -12,6 +12,7 @@
 #include "DiaGraph.h"
 #include "LevelScheme.h"
 #include "Plotter.h"
+#include "Fitter.h"
 
 #include <TFile.h>
 #include <TVirtualFitter.h>
@@ -37,27 +38,6 @@ public:
 
 private:
     typedef std::vector<std::pair<double, double>> IntensityData;
-    struct FitRes{
-        double energy;
-        std::pair<double, double> integral;
-        std::pair<double, double> sigma;
-        std::pair<double, double> sigma_gauss;
-        std::pair<double, double> tail;
-        FitRes(const double& energy,
-               const double& integral,
-               const double& integral_err,
-               const double& sigma,
-               const double& sigma_err,
-               const double& sigma_gauss,
-               const double& sigma_gauss_err,
-               const double& tail,
-               const double& tail_err):
-                    energy(energy),
-                    integral(std::make_pair(integral, integral_err)),
-                    sigma(std::make_pair(sigma, sigma_err)),
-                    sigma_gauss(std::make_pair(sigma_gauss, sigma_gauss_err)),
-                    tail(std::make_pair(tail, tail_err)){}
-    };
 
     bool debug_canvas;
     bool simulation;
@@ -81,7 +61,6 @@ private:
     unsigned fit_counter;
 
     double GetPeakIntegral(TH1D &, const double &);
-    std::vector<FitRes> GetPeaksIntegral(TH1D &, const std::vector<std::pair<double, double>> &);
     static IntensityData ReadIntensities(const std::string&);
     void GenerateRelativeEffGraph();
 
