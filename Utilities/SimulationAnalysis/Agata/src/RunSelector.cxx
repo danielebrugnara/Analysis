@@ -1,15 +1,16 @@
 #include "RunSelector.h"
 #include "Readsimu.h"
 
-RunSelector::RunSelector(std::string file_name){
-
+RunSelector::RunSelector(std::string file_name):nevts(0){
     if (file_name.compare(file_name.size()-5, 5, ".root")){
     //is not a root file, generate it!
         bool smearing = true;
-        int it_max = 119891;
-        readsimu(file_name, file_name+".root", smearing, it_max);
+        int it_max = -1;
+        std::cout << "Calling readsimu\n";
+        nevts = readsimu(file_name, file_name+".root", smearing, it_max);
         file_name = file_name+".root";
     }
+    std::cout << "nevts read by readimu: " << nevts << std::endl;
 	auto* file = new TFile(file_name.c_str());
     if (!file) throw std::runtime_error("File not valid\n");
     auto* tree = (TTree*)file->Get("SimulatedAgata");

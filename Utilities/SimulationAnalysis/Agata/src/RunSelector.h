@@ -12,5 +12,6 @@
 class RunSelector{
     public:
     RunSelector(std::string);
+    int nevts;
 };
 #endif

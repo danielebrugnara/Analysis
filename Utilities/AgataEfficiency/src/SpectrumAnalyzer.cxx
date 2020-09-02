@@ -401,6 +401,7 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
             //if (counts[ii].first<2E3) continue;
             //if (counts[ii].second/energies[ii].second >1E4) continue;
             if (results[ii].integral.first == 0) continue;
+            if (results[ii].sigma.first > 6) continue;
             bool skip = false;
             for(const auto& it_blacklist: blacklisted_energies){
                 if (abs(energies[ii].first-it_blacklist)<0.1)

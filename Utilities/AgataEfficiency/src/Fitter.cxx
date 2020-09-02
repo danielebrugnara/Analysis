@@ -268,8 +268,17 @@ std::vector<Fitter::FitRes> Fitter::FindFunction() {
     }
 
     //Computing parameters and errors
-    if (!fit_is_valid) std::cerr << "Fit is not valid\n";
+//    for (int ii=0; ii<energies.size();++ii){
+//        if (abs(energies[ii].first-parameters.mean[ii].fitted_value.first)>5)
+//            fit_is_valid = false;
+//    }
+
     std::vector<FitRes> results;
+    if (!fit_is_valid){
+        std::cerr << "Fit is not valid\n";
+        return results;
+    }
+
 
     for(int ii=0; ii<number_of_gaussians; ++ii) {
         double integral = parameters.ampl[ii].fitted_value.first * parameters.common_ampl.fitted_value.first;

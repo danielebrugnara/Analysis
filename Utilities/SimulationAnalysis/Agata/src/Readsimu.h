@@ -32,9 +32,10 @@ enum LineType {
 };
 
 enum LineType Classify(const std::string&, bool);
+double Resolution_AGATA(const double&);
 
 
-void readsimu(const std::string& inputfile, const std::string& rootoutput, bool SMEARING=false, int it_max=-1, bool gun=false)
+int readsimu(const std::string& inputfile, const std::string& rootoutput, bool SMEARING=false, int it_max=-1, bool gun=false)
 {
 
 	Particle* tmp_particle=0;
@@ -52,7 +53,7 @@ void readsimu(const std::string& inputfile, const std::string& rootoutput, bool 
 	auto *randm=new TRandom();
 	double Resolution_DIAMANT=0.021;
 	//double Resolution_AGATA=0.002;
-	double Resolution_AGATA=0.003/2.355;//numerator is FWHM
+	//double Resolution_AGATA=0.003/2.355;//numerator is FWHM
 
 	double Energy, posX, posY, posZ;
 	int nr, type, segment, crystal;
@@ -129,7 +130,7 @@ void readsimu(const std::string& inputfile, const std::string& rootoutput, bool 
 						       oneline >> crystal >> Energy >> posX >> posY >> posZ >> segment;
 						       if (SMEARING && Energy>0){
                                    // std::cout << "before : " << Energy << std::endl;
-							       Energy =randm->Gaus(Energy, Resolution_AGATA*Energy);
+							       Energy =randm->Gaus(Energy, Resolution_AGATA(Energy));
                                    // std::cout << "after : " << Energy << std::endl;
 						       }
 						       Hit tmp_hit(crystal, Energy, posX, posY, posZ, segment, 0);
@@ -158,9 +159,9 @@ void readsimu(const std::string& inputfile, const std::string& rootoutput, bool 
 	output->Close();
 
     if (iteration == 0){
-        readsimu( inputfile, rootoutput, SMEARING, it_max, true);
+        return readsimu( inputfile, rootoutput, SMEARING, it_max, true);
     }
-
+    return iteration-1;
 }
 
 enum LineType Classify(const std::string& Line, bool gun){
@@ -195,7 +196,11 @@ enum LineType Classify(const std::string& Line, bool gun){
 		return UNKNOWN_EVENT;
 }
 
-
+double Resolution_AGATA(const double& energy){
+//   1  p0           8.12318e-01           nan          -nan          -nan
+//   2  p1           2.06151e-03           nan          -nan          -nan
+    return 8.12318e-01+2.06151e-03*energy;
+}
 
 
 
