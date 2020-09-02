@@ -359,10 +359,20 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
     }
 
     std::vector<double> X, Xerr, Y1, Y1err, Y2, Y3, Y3err, Y4, Y4err, Y5, Y5err;
-    //std::vector<double> blacklisted_energies;
-    std::vector<double> blacklisted_energies = {
-            329.425,330.54,503.474,764.9,768.944,926.317,930.58,937.05,1249.94,1457.64
-    };
+    std::vector<double> blacklisted_energies;
+//    std::vector<double> blacklisted_energies = {
+//            329.425,330.54,503.474,764.9,768.944,926.317,930.58,937.05,1249.94,1457.64
+//    };
+    int fit_idx = 0;
+
+    bool read_pars_from_file = false;
+
+    std::string pars_file_name = "files/fitparams.txt";
+    if (!read_pars_from_file) {
+        std::ofstream pars_file(pars_file_name);
+        pars_file << "List of parameters" << std::endl;
+        pars_file.close();
+    }
 
     for (const auto& it_transition: seen_transitions){
         std::vector<std::pair<double, double>> energies;
@@ -371,7 +381,12 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
             energies.push_back(eu152_intensities[it]);
         }
         Fitter fitter(*subtrspec, energies);
-        auto results = fitter.Fit();
+
+        auto results = read_pars_from_file ? fitter.Fit(pars_file_name,fit_idx++):fitter.Fit();
+
+        if (!read_pars_from_file)
+            fitter.WriteParsOnFile("files/fitparams.txt", fit_idx++);
+
         if (debug_canvas){
             auto fitref = fitter.GetFitRef();
             auto specref = fitter.GetSpecRef();
