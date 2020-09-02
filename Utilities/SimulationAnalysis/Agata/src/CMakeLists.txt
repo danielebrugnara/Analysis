@@ -21,5 +21,6 @@ add_library(RunSelector STATIC RunSelector.cxx G__RunSelector.cxx)
 target_link_libraries(RunSelector ${ROOT_LIBRARIES} Selector Readsimu)
 
 #linking to main
+ROOT_GENERATE_DICTIONARY(G__main main.cxx LINKDEF mainLinkDef.h)
 add_executable(simulationanalysis main.cxx)
-target_link_libraries(simulationanalysis RunSelector)
+target_link_libraries(simulationanalysis RunSelector ${ROOT_LIBRARIES})

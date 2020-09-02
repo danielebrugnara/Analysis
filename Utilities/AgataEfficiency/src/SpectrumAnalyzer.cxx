@@ -27,6 +27,8 @@ SpectrumAnalyzer::SpectrumAnalyzer(const std::string & file_name, const bool& de
         simulation = true;
         gg_ptr = dynamic_cast<TH2D *>(file->Get("addb_gg"));
         hspec_ptr = dynamic_cast<TH1D *>(file->Get("addb_spec"));
+        auto* tmp =  dynamic_cast<TVector2 *>(file->Get("start_stop"));
+        nevts = tmp->Y();
     }
 
     if (gg_ptr == nullptr || hspec_ptr == nullptr)
@@ -55,12 +57,15 @@ void SpectrumAnalyzer::Analyze() {
     TFile out_file("eff_curve.root", "recreate");
 
     GenerateRelativeEffGraph();
-    double acq_time = start_stop.Y()-start_stop.X();
-    double source_activity = 22296.;
-    double ndays = 2359.;
-    double t12 = 13.517 *365.2425; //t12 in years * ndays
-    double tau = t12 /log(2); //t12 in years * ndays
-    source_activity = source_activity * exp(-ndays/tau);
+    if (!simulation){
+        double acq_time = start_stop.Y()-start_stop.X();
+        double source_activity = 22296.;
+        double ndays = 2359.;
+        double t12 = 13.517 *365.2425; //t12 in years * ndays
+        double tau = t12 /log(2); //t12 in years * ndays
+        source_activity = source_activity * exp(-ndays/tau);
+        nevts = acq_time*source_activity;
+    }
     scaled_relative_effgraph.SetName("scaled_relative_effgraph");
     scaled_relative_effgraph.SetTitle("scaled_relative_effgraph");
     scaled_relative_effgraph.SetMarkerColor(8);
@@ -68,10 +73,10 @@ void SpectrumAnalyzer::Analyze() {
     for (int ii=0; ii<relative_effgraph.GetN(); ++ii){
         scaled_relative_effgraph.SetPoint(ii,
                                           relative_effgraph.GetPointX(ii),
-                                          relative_effgraph.GetPointY(ii)/(acq_time*source_activity));
+                                          relative_effgraph.GetPointY(ii)/nevts);
         scaled_relative_effgraph.SetPointError(     ii,
                                                     0,
-                                                    relative_effgraph.GetErrorY(ii)/(acq_time*source_activity));
+                                                    relative_effgraph.GetErrorY(ii)/nevts);
     }
 
 
@@ -348,7 +353,7 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
 
     std::vector<std::vector<int>> seen_transitions;
     double near_peak_threash = 6.5;
-    for (int ii=0; ii<eu152_intensities.size(); ++ii) {
+    for (unsigned long int ii=0; ii<eu152_intensities.size(); ++ii) {
         if(eu152_intensities[ii].second < 0.001) continue;
         std::vector<int> tmp_vec;
         tmp_vec.push_back(ii);
@@ -397,7 +402,7 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
         }
 
         //counts /= it_eff.second;
-        for (int ii=0; ii<results.size(); ++ii){
+        for (unsigned long int ii=0; ii<results.size(); ++ii){
             //if (counts[ii].first<2E3) continue;
             //if (counts[ii].second/energies[ii].second >1E4) continue;
             if (results[ii].integral.first == 0) continue;

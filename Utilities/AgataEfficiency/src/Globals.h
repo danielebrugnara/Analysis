@@ -6,7 +6,7 @@
 #include "TSystem.h"
 
 static TCanvas* canvas;
-static TApplication* rootapplication;
-static TSystem* rootsystem;
+//static TApplication* rootapplication;
+//static TSystem* rootsystem;
 
 #endif //EFFANALYSIS_GLOBALS_H

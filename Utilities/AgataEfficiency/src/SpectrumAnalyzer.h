@@ -44,6 +44,7 @@ private:
     TH2D gg;
     TH1D hspec;
     TVector2 start_stop;
+    double nevts;
     Plotter plotter;
     TGraph effgraph;
     TGraphErrors sigmagraph;

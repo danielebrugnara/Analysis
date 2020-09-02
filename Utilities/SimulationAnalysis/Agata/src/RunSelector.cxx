@@ -17,7 +17,7 @@ RunSelector::RunSelector(std::string file_name):nevts(0){
     if (!tree) throw std::runtime_error("Tree not valid\n");
 	auto* selector = new Selector();
 	tree->Process(selector, "option");
-    std::string file_out_name (file->GetName());
+    file_out_name = file->GetName();
     file->Close();
 
     file_out_name.insert(0, "spectra_");

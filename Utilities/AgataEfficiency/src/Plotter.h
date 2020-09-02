@@ -75,10 +75,10 @@ public:
         //UnZoom();
 
         canvas->cd();
-        double x1 ;
-        double x2 ;
-        double y1 ;
-        double y2 ;
+        double x1{0};
+        double x2{0};
+        double y1{0};
+        double y2{0};
 
         if(!opt.empty()) {
             if(opt.find("bl")!=std::string::npos){
@@ -158,7 +158,7 @@ public:
         TObject* obj = nullptr;
         TIter it (canvas->GetListOfPrimitives());
         while ((obj = it.Next())) {
-            auto aa = obj->GetName();
+            //auto aa = obj->GetName();
             if (dynamic_cast<TH1 *>(obj) != nullptr) {
                 auto *ptr = dynamic_cast<TH1 *>(obj);
                 //UnZoom();

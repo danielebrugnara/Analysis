@@ -108,22 +108,22 @@ private:
         explicit InitializationParameters()= default;
         InitializationParameters(const InitializationParameters& old_obj)=default;
         void SetupParameters(TF1& func){
-            for (int ii=0; ii<ampl.size(); ++ii){
-                ampl[ii].SetupParameter(func,0+ii*npars,Form("Ampl_%i", ii));
-                mean[ii].SetupParameter(func,1+ii*npars,Form("Mean_%i", ii));
-                sigma[ii].SetupParameter(func,2+ii*npars,Form("Sigma_%i", ii));
-                tau[ii].SetupParameter(func,3+ii*npars,Form("Tau_%i", ii));
+            for (unsigned long int ii=0; ii<ampl.size(); ++ii){
+                ampl[ii].SetupParameter(func,0+ii*npars,Form("Ampl_%li", ii));
+                mean[ii].SetupParameter(func,1+ii*npars,Form("Mean_%li", ii));
+                sigma[ii].SetupParameter(func,2+ii*npars,Form("Sigma_%li", ii));
+                tau[ii].SetupParameter(func,3+ii*npars,Form("Tau_%li", ii));
             }
             common_ampl.SetupParameter(func,(int)ampl.size()*npars,"CommonAmpl");
             common_offset.SetupParameter(func,(int)ampl.size()*npars+1,"CommonOffset");
             func.SetRange(left_interval, right_interval);
         }
         void GetParameters(TF1& func){
-            for (int ii=0; ii<ampl.size(); ++ii){
-                ampl[ii].GetParameter(func,0+ii*npars);
-                mean[ii].GetParameter(func,1+ii*npars);
-                sigma[ii].GetParameter(func,2+ii*npars);
-                tau[ii].GetParameter(func,3+ii*npars);
+            for (unsigned long int ii=0; ii<ampl.size(); ++ii){
+                ampl[ii].GetParameter(func,0+(int)ii*npars);
+                mean[ii].GetParameter(func,1+(int)ii*npars);
+                sigma[ii].GetParameter(func,2+(int)ii*npars);
+                tau[ii].GetParameter(func,3+(int)ii*npars);
             }
             common_ampl.GetParameter(func, (int)ampl.size()*npars);
             common_offset.GetParameter(func, (int)ampl.size()*npars+1);

@@ -13,5 +13,6 @@ class RunSelector{
     public:
     RunSelector(std::string);
     int nevts;
+    std::string file_out_name;
 };
 #endif
