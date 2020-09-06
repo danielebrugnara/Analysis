@@ -374,7 +374,7 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
 //    };
     int fit_idx = 0;
 
-    bool read_pars_from_file = true;
+    bool read_pars_from_file = false;
 
     std::string pars_file_name = "files/fitparams_";
     pars_file_name += file_name.substr(0,file_name.find(".root"));

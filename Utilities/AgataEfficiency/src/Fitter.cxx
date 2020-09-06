@@ -25,7 +25,6 @@ std::vector<Fitter::FitRes> Fitter::Fit(){
         title += std::to_string(it.first);
     }
     RooPlot *frame = x.frame(RooFit::Title(title.c_str()));
-    dh.plotOn(frame);
 
     int ngauss=energies.size();
     //RooFitParams params[ngauss];
@@ -55,37 +54,75 @@ std::vector<Fitter::FitRes> Fitter::Fit(){
                                 parameters.tau[i].min,
                                 parameters.tau[i].max)
         );
+        params.back().fracsignal->setConstant(parameters.ampl[i].fixed);
+        params.back().fracsignal->setConstant(true);
+        params.back().mean->setConstant(parameters.mean[i].fixed);
+        params.back().mean->setConstant(true);
+        params.back().sigma->setConstant(parameters.sigma[i].fixed);
+        params.back().tau->setConstant(parameters.tau[i].fixed);
     }
 
     std::vector<RooGaussModel*> gaussians;
     std::vector<RooDecay*> smeared_gaussians;
-    std::vector<RooAddPdf*> partial_model;
+    RooArgList smeared_gaussians_list;
+    RooArgList signals_list;
+//    std::vector<RooAbsPdf*> partial_model;
     for (int i=0; i<ngauss; ++i){
         gaussians.push_back(new RooGaussModel(Form("gaussian_%i",i),Form("gaussian_%i",i), x, *params[i].mean, *params[i].sigma));
         smeared_gaussians.push_back(new RooDecay(Form("smeared_gaussian_%i", i),Form("smeared_gaussian_%i", i),x,*params[i].tau,*gaussians[i],RooDecay::Flipped));
+        smeared_gaussians_list.add(*smeared_gaussians.back());
+        signals_list.add(*params[i].fracsignal);
     }
 
     //Construct polynomial
+    //   partial_model.reserve(ngauss-1);
+//    if (ngauss>1) {
+//        partial_model.push_back(new RooAddPdf(Form("gaus%i_gaus%i", 0, 0 + 1),
+//                                              Form("gaus%i_gaus%i", 1, 0 + 1),
+//                                              RooArgList(*smeared_gaussians[0], *smeared_gaussians[1]),
+//                                              RooArgList(*params[0].fracsignal)));
+//        for (int i=1; i<ngauss-1; ++i){
+//            partial_model.push_back(new RooAddPdf(Form("gaus%i_gaus%i",i,i+1),
+//                                                  Form("gaus%i_gaus%i",i,i+1),
+//                                                  RooArgList(*partial_model[i-1], *smeared_gaussians[i+1]),
+//                                                  RooArgList(*params[i].fracsignal)));
+//        }
+//    }else{
+//        partial_model.push_back(smeared_gaussians[0]);
+//    }
+
+    RooAddPdf signal(Form("signal"),
+                     Form("signal"),
+                     smeared_gaussians_list,
+                     signals_list);
 
     RooRealVar pol1("pol1", "pol1", 0, -0.01, 0.01);
     //RooRealVar pol2("pol2", "pol2", 0, -0.01, 0.01);
     RooPolynomial bkg("bkg", "bkg", x, RooArgList(pol1));
+    auto* sign_y = new RooRealVar("sign_y","sign_y", 1E3, 0.,1E7);
+    auto* bkg_y = new RooRealVar("bkg_y","bkg_y", 1E3, 0.,1E7);
+    params[ngauss-1].fracsignal = sign_y;
 
-    partial_model.push_back(new RooAddPdf(Form("bkg_gaus0"),Form("bkg_gaus0"),RooArgList(*smeared_gaussians[0],bkg),*params[0].fracsignal));
-    for (int i=1; i<ngauss; ++i){
-        partial_model.push_back(new RooAddPdf(Form("gaus%i_gaus%i",i,i-1),Form("gaus%i_gaus%i",i,i-1),RooArgList(*smeared_gaussians[i],*partial_model[i-1]),*params[i].fracsignal));
-    }
-    auto* model = partial_model[ngauss-1];
+    auto* model = new RooAddPdf(Form("bkg_gaus%i",ngauss-1),
+                                Form("bkg_gaus%i", ngauss-1),
+                                RooArgList(signal,bkg),
+                                RooArgList(*sign_y,*bkg_y));
 
-    auto *result = model->fitTo(dh);
+    dh.plotOn(frame);
+    auto *result = model->fitTo(dh, RooFit::Save());
     model->plotOn(frame, RooFit::VisualizeError(*result));
+    //model->plotOn(frame, RooFit::VisualizeError(*result, *sign_y));
+    model->plotOn(frame );
     model->paramOn(frame, RooFit::Layout(0.7, 0.9, 0.9));
-
+    dh.plotOn(frame);
+    std::vector<TF1* > root_smeared_gaussians;
     for (int i=0; i<ngauss; ++i) {
         //smeared_gaussians[i]->plotOn(frame, RooFit::LineStyle(kDashed), RooFit::LineColor(kRed));
         model->plotOn(frame, RooFit::Components(*smeared_gaussians[i]), RooFit::LineStyle(kDashed),RooFit::LineColor(kGreen));
+        root_smeared_gaussians.push_back(smeared_gaussians[i]->asTF(RooArgList(x),
+                                                                    *smeared_gaussians[i]->getParameters(RooArgList(x))));
     }
-    model->plotOn(frame, RooFit::Components(bkg), RooFit::LineStyle(kDashed),RooFit::LineColor(kRed));
+//    model->plotOn(frame, RooFit::Components(bkg), RooFit::LineStyle(kDashed),RooFit::LineColor(kRed));
     parameters.GetParameters(params);
 
 
@@ -105,13 +142,19 @@ std::vector<Fitter::FitRes> Fitter::Fit(){
 
     std::vector<Fitter::FitRes> results;
     x.setRange("increased_range", parameters.left_interval-10, parameters.right_interval+10);
-    RooAbsReal* integral_res = model->createIntegral(RooArgSet(x),RooArgSet(x),"increased_range");
-    double int_val = integral_res->getVal();
+    //RooAbsReal* integral_res = model->createIntegral(RooArgSet(x),RooArgSet(x),"x");
+    double int_signal = sign_y->getVal();
+    double int_bkg = bkg_y->getVal();
     //double integral_err = integral->getPropagatedError(*result,RooArgSet(x));
     //RooAbsReal* model_counts = model->createIntegral(x,RooFit::NormSet(x), RooFit::Range("x"));
     for(int ii=0; ii<ngauss; ++ii) {
-        double integral = int_val*integral*parameters.ampl[ii].fitted_value.first;
-        double integral_err = 0;
+        double integral =int_signal* root_smeared_gaussians[ii]->Integral(parameters.left_interval,
+                                                                          parameters.right_interval,
+                                                                          0);
+        double integral_err =int_signal* root_smeared_gaussians[ii]->IntegralError(parameters.left_interval,
+                                                                                   parameters.right_interval,
+                                                                                   0,
+                                                                                   result->covarianceMatrix().GetMatrixArray());
         double ampl = parameters.ampl[ii].fitted_value.first;
         double ampl_err = parameters.ampl[ii].fitted_value.second;
         double sigma_gauss = parameters.sigma[ii].fitted_value.first;
@@ -161,13 +204,6 @@ void Fitter::FindParameters() {
     for(const auto&it: energies) {
         fractions.push_back(it.second/total_int);
     }
-    std::vector<double>scaling = fractions;
-    scaling[scaling.size()-1] = fractions[scaling.size()-1];
-    double prod = 1-scaling[scaling.size()-1];
-    for(int i=(int)scaling.size()-2;i>=0;--i){
-        scaling[i] = fractions[i]/prod;
-        prod *= (1-scaling[i]);
-    }
 
     int number_of_gaussians = energies.size();
     InitializationParameters initialpars(number_of_gaussians);
@@ -179,7 +215,7 @@ void Fitter::FindParameters() {
     initialpars.right_interval = energies.back().first + 15.;
 
     for (int ii = 0; ii < number_of_gaussians; ++ii) {
-        //initialpars.ampl[ii].initial_value = scaling[ii];
+        initialpars.ampl[ii].initial_value = fractions[ii];
         initialpars.ampl[ii].initial_value = 0.5;
         initialpars.ampl[ii].min = 0.;
         initialpars.ampl[ii].max = 1.;
