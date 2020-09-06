@@ -1,316 +1,219 @@
 #include "Fitter.h"
 
-Fitter::Fitter(TH1D spec, std::vector<std::pair<double, double>> energies):
-        spec(std::move(spec)),
+Fitter::Fitter(const TH1D& spec, std::vector<std::pair<double, double>> energies):
+        spec(spec),
         energies(std::move(energies)){
 }
 
-std::vector<Fitter::FitRes> Fitter::Fit(){
-    FindParameters();
-    return FindFunction();
-}
 
-std::vector<Fitter::FitRes> Fitter::Fit(const std::string& file, const int& idx) {
-    parameters = ReadParsFromFile(file, idx);
-    return FindFunction();
+
+std::vector<Fitter::FitRes> Fitter::Fit(){
+
+    if (parameters.sigma.empty())
+        FindParameters();
+    //return FindFunction();
+    // Declare observable x
+    RooRealVar x("x", "x", parameters.left_interval, parameters.right_interval);
+
+    // Create a binned dataset that imports contents of TH1 and associates its contents to observable 'x'
+    RooDataHist dh("dh", "dh", x, RooFit::Import(spec));
+
+    // Make plot of binned dataset showing Poisson error bars (RooFit default)
+    std::string title = "Fit at energies ";
+    for(const auto& it: energies){
+        title += " ";
+        title += std::to_string(it.first);
+    }
+    RooPlot *frame = x.frame(RooFit::Title(title.c_str()));
+    dh.plotOn(frame);
+
+    int ngauss=energies.size();
+    //RooFitParams params[ngauss];
+    std::vector<RooFitParams> params;
+    //alternative to decay: RooAbsPdf* beta = bindPdf("beta",ROOT::Math::beta_pdf,x2,a,b) ;
+    params.reserve(ngauss);
+    for(int i=0; i<ngauss;++i){
+        params.emplace_back(
+                 new RooRealVar(parameters.ampl[i].name.c_str(),
+                                                parameters.ampl[i].name.c_str(),
+                                                parameters.ampl[i].initial_value,
+                                                parameters.ampl[i].min,
+                                                parameters.ampl[i].max),
+                 new RooRealVar(parameters.mean[i].name.c_str(),
+                                parameters.mean[i].name.c_str(),
+                                parameters.mean[i].initial_value,
+                                parameters.mean[i].min,
+                                parameters.mean[i].max),
+                 new RooRealVar(parameters.sigma[i].name.c_str(),
+                                parameters.sigma[i].name.c_str(),
+                                parameters.sigma[i].initial_value,
+                                parameters.sigma[i].min,
+                                parameters.sigma[i].max),
+                 new RooRealVar(parameters.tau[i].name.c_str(),
+                                parameters.tau[i].name.c_str(),
+                                parameters.tau[i].initial_value,
+                                parameters.tau[i].min,
+                                parameters.tau[i].max)
+        );
+    }
+
+    std::vector<RooGaussModel*> gaussians;
+    std::vector<RooDecay*> smeared_gaussians;
+    std::vector<RooAddPdf*> partial_model;
+    for (int i=0; i<ngauss; ++i){
+        gaussians.push_back(new RooGaussModel(Form("gaussian_%i",i),Form("gaussian_%i",i), x, *params[i].mean, *params[i].sigma));
+        smeared_gaussians.push_back(new RooDecay(Form("smeared_gaussian_%i", i),Form("smeared_gaussian_%i", i),x,*params[i].tau,*gaussians[i],RooDecay::Flipped));
+    }
+
+    //Construct polynomial
+
+    RooRealVar pol1("pol1", "pol1", 0, -0.01, 0.01);
+    //RooRealVar pol2("pol2", "pol2", 0, -0.01, 0.01);
+    RooPolynomial bkg("bkg", "bkg", x, RooArgList(pol1));
+
+    partial_model.push_back(new RooAddPdf(Form("bkg_gaus0"),Form("bkg_gaus0"),RooArgList(*smeared_gaussians[0],bkg),*params[0].fracsignal));
+    for (int i=1; i<ngauss; ++i){
+        partial_model.push_back(new RooAddPdf(Form("gaus%i_gaus%i",i,i-1),Form("gaus%i_gaus%i",i,i-1),RooArgList(*smeared_gaussians[i],*partial_model[i-1]),*params[i].fracsignal));
+    }
+    auto* model = partial_model[ngauss-1];
+
+    auto *result = model->fitTo(dh);
+    model->plotOn(frame, RooFit::VisualizeError(*result));
+    model->paramOn(frame, RooFit::Layout(0.7, 0.9, 0.9));
+
+    for (int i=0; i<ngauss; ++i) {
+        //smeared_gaussians[i]->plotOn(frame, RooFit::LineStyle(kDashed), RooFit::LineColor(kRed));
+        model->plotOn(frame, RooFit::Components(*smeared_gaussians[i]), RooFit::LineStyle(kDashed),RooFit::LineColor(kGreen));
+    }
+    model->plotOn(frame, RooFit::Components(bkg), RooFit::LineStyle(kDashed),RooFit::LineColor(kRed));
+    parameters.GetParameters(params);
+
+
+    //result->Print();
+
+    //RooAbsReal
+//    RooAbsMoment *aa = smeared_gaussians[0]->sigma(x);
+//    std::cout << "sigma : " << aa->sigma(x)->getVal(x);
+//    std::cout << " pm. " << aa->mean()->getVal(x) << std::endl;
+
+//    RooAbsMoment * mean= gaussians[0]->moment(RooArgList(x,*params[0].mean, *params[0].sigma),1, false, true);
+//    std::cout << "sigma_gauss : " << mean->mean();
+//    std::cout << " pm. " << mean->mean()->sigma(x) << std::endl;
+    //smeared_gaussians[0]->sigma
+
+
+
+    std::vector<Fitter::FitRes> results;
+    x.setRange("increased_range", parameters.left_interval-10, parameters.right_interval+10);
+    RooAbsReal* integral_res = model->createIntegral(RooArgSet(x),RooArgSet(x),"increased_range");
+    double int_val = integral_res->getVal();
+    //double integral_err = integral->getPropagatedError(*result,RooArgSet(x));
+    //RooAbsReal* model_counts = model->createIntegral(x,RooFit::NormSet(x), RooFit::Range("x"));
+    for(int ii=0; ii<ngauss; ++ii) {
+        double integral = int_val*integral*parameters.ampl[ii].fitted_value.first;
+        double integral_err = 0;
+        double ampl = parameters.ampl[ii].fitted_value.first;
+        double ampl_err = parameters.ampl[ii].fitted_value.second;
+        double sigma_gauss = parameters.sigma[ii].fitted_value.first;
+        double sigma_gauss_err = parameters.sigma[ii].fitted_value.second;
+        double tail = parameters.tau[ii].fitted_value.first;
+        double tail_err = parameters.tau[ii].fitted_value.second;
+//        double integral_err = sqrt( pow(parameters.ampl[ii].fitted_value.first * parameters.common_ampl.fitted_value.second ,2)+
+//                                    pow(parameters.ampl[ii].fitted_value.second * parameters.common_ampl.fitted_value.first ,2));
+//
+//        double sigma = sqrt(pow(parameters.sigma[ii].fitted_value.first,2)+pow(parameters.tau[ii].fitted_value.first,2));
+//        double sigma_err = 1./sigma*
+//                           sqrt(    pow(parameters.sigma[ii].fitted_value.first*parameters.sigma[ii].fitted_value.second,2)+
+//                                    pow(parameters.tau[ii].fitted_value.first*parameters.tau[ii].fitted_value.second,2)+
+//                                    2*parameters.sigma[ii].fitted_value.first*parameters.tau[ii].fitted_value.first*cov[3+npars*ii][2+npars*ii]);
+//
+//        double sigma_gauss = parameters.sigma[ii].fitted_value.first;
+//        double sigma_gauss_err = parameters.sigma[ii].fitted_value.second;
+//
+//        double tail = parameters.tau[ii].fitted_value.first;
+//        double tail_err = parameters.tau[ii].fitted_value.second;
+//
+        results.emplace_back(
+                energies[ii].first,
+                integral, integral_err,
+                ampl, ampl_err,
+                sigma_gauss, sigma_gauss_err,
+                tail, tail_err);
+    }
+    auto* cv = new TCanvas();
+    frame->Draw();
+    cv->WaitPrimitive();
+    delete cv;
+
+    return results;
+
 }
 
 void Fitter::FindParameters() {
-    std::vector<double> heights;
-    std::vector<double> sigmas;
-    for (const auto &it_en: energies) {
-        std::cout << "===== Single peak fit :" << it_en.first << "\n";
-        double single_fit_interval{3.0};
-        double single_min_sigma{0.5};
-        double single_max_sigma{4.0};
-
-        TF1 fitfunc(Form("gaussian_%f", it_en.first),
-                    [](const double *x, const double *par) {
-                        return par[0] * exp(-pow((x[0] - par[1]) / (par[2]), 2));
-                    },
-                    it_en.first - single_fit_interval,
-                    it_en.first + single_fit_interval,
-                    3,
-                    1);
-        fitfunc.SetNpx(400);
-
-        fitfunc.SetParameter(0, std::max(0., spec.GetBinContent(spec.GetXaxis()->FindBin(it_en.first))));
-        fitfunc.SetParLimits(0, std::max(0., fitfunc.GetParameter(0) / 4.),
-                             std::max(fitfunc.GetParameter(0) * 3., 40.));
-
-        fitfunc.SetParameter(1, it_en.first);
-        fitfunc.SetParLimits(1, it_en.first - 10, it_en.first + 10);
-
-        fitfunc.SetParameter(2, 1.8);
-        fitfunc.SetParLimits(2, single_min_sigma, single_max_sigma);
-
-        fitfunc.FixParameter(1, it_en.first);
-
-        TFitResultPtr fit_res_ptr(0);
-        fit_res_ptr = spec.Fit(&fitfunc,
-                               "S",
-                               "",
-                               fitfunc.GetXmin(),
-                               fitfunc.GetXmax());
-
-        heights.push_back(fitfunc.GetParameter(0));
-        TFitResult fit_result = *fit_res_ptr;
-
-        if (fitfunc.GetParameter(2) < sqrt(single_max_sigma) &&
-            fitfunc.GetParameter(2) > sqrt(single_min_sigma) &&
-            fit_result.IsValid())
-            sigmas.push_back(fitfunc.GetParameter(2));
-        else
-            sigmas.push_back((sqrt(single_max_sigma) + sqrt(single_min_sigma)) * 0.5);
-
+    std::vector<double>fractions;
+    double total_int {0};
+    double percent_bkg {0.2};
+    for(const auto&it: energies){
+        total_int+=it.second;
     }
+    total_int +=percent_bkg;
 
-    //Multifit
-    //https://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution
-    // par[0+ii*npars] -> coeff (integral of distribution, since the rest is normalized)
-    // par[1+ii*npars] -> gaussian mean value
-    // par[2+ii*npars] -> gaussian sigma
-    // par[3+ii*npars] -> exponential tau  (exp(-x/tau))
-
-    //integral: par[0+ii*npars] -> actual integral is par[0+ii*npars]*par[number_of_gaussians*npars]
-    //mean: par[1+ii*npars]-par[3+ii*npars]
-    //sigma: sqrt(par[1+ii*npars]^2 + par[3+ii*npars]^2)
-
-    //double lim_inf = energies.front().first - fit_interval;
-    //double lim_sup = energies.back().first + fit_interval;
+    for(const auto&it: energies) {
+        fractions.push_back(it.second/total_int);
+    }
+    std::vector<double>scaling = fractions;
+    scaling[scaling.size()-1] = fractions[scaling.size()-1];
+    double prod = 1-scaling[scaling.size()-1];
+    for(int i=(int)scaling.size()-2;i>=0;--i){
+        scaling[i] = fractions[i]/prod;
+        prod *= (1-scaling[i]);
+    }
 
     int number_of_gaussians = energies.size();
     InitializationParameters initialpars(number_of_gaussians);
     initialpars.min_sigma = 0.5;
     initialpars.max_sigma = 4.0;
-    initialpars.min_tau = 0.06;
-    initialpars.max_tau = 8.;
-    initialpars.left_interval = energies.front().first - 14.;
-    initialpars.right_interval = energies.back().first + 10.;
+    initialpars.min_tau = 0.001;
+    initialpars.max_tau = 10.;
+    initialpars.left_interval = energies.front().first - 15.;
+    initialpars.right_interval = energies.back().first + 15.;
 
     for (int ii = 0; ii < number_of_gaussians; ++ii) {
-        initialpars.ampl[ii].initial_value = energies[ii].second;
-        initialpars.ampl[ii].min = energies[ii].second * 0.9;
-        initialpars.ampl[ii].max = energies[ii].second * 1.1;
-        initialpars.ampl[ii].fixed = true;
+        //initialpars.ampl[ii].initial_value = scaling[ii];
+        initialpars.ampl[ii].initial_value = 0.5;
+        initialpars.ampl[ii].min = 0.;
+        initialpars.ampl[ii].max = 1.;
+        initialpars.ampl[ii].fixed = false;
+        initialpars.ampl[ii].name = "Ampl_"+std::to_string(ii);
 
         initialpars.mean[ii].initial_value = energies[ii].first;
-        initialpars.mean[ii].min = energies[ii].first - 1.3;
-        initialpars.mean[ii].max = energies[ii].first + 1.3;
-        initialpars.mean[ii].fixed = true;
+        initialpars.mean[ii].min = energies[ii].first - 5.;
+        initialpars.mean[ii].max = energies[ii].first + 5.;
+        initialpars.mean[ii].fixed = false;
+        initialpars.mean[ii].name = "Mean_"+std::to_string(ii);
 
-        initialpars.sigma[ii].initial_value = sigmas[ii];
+        initialpars.sigma[ii].initial_value = 1.;
         initialpars.sigma[ii].min = initialpars.min_sigma;
         initialpars.sigma[ii].max = initialpars.max_sigma;
         initialpars.sigma[ii].fixed = false;
+        initialpars.sigma[ii].name = "Sigma_"+std::to_string(ii);
 
-        initialpars.tau[ii].initial_value = 0.1;
+        initialpars.tau[ii].initial_value = 1.3;
         initialpars.tau[ii].min = initialpars.min_tau;
         initialpars.tau[ii].max = initialpars.max_tau;
         initialpars.tau[ii].fixed = false;
+        initialpars.tau[ii].name = "Tau_"+std::to_string(ii);
     }
-
-    int max_idx = 0;
-    for (unsigned long int ii = 0; ii < heights.size(); ++ii) {
-        if (heights[ii] > heights[max_idx])
-            max_idx = ii;
-    }
-
-    initialpars.common_ampl.initial_value = heights[max_idx] / energies[max_idx].second * 1.2;
-    initialpars.common_ampl.min = std::max(0., initialpars.common_ampl.initial_value * 0.8);
-    initialpars.common_ampl.max = std::max(1., initialpars.common_ampl.initial_value * 3);
-    initialpars.common_ampl.fixed = false;
-
-    initialpars.common_offset.initial_value = 0;
-    initialpars.common_offset.min = 0.;
-    initialpars.common_offset.max = heights[max_idx] * 1E-1;
-    initialpars.common_offset.fixed = true;
 
     parameters = initialpars;
 }
 
-std::vector<Fitter::FitRes> Fitter::FindFunction() {
-    int number_of_gaussians = energies.size();
-    const int npars{4};
-    fitfunc = TF1(Form("gaussians_%ito%i", (int)energies.front().first, (int)energies.back().first),
-                        [number_of_gaussians](const double *x, const double *par) {
-                            long double result{0};
-                            for(int ii=0; ii<number_of_gaussians; ++ii){
-                                double argument = 1./sqrt(2.)*(par[2+ii*npars]/par[3+ii*npars]+(x[0]-par[1+ii*npars])/par[2+ii*npars]);
-                                result +=   par[0+ii*npars] *
-                                            exp(-0.5*pow((x[0]-par[1+ii*npars])/par[2+ii*npars],2))*
-                                            0.5/par[3+ii*npars]*
-                                            exp(pow(argument,2))*erfc(argument);
-                            };
-                            return static_cast<double>(result*par[number_of_gaussians*npars]+par[number_of_gaussians*npars+1]);
-                        },
-                        parameters.left_interval,
-                        parameters.right_interval,
-                    npars*number_of_gaussians+2,
-                    1);
-
-    fitfunc.SetNpx(300);
-    parameters.SetupParameters(fitfunc);
-
-    TFitResultPtr fit_res_ptr(0);
-    std:: cout << "===========> Multi fit 1:\n";
-    fit_res_ptr = spec.Fit( &fitfunc,
-                            "SR",
-                            "",
-                            fitfunc.GetXmin(),
-                            fitfunc.GetXmax());
-    parameters.GetParameters(fitfunc);
-
-    TFitResult fit_result = *fit_res_ptr;
-    auto cov = fit_result.GetCovarianceMatrix();
-    bool fit_is_valid  = fit_result.IsValid();
-
-    if(!fit_is_valid){
-        fit_res_ptr = 0;
-        std:: cout << "===========> Multi fit 1:\n";
-        fit_res_ptr = spec.Fit( &fitfunc,
-                                "SRWW",
-                                "",
-                                fitfunc.GetXmin(),
-                                fitfunc.GetXmax());
-        parameters.GetParameters(fitfunc);
-
-        fit_result = *fit_res_ptr;
-        cov = fit_result.GetCovarianceMatrix();
-        fit_is_valid  = fit_result.IsValid();
-    }
-
-
-
-
-    if(!fit_is_valid){//2nd try -> Try to increase tau
-        for(int ii=0; ii<number_of_gaussians; ++ii) {
-            //Releasing mean to account for shift due to tail
-            parameters.mean[ii].fixed = false;
-
-            //Trying to increase tail starting point
-            parameters.tau[ii].initial_value = 3.;
-            parameters.tau[ii].min = 0.06;
-            parameters.tau[ii].max = 8.;
-
-        }
-        //parameters.common_ampl.min = std::max(0.,parameters.common_ampl.initial_value*0.5);
-        //parameters.common_ampl.max = std::max(1.,parameters.common_ampl.initial_value*5.);
-
-        std::cout << "===========> Multi fit 2, trying fit AGAIN:\n";
-        parameters.SetupParameters(fitfunc);
-        fit_res_ptr = spec.Fit(&fitfunc,
-                               "SR",
-                               "",
-                               fitfunc.GetXmin(),
-                               fitfunc.GetXmax());
-        parameters.GetParameters(fitfunc);
-
-        fit_result = *fit_res_ptr;
-        cov = fit_result.GetCovarianceMatrix();
-        fit_is_valid = fit_result.IsValid();
-
-        for (int ii=23; (ii>5)&&(!fit_is_valid); --ii) {
-
-            parameters.left_interval = energies.front().first - ii;
-            parameters.right_interval = energies.back().first + ii;
-
-            std::cout << "===========> Multi fit 2, trying fit AGAIN:\n";
-            parameters.SetupParameters(fitfunc);
-            fit_res_ptr = spec.Fit(&fitfunc,
-                                   "SR",
-                                   "",
-                                   fitfunc.GetXmin(),
-                                   fitfunc.GetXmax());
-            parameters.GetParameters(fitfunc);
-
-            fit_result = *fit_res_ptr;
-            cov = fit_result.GetCovarianceMatrix();
-            fit_is_valid = fit_result.IsValid();
-
-            if (!fit_is_valid){
-                fit_res_ptr = spec.Fit(&fitfunc,
-                                       "SRWW",
-                                       "",
-                                       fitfunc.GetXmin(),
-                                       fitfunc.GetXmax());
-                parameters.GetParameters(fitfunc);
-
-                fit_result = *fit_res_ptr;
-                cov = fit_result.GetCovarianceMatrix();
-                fit_is_valid = fit_result.IsValid();
-            }
-        }
-    }
-
-    if (fit_is_valid) {//Try to improve precision
-        std:: cout << "===========> CONVERGED!, trying to improve precision:\n";
-        for(int ii=0; ii<number_of_gaussians; ++ii) {
-            fitfunc.SetParLimits(1+ii*npars, fitfunc.GetParameter(1+ii*npars)*0.8,fitfunc.GetParameter(1+ii*npars)*1.2);
-            fitfunc.SetParLimits(2+ii*npars, fitfunc.GetParameter(2+ii*npars)*0.8,fitfunc.GetParameter(2+ii*npars)*1.2);
-            fitfunc.SetParLimits(3+ii*npars, fitfunc.GetParameter(3+ii*npars)*0.8,fitfunc.GetParameter(3+ii*npars)*1.2);
-
-            //fitfunc.SetParameter(2+ii*npars, abs(fitfunc.GetParameter(2+ii*npars)));
-        }
-        fitfunc.SetParLimits(number_of_gaussians*npars, fitfunc.GetParameter(number_of_gaussians*npars)*0.8,fitfunc.GetParameter(number_of_gaussians*npars)*1.2);
-        fit_res_ptr = spec.Fit( &fitfunc,
-                                "SMERI",
-                                "",
-                                fitfunc.GetXmin(),
-                                fitfunc.GetXmax());
-        parameters.GetParameters(fitfunc);
-        auto new_fit_result = *fit_res_ptr;
-        if (new_fit_result.IsValid()) {
-            fit_result = new_fit_result;
-            cov = fit_result.GetCovarianceMatrix();
-            fit_is_valid = fit_result.IsValid();
-        }
-    }
-
-    //Computing parameters and errors
-//    for (int ii=0; ii<energies.size();++ii){
-//        if (abs(energies[ii].first-parameters.mean[ii].fitted_value.first)>5)
-//            fit_is_valid = false;
-//    }
-
-    std::vector<FitRes> results;
-    if (!fit_is_valid){
-        std::cerr << "Fit is not valid\n";
-        return results;
-    }
-
-
-    for(int ii=0; ii<number_of_gaussians; ++ii) {
-        double integral = parameters.ampl[ii].fitted_value.first * parameters.common_ampl.fitted_value.first;
-        double integral_err = sqrt( pow(parameters.ampl[ii].fitted_value.first * parameters.common_ampl.fitted_value.second ,2)+
-                                    pow(parameters.ampl[ii].fitted_value.second * parameters.common_ampl.fitted_value.first ,2));
-
-        double sigma = sqrt(pow(parameters.sigma[ii].fitted_value.first,2)+pow(parameters.tau[ii].fitted_value.first,2));
-        double sigma_err = 1./sigma*
-                           sqrt(    pow(parameters.sigma[ii].fitted_value.first*parameters.sigma[ii].fitted_value.second,2)+
-                                    pow(parameters.tau[ii].fitted_value.first*parameters.tau[ii].fitted_value.second,2)+
-                                    2*parameters.sigma[ii].fitted_value.first*parameters.tau[ii].fitted_value.first*cov[3+npars*ii][2+npars*ii]);
-
-        double sigma_gauss = parameters.sigma[ii].fitted_value.first;
-        double sigma_gauss_err = parameters.sigma[ii].fitted_value.second;
-
-        double tail = parameters.tau[ii].fitted_value.first;
-        double tail_err = parameters.tau[ii].fitted_value.second;
-
-        results.emplace_back(
-                energies[ii].first,
-                integral, integral_err,
-                sigma, sigma_err,
-                sigma_gauss, sigma_gauss_err,
-                tail, tail_err);
-    }
-    return results;
-}
 
 
 Fitter::~Fitter() = default;
 
 void Fitter::WriteParsOnFile(const std::string& file_name, const int& idx) {
+    FindParameters();
     std::ofstream parfile(file_name, std::ios::app);
 
     if (!parfile.is_open())
@@ -369,10 +272,10 @@ void Fitter::WriteParsOnFile(const std::string& file_name, const int& idx) {
     parfile.close();
 }
 
-Fitter::InitializationParameters Fitter::ReadParsFromFile(const std::string & parfile_name, const int &idx) {
+void Fitter::ReadParsFromFile(const std::string & parfile_name, const int &idx) {
     std::ifstream parfile(parfile_name);
     if (!parfile.is_open())
-        throw std::runtime_error("Parfile not opened\n");
+        throw std::runtime_error("Parfile: "+parfile_name+" not opened\n");
 
     InitializationParameters tmp_pars;
     std::string line;
@@ -436,5 +339,9 @@ Fitter::InitializationParameters Fitter::ReadParsFromFile(const std::string & pa
         }
 
     }
-    return tmp_parameters;
+    parameters = tmp_parameters;
+    if (tmp_parameters.sigma.empty()){
+        std::cerr << "Could not find parameters, using default ones\n";
+        FindParameters();
+    }
 }

@@ -1,6 +1,7 @@
 #include "SpectrumAnalyzer.h"
 
 SpectrumAnalyzer::SpectrumAnalyzer(const std::string & file_name, const bool& debug_canvas):
+        file_name(file_name),
         debug_canvas(debug_canvas),
         simulation(false),
         effgraph(),
@@ -315,7 +316,8 @@ TH1D* SpectrumAnalyzer::ProjectAndSubtract(  const TH2D& mat,
 TH1D* SpectrumAnalyzer::Subtract(TH1D & spec) {
     //UpdateErrors(spec);
     TH1D bkgx   = *((TH1D*)spec.ShowBackground(10, ""));
-    UpdateErrors(bkgx);
+    bkgx.Sumw2();
+    //UpdateErrors(bkgx);
     TH1D* subtrx = new TH1D(spec);
     //subtrx->Sumw2();
     subtrx->Add(&bkgx, -1);
@@ -351,6 +353,8 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
     UpdateErrors(spect);
     TH1D* subtrspec = Subtract(spect);
 
+
+
     std::vector<std::vector<int>> seen_transitions;
     double near_peak_threash = 6.5;
     for (unsigned long int ii=0; ii<eu152_intensities.size(); ++ii) {
@@ -370,9 +374,11 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
 //    };
     int fit_idx = 0;
 
-    bool read_pars_from_file = false;
+    bool read_pars_from_file = true;
 
-    std::string pars_file_name = "files/fitparams.txt";
+    std::string pars_file_name = "files/fitparams_";
+    pars_file_name += file_name.substr(0,file_name.find(".root"));
+    pars_file_name += ".txt";
     if (!read_pars_from_file) {
         std::ofstream pars_file(pars_file_name);
         pars_file << "List of parameters" << std::endl;
@@ -385,20 +391,26 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
         for (const auto & it: it_transition){
             energies.push_back(eu152_intensities[it]);
         }
-        Fitter fitter(*subtrspec, energies);
+        //Fitter fitter(*subtrspec, energies);
+        Fitter fitter(spect, energies);
 
-        auto results = read_pars_from_file ? fitter.Fit(pars_file_name,fit_idx++):fitter.Fit();
+        if (read_pars_from_file)
+            fitter.ReadParsFromFile(pars_file_name,fit_idx++);
+        else
+            fitter.WriteParsOnFile(pars_file_name, fit_idx++);
 
-        if (!read_pars_from_file)
-            fitter.WriteParsOnFile("files/fitparams.txt", fit_idx++);
+        auto results = fitter.Fit();
+
+
 
         if (debug_canvas){
-            auto fitref = fitter.GetFitRef();
-            auto specref = fitter.GetSpecRef();
+            //canvas->WaitPrimitive();
+            //auto fitref = fitter.GetFitRef();
+            //auto specref = fitter.GetSpecRef();
 
-            plotter.PlotOnCanvas<TH1D>(specref, "histo");
-            plotter.PlotOnCanvas<TF1>(fitref, "same");
-            plotter.SetRange(fitref.GetXmin(),fitref.GetXmax());
+            //plotter.PlotOnCanvas<TH1D>(specref, "histo");
+            //plotter.PlotOnCanvas<TF1>(fitref, "same");
+            //plotter.SetRange(fitref.GetXmin(),fitref.GetXmax());
         }
 
         //counts /= it_eff.second;
@@ -406,7 +418,7 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
             //if (counts[ii].first<2E3) continue;
             //if (counts[ii].second/energies[ii].second >1E4) continue;
             if (results[ii].integral.first == 0) continue;
-            if (results[ii].sigma.first > 6) continue;
+            //if (results[ii]..first > 6) continue;
             bool skip = false;
             for(const auto& it_blacklist: blacklisted_energies){
                 if (abs(energies[ii].first-it_blacklist)<0.1)
@@ -431,8 +443,8 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
             Y3err.push_back(results[ii].integral.second);
 
             //
-            Y4.push_back(results[ii].sigma.first);
-            Y4err.push_back(results[ii].sigma.second);
+            Y4.push_back(results[ii].ampl.first);
+            Y4err.push_back(results[ii].ampl.second);
 
             //
             Y5.push_back(results[ii].sigma_gauss.first);

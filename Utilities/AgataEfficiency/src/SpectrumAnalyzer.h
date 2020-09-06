@@ -39,6 +39,7 @@ public:
 private:
     typedef std::vector<std::pair<double, double>> IntensityData;
 
+    std::string file_name;
     bool debug_canvas;
     bool simulation;
     TH2D gg;
