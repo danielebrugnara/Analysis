@@ -28,7 +28,7 @@ list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 find_package(ROOT REQUIRED COMPONENTS Gui Core Imt RIO Net Hist Graf Graf3d Gpad ROOTVecOps Tree TreePlayer Rint Postscript Matrix Physics MathCore Thread MultiProc ROOTDataFrame RooFitCore RooFit)
 include(${ROOT_USE_FILE})
 
-include_directories(${CMAKE_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
+include_directories(${ROOT_INCLUDE_DIRS})
 add_definitions(${ROOT_CXX_FLAGS})
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/")
