@@ -2,7 +2,8 @@
 
 Fitter::Fitter(const TH1D& spec, std::vector<std::pair<double, double>> energies):
         spec(spec),
-        energies(std::move(energies)){
+        energies(std::move(energies)),
+        canvas_enabled(false){
 }
 
 
@@ -185,11 +186,12 @@ std::vector<Fitter::FitRes> Fitter::Fit(){
                 sigma_gauss, sigma_gauss_err,
                 tail, tail_err);
     }
-//    auto* cv = new TCanvas();
-//    frame->Draw();
-//    cv->WaitPrimitive();
-//    delete cv;
-
+    if (canvas_enabled) {
+        auto *cv = new TCanvas();
+        frame->Draw();
+        cv->WaitPrimitive();
+        delete cv;
+    }
     return results;
 
 }
@@ -386,4 +388,8 @@ void Fitter::ReadParsFromFile(const std::string & parfile_name, const int &idx) 
         std::cerr << "Could not find parameters, using default ones\n";
         FindParameters();
     }
+}
+
+void Fitter::EnableCanvas(bool canvas_enabled) {
+    this->canvas_enabled = canvas_enabled;
 }

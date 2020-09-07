@@ -65,6 +65,7 @@ private:
     double GetPeakIntegral(TH1D &, const double &);
     static IntensityData ReadIntensities(const std::string&);
     void GenerateRelativeEffGraph();
+    void GenerateAbsoluteEffGraph();
 
     static void UpdateErrors(TH1D &);
 
@@ -72,7 +73,6 @@ private:
                              const double &, const double &,
                              const double &, const double &,
                              const double &, const double &);
-    static TH1D* Subtract(TH1D&);
 
 };
 #endif //EFFANALYSIS_SPECTRUMANALYZER_H

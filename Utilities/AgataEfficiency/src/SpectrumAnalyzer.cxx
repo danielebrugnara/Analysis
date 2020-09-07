@@ -58,194 +58,198 @@ void SpectrumAnalyzer::Analyze() {
     TFile out_file("eff_curve.root", "recreate");
 
     GenerateRelativeEffGraph();
-    if (!simulation){
-        double acq_time = start_stop.Y()-start_stop.X();
-        double source_activity = 22296.;
-        double ndays = 2359.;
-        double t12 = 13.517 *365.2425; //t12 in years * ndays
-        double tau = t12 /log(2); //t12 in years * ndays
-        source_activity = source_activity * exp(-ndays/tau);
-        nevts = acq_time*source_activity;
-    }
-    scaled_relative_effgraph.SetName("scaled_relative_effgraph");
-    scaled_relative_effgraph.SetTitle("scaled_relative_effgraph");
-    scaled_relative_effgraph.SetMarkerColor(8);
-    scaled_relative_effgraph.SetMarkerStyle(21);
-    for (int ii=0; ii<relative_effgraph.GetN(); ++ii){
-        scaled_relative_effgraph.SetPoint(ii,
-                                          relative_effgraph.GetPointX(ii),
-                                          relative_effgraph.GetPointY(ii)/nevts);
-        scaled_relative_effgraph.SetPointError(     ii,
-                                                    0,
-                                                    relative_effgraph.GetErrorY(ii)/nevts);
-    }
+    GenerateAbsoluteEffGraph();
+}
 
-
+void SpectrumAnalyzer::GenerateAbsoluteEffGraph() {
     int nponts=0;
     double Br_threashold = 0.01;
     double Integral_threashold1 = 1000;
     double Integral_threashold2 = 10;
     int Entries_threashold = 1E3;
-    TH1D projx  = *gg.ProjectionX();
-    TH1D* subtrprojx = Subtract(projx);
-    UpdateErrors(*subtrprojx);
-    //Plotter pltx(projx, "");
+    TH1D proj_x  = *gg.ProjectionX();
     int cnt{0};
     std::vector<int> meaningful_combinations = {
             1, 13, 19, 21, 26, 27, 50,
             66, 67, 68, 69, 70, 72, 79,
             81, 159
     };
-
-
-    for (const auto & it: gamma_gamma){
+    int fit_x_idx{0};
+    int fit_y_idx{0};
+    for (const auto & it: gamma_gamma) {
         if (it.first->Br.first < Br_threashold || it.second->Br.first < Br_threashold)
             continue;
-        if (std::find(meaningful_combinations.begin(), meaningful_combinations.end(), cnt++)!=meaningful_combinations.end())
+        if (std::find(meaningful_combinations.begin(), meaningful_combinations.end(), cnt++) !=
+            meaningful_combinations.end())
             continue;
 
-        std::cout <<"~~" << *it.first <<" -> "<< *it.second<< std::endl;
-        double engamma1 = it.first->Egamma.first/UNITS::keV;
-        double engamma2 = it.second->Egamma.first/UNITS::keV;
+        std::cout << "~~" << *it.first << " -> " << *it.second << std::endl;
+        double engamma1 = it.first->Egamma.first / UNITS::keV;
+        double engamma2 = it.second->Egamma.first / UNITS::keV;
         double branching2 = it.second->Br.first;
 
-        std::cout << "En1 : " << engamma1<< "\n";
-        std::cout << "En2: " << engamma2<< "\n";
+        std::cout << "En1 : " << engamma1 << "\n";
+        std::cout << "En2: " << engamma2 << "\n";
+        std::vector<std::pair<double, double>> energies_x = {std::make_pair(engamma1, 1.)};
+        std::vector<std::pair<double, double>> energies_y = {std::make_pair(engamma2, 1.)};
 
-        double integral1 = GetPeakIntegral(*subtrprojx, engamma1);
-        if (integral1 < Integral_threashold1){
-            continue;
-        }
+        //Fitting X projection
+        bool read_pars_from_file = false;
+        std::string pars_file_x_name = "files/fitparams_absolutex_";
+        pars_file_x_name += file_name.substr(0, file_name.find(".root"));
+        pars_file_x_name += ".txt";
 
+        Fitter fitter_x(proj_x, energies_x);
+        fitter_x.EnableCanvas();
+
+        if (read_pars_from_file)
+            fitter_x.ReadParsFromFile(pars_file_x_name, fit_x_idx++);
+        else
+            fitter_x.WriteParsOnFile(pars_file_x_name, fit_x_idx++);
+
+        auto results_x = fitter_x.Fit();
+
+        //double integral1 = GetPeakIntegral(*subtrprojx, engamma1);
+//        if (integral1 < Integral_threashold1){
+//            continue;
+//        }
+//
+
+        //Creating Y projection
         double gate_width = 5.;
         double noise_gate_width = 50.;
         double noise_gate_dist = 10.;
 
-        TH1D* projy = ProjectAndSubtract(gg,
+        TH1D* proj_y = ProjectAndSubtract(gg,
                                          engamma1-gate_width/2., engamma1+gate_width/2.,
                                          engamma1-noise_gate_dist-noise_gate_width, engamma1-noise_gate_dist,
                                          engamma1+noise_gate_dist, engamma1+noise_gate_dist+noise_gate_width);
-        std::cout << "Entries projy : " << projy->GetEntries()<< "\n";
-
-        projy = Subtract(*projy);
-
-        if (projy->GetEntries()<Entries_threashold) {
-            delete projy;
-            continue;
-        }
-        double integral2 = GetPeakIntegral(*projy, engamma2);
-
-        if (integral2 < Integral_threashold2){
-            delete projy;
+//
+        if (proj_y->GetEntries()<Entries_threashold) {
+            delete proj_y;
             continue;
         }
 
 
-        double eff = integral2/(integral1*branching2);
-        if (debug_canvas)
-            canvas->SetTitle(Form("comb%i", cnt));
-        if (debug_canvas)
-            plotter.WriteOnCanvas(std::string("int1 : ")+
-                                  std::to_string(integral1)+
-                                  " int2 : "+
-                                  std::to_string(integral2)+
-                                  " eff: "+
-                                  std::to_string(eff),
-                                  46);
+        //Fitting Y projection
+        std::string pars_file_y_name = "files/fitparams_absolutey_";
+        pars_file_y_name += file_name.substr(0, file_name.find(".root"));
+        pars_file_y_name += ".txt";
 
-        effgraph.SetPoint(nponts++,engamma2, eff);
-        delete projy;
+        Fitter fitter_y(*proj_y, energies_y);
+        fitter_y.EnableCanvas();
 
+        if (read_pars_from_file)
+            fitter_y.ReadParsFromFile(pars_file_y_name, fit_y_idx++);
+        else
+            fitter_y.WriteParsOnFile(pars_file_y_name, fit_y_idx++);
+
+        auto results_y = fitter_y.Fit();
+//
+//        if (integral2 < Integral_threashold2){
+//            delete projy;
+//            continue;
+//        }
+//
+//
+//        double eff = integral2/(integral1*branching2);
+//        if (debug_canvas)
+//            canvas->SetTitle(Form("comb%i", cnt));
+//        if (debug_canvas)
+//            plotter.WriteOnCanvas(std::string("int1 : ")+
+//                                  std::to_string(integral1)+
+//                                  " int2 : "+
+//                                  std::to_string(integral2)+
+//                                  " eff: "+
+//                                  std::to_string(eff),
+//                                  46);
+//
+//        effgraph.SetPoint(nponts++,engamma2, eff);
+//        delete projy;
+//
     }
-
-    sigmagraph.Write();
-    sigmagaussgraph.Write();
-    relative_effgraph.Write();
-    scaled_relative_effgraph.Write();
-    relative_integralgraph.Write();
-    relative_intgraph.Write();
-    effgraph.Write();
-    out_file.Write();
-    out_file.Close();
+//
+//    sigmagraph.Write();
+//    sigmagaussgraph.Write();
+//    relative_effgraph.Write();
+//    scaled_relative_effgraph.Write();
+//    relative_integralgraph.Write();
+//    relative_intgraph.Write();
+//    effgraph.Write();
+//    out_file.Write();
+//    out_file.Close();
 }
 
-double SpectrumAnalyzer::GetPeakIntegral(TH1D& spec, const double& engamma){
-    if (debug_canvas)
-        plotter.PlotOnCanvas<TH1>(spec, "histo");
-    UpdateErrors(spec);
-    fit_counter++;
-    TF1 fitfunc(Form("gaussian_%f_%i", engamma, fit_counter),
-                [](const double* x, const double*par)
-                {return par[0]*exp(-pow((x[0]-par[1])/(par[2]),2));},
-                engamma-fit_interval,
-                engamma+fit_interval,
-                3,
-                1);
-    fitfunc.SetNpx(400);
-
-    fitfunc.SetParameter(0, spec.GetBinContent(spec.GetXaxis()->FindBin(engamma)));
-    fitfunc.SetParameter(1, engamma);
-    fitfunc.SetParameter(2, 1.8);
-
-    fitfunc.SetParLimits(0, fitfunc.GetParameter(0)/3, fitfunc.GetParameter(0)*3);
-    fitfunc.SetParLimits(1, engamma-10, engamma+10);
-    fitfunc.SetParLimits(2, 0.8, 5);
-
-    fitfunc.FixParameter(1, engamma);
-
-    TFitResultPtr fit_res_ptr(0);
-
-    fit_res_ptr = spec.Fit( &fitfunc,
-                            "S",
-                            "",
-                            fitfunc.GetXmin(),
-                            fitfunc.GetXmax());
-    if (debug_canvas)
-        plotter.PlotOnCanvas<TF1>(fitfunc, "same");
-    if (debug_canvas)
-        plotter.SetRange(engamma-50, engamma+50);
-
-    if (fit_res_ptr>=0){
-        fit_res_ptr->Print();
-    }else{
-        if (debug_canvas)
-            plotter.WriteOnCanvas("FitNotSuccessful!!");
-        return -1;
-    }
-
-//    if (fit_res_ptr->Chi2()>5*fit_res_ptr->Ndf()) {
-//        plotter.WriteOnCanvas(std::string("high chi : ")+
-//                                            std::to_string(fit_res_ptr->Chi2())+
-//                                            " with ndf : "+
-//                                            std::to_string(fit_res_ptr->Ndf()));
+//double SpectrumAnalyzer::GetPeakIntegral(TH1D& spec, const double& engamma){
+//    if (debug_canvas)
+//        plotter.PlotOnCanvas<TH1>(spec, "histo");
+//    UpdateErrors(spec);
+//    fit_counter++;
+//    TF1 fitfunc(Form("gaussian_%f_%i", engamma, fit_counter),
+//                [](const double* x, const double*par)
+//                {return par[0]*exp(-pow((x[0]-par[1])/(par[2]),2));},
+//                engamma-fit_interval,
+//                engamma+fit_interval,
+//                3,
+//                1);
+//    fitfunc.SetNpx(400);
+//
+//    fitfunc.SetParameter(0, spec.GetBinContent(spec.GetXaxis()->FindBin(engamma)));
+//    fitfunc.SetParameter(1, engamma);
+//    fitfunc.SetParameter(2, 1.8);
+//
+//    fitfunc.SetParLimits(0, fitfunc.GetParameter(0)/3, fitfunc.GetParameter(0)*3);
+//    fitfunc.SetParLimits(1, engamma-10, engamma+10);
+//    fitfunc.SetParLimits(2, 0.8, 5);
+//
+//    fitfunc.FixParameter(1, engamma);
+//
+//    TFitResultPtr fit_res_ptr(0);
+//
+//    fit_res_ptr = spec.Fit( &fitfunc,
+//                            "S",
+//                            "",
+//                            fitfunc.GetXmin(),
+//                            fitfunc.GetXmax());
+//    if (debug_canvas)
+//        plotter.PlotOnCanvas<TF1>(fitfunc, "same");
+//    if (debug_canvas)
+//        plotter.SetRange(engamma-50, engamma+50);
+//
+//    if (fit_res_ptr>=0){
+//        fit_res_ptr->Print();
+//    }else{
+//        if (debug_canvas)
+//            plotter.WriteOnCanvas("FitNotSuccessful!!");
 //        return -1;
 //    }
-
-    TFitResult fit_result = *fit_res_ptr;
-
-    double integral =  fitfunc.GetParameter(0)*sqrt(UNITS::CONSTANTS::pi)*fitfunc.GetParameter(2);
-    if (debug_canvas)
-        plotter.WriteOnCanvas(std::string("correct chi : ")+
-                              std::to_string(fit_res_ptr->Chi2())+
-                              " with ndf : "+
-                              std::to_string(fit_res_ptr->Ndf())+
-                              ", integral : "+
-                              std::to_string(integral));
-
-    // plotter.SetRange(engamma-100, engamma+100);
-
-    //subtrx.SetName(Form("%s_%f_%i__%f",spec.GetName(), engamma, fit_counter, integral));
-    //subtrx.Write();
-
-    return integral;
-}
-
-
-void SpectrumAnalyzer::UpdateErrors(TH1D & spec) {
-    for (int ii=0; ii<spec.GetNbinsX(); ++ii){
-        spec.SetBinError(ii, sqrt(spec.GetBinContent(ii)));
-    }
-}
+//
+////    if (fit_res_ptr->Chi2()>5*fit_res_ptr->Ndf()) {
+////        plotter.WriteOnCanvas(std::string("high chi : ")+
+////                                            std::to_string(fit_res_ptr->Chi2())+
+////                                            " with ndf : "+
+////                                            std::to_string(fit_res_ptr->Ndf()));
+////        return -1;
+////    }
+//
+//    TFitResult fit_result = *fit_res_ptr;
+//
+//    double integral =  fitfunc.GetParameter(0)*sqrt(UNITS::CONSTANTS::pi)*fitfunc.GetParameter(2);
+//    if (debug_canvas)
+//        plotter.WriteOnCanvas(std::string("correct chi : ")+
+//                              std::to_string(fit_res_ptr->Chi2())+
+//                              " with ndf : "+
+//                              std::to_string(fit_res_ptr->Ndf())+
+//                              ", integral : "+
+//                              std::to_string(integral));
+//
+//    // plotter.SetRange(engamma-100, engamma+100);
+//
+//    //subtrx.SetName(Form("%s_%f_%i__%f",spec.GetName(), engamma, fit_counter, integral));
+//    //subtrx.Write();
+//
+//    return integral;
+//}
 
 TH1D* SpectrumAnalyzer::ProjectAndSubtract(  const TH2D& mat,
                                              const double& e_min_sig  ,const double& e_max_sig,
@@ -313,16 +317,16 @@ TH1D* SpectrumAnalyzer::ProjectAndSubtract(  const TH2D& mat,
     return signal;
 }
 
-TH1D* SpectrumAnalyzer::Subtract(TH1D & spec) {
-    //UpdateErrors(spec);
-    TH1D bkgx   = *((TH1D*)spec.ShowBackground(10, ""));
-    bkgx.Sumw2();
-    //UpdateErrors(bkgx);
-    TH1D* subtrx = new TH1D(spec);
-    //subtrx->Sumw2();
-    subtrx->Add(&bkgx, -1);
-    return subtrx;
-}
+//TH1D* SpectrumAnalyzer::Subtract(TH1D & spec) {
+//    //UpdateErrors(spec);
+//    TH1D bkgx   = *((TH1D*)spec.ShowBackground(10, ""));
+//    bkgx.Sumw2();
+//    //UpdateErrors(bkgx);
+//    TH1D* subtrx = new TH1D(spec);
+//    //subtrx->Sumw2();
+//    subtrx->Add(&bkgx, -1);
+//    return subtrx;
+//}
 
 SpectrumAnalyzer::IntensityData SpectrumAnalyzer::ReadIntensities(const std::string & file_name) {
     std::ifstream file(file_name);
@@ -350,10 +354,10 @@ SpectrumAnalyzer::IntensityData SpectrumAnalyzer::ReadIntensities(const std::str
 void SpectrumAnalyzer::GenerateRelativeEffGraph() {
     //TH1D projx  = *gg.ProjectionX();
     TH1D spect = hspec;
-    UpdateErrors(spect);
-    TH1D* subtrspec = Subtract(spect);
+    spect.Sumw2();
 
-
+    //UpdateErrors(spect);
+    //TH1D* subtrspec = Subtract(spect);
 
     std::vector<std::vector<int>> seen_transitions;
     double near_peak_threash = 6.5;
@@ -375,10 +379,10 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
     int fit_idx = 0;
 
     bool read_pars_from_file = true   ;
-
     std::string pars_file_name = "files/fitparams_relative_";
     pars_file_name += file_name.substr(0,file_name.find(".root"));
     pars_file_name += ".txt";
+
     if (!read_pars_from_file) {
         std::ofstream pars_file(pars_file_name);
         pars_file << "List of parameters" << std::endl;
@@ -488,6 +492,28 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
         //                        " nr : "+
         //                        std::to_string(it_transition.front()),
         //                      46);
+    }
+
+    if (!simulation){
+        double acq_time = start_stop.Y()-start_stop.X();
+        double source_activity = 22296.;
+        double ndays = 2359.;
+        double t12 = 13.517 *365.2425; //t12 in years * ndays
+        double tau = t12 /log(2); //t12 in years * ndays
+        source_activity = source_activity * exp(-ndays/tau);
+        nevts = acq_time*source_activity;
+    }
+    scaled_relative_effgraph.SetName("scaled_relative_effgraph");
+    scaled_relative_effgraph.SetTitle("scaled_relative_effgraph");
+    scaled_relative_effgraph.SetMarkerColor(8);
+    scaled_relative_effgraph.SetMarkerStyle(21);
+    for (int ii=0; ii<relative_effgraph.GetN(); ++ii){
+        scaled_relative_effgraph.SetPoint(ii,
+                                          relative_effgraph.GetPointX(ii),
+                                          relative_effgraph.GetPointY(ii)/nevts);
+        scaled_relative_effgraph.SetPointError(     ii,
+                                                    0,
+                                                    relative_effgraph.GetErrorY(ii)/nevts);
     }
 }
 
