@@ -54,7 +54,6 @@ std::vector<Fitter::FitRes> Fitter::Fit(){
                                 parameters.tau[i].max)
         );
         params.back().fracsignal->setConstant(parameters.ampl[i].fixed);
-        params.back().fracsignal->setConstant(true);
         params.back().mean->setConstant(parameters.mean[i].fixed);
         //params.back().mean->setConstant(true);
         params.back().sigma->setConstant(parameters.sigma[i].fixed);
@@ -219,7 +218,7 @@ void Fitter::FindParameters() {
         //initialpars.ampl[ii].initial_value = 0.5;
         initialpars.ampl[ii].min = 0.;
         initialpars.ampl[ii].max = 1.;
-        initialpars.ampl[ii].fixed = false;
+        initialpars.ampl[ii].fixed = true;
         initialpars.ampl[ii].name = "Ampl_"+std::to_string(ii);
 
         initialpars.mean[ii].initial_value = energies[ii].first;
