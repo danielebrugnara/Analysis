@@ -47,14 +47,12 @@ private:
     TVector2 start_stop;
     double nevts;
     Plotter plotter;
-    TGraph effgraph;
-    TGraphErrors sigmagraph;
-    TGraphErrors sigmagaussgraph;
-    TGraphErrors relative_effgraph;
-    TGraphErrors scaled_relative_effgraph;
-    TGraphErrors relative_integralgraph;
-    TGraph relative_intgraph;
-    //void SetupLevelSchemes();
+
+    TGraphErrors relative_eff_graph;
+    TGraphErrors absolute_eff_graph;
+    TGraphErrors sigma_graph;
+    TGraphErrors tau_graph;
+
     LevelScheme levelscheme;
     IntensityData eu152_intensities;
     std::vector<std::pair<const Gamma *, const Gamma *>> gamma_gamma;
