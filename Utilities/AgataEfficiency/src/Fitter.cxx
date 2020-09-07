@@ -6,8 +6,6 @@ Fitter::Fitter(const TH1D& spec, std::vector<std::pair<double, double>> energies
         canvas_enabled(false){
 }
 
-
-
 std::vector<Fitter::FitRes> Fitter::Fit(){
 
     if (parameters.sigma.empty())

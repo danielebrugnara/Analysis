@@ -75,18 +75,37 @@ void SpectrumAnalyzer::GenerateAbsoluteEffGraph() {
     TH1D proj_x  = *gg.ProjectionX();
     int cnt{0};
     std::vector<int> meaningful_combinations = {
-            1, 13, 19, 21, 26, 27, 50,
-            66, 67, 68, 69, 70, 72, 79,
-            81, 159
+            1, 5, 24, 31, 35, 46, 47, 99, 158, 167, 168,
+            169, 170, 197, 298, 302, 479, 535, 561,
+            684, 755, 782, 885, 1240, 1359, 1397
     };
     int fit_x_idx{0};
     int fit_y_idx{0};
     std::vector<double> X, X_err, Y_eff, Y_eff_err;
 
+    bool read_pars_from_file = true;
+
+    std::string pars_file_x_name = "files/fitparams_absolutex_";
+    pars_file_x_name += file_name.substr(0, file_name.find(".root"));
+    pars_file_x_name += ".txt";
+    std::string pars_file_y_name = "files/fitparams_absolutey_";
+    pars_file_y_name += file_name.substr(0, file_name.find(".root"));
+    pars_file_y_name += ".txt";
+
+    if (!read_pars_from_file){
+        std::ofstream pars_x_file(pars_file_x_name);
+        pars_x_file << "List of parameters X" << std::endl;
+        pars_x_file.close();
+        std::ofstream pars_y_file(pars_file_y_name);
+        pars_y_file << "List of parameters Y" << std::endl;
+        pars_y_file.close();
+    }
+
     for (const auto & it: gamma_gamma) {
+        cnt++;
         if (it.first->Br.first < Br_threashold || it.second->Br.first < Br_threashold)
             continue;
-        if (std::find(meaningful_combinations.begin(), meaningful_combinations.end(), cnt++) !=
+        if (std::find(meaningful_combinations.begin(), meaningful_combinations.end(), cnt) ==
             meaningful_combinations.end())
             continue;
 
@@ -95,34 +114,22 @@ void SpectrumAnalyzer::GenerateAbsoluteEffGraph() {
         double engamma2 = it.second->Egamma.first / UNITS::keV;
         double branching2 = it.second->Br.first;
 
-        std::cout << "En1 : " << engamma1 << "\n";
-        std::cout << "En2: " << engamma2 << "\n";
         std::vector<std::pair<double, double>> energies_x = {std::make_pair(engamma1, 1.)};
         std::vector<std::pair<double, double>> energies_y = {std::make_pair(engamma2, 1.)};
 
         //Fitting X projection
-        bool read_pars_from_file = false;
-        std::string pars_file_x_name = "files/fitparams_absolutex_";
-        pars_file_x_name += file_name.substr(0, file_name.find(".root"));
-        pars_file_x_name += ".txt";
-
         Fitter fitter_x(proj_x, energies_x);
-        //fitter_x.EnableCanvas();
+        fitter_x.EnableCanvas();
 
         if (read_pars_from_file)
-            fitter_x.ReadParsFromFile(pars_file_x_name, fit_x_idx++);
-        else
-            fitter_x.WriteParsOnFile(pars_file_x_name, fit_x_idx++);
+            fitter_x.ReadParsFromFile(pars_file_x_name, cnt);
+        else {
+            fitter_x.WriteParsOnFile(pars_file_x_name, cnt);
+        }
 
         auto results_x = fitter_x.Fit();
         double  integral_x = results_x[0].integral.first;
         double  integral_x_err = results_x[0].integral.second;
-
-        //double integral1 = GetPeakIntegral(*subtrprojx, engamma1);
-//        if (integral1 < Integral_threashold1){
-//            continue;
-//        }
-//
 
         //Creating Y projection
         double gate_width = 5.;
@@ -133,37 +140,28 @@ void SpectrumAnalyzer::GenerateAbsoluteEffGraph() {
                                          engamma1-gate_width/2., engamma1+gate_width/2.,
                                          engamma1-noise_gate_dist-noise_gate_width, engamma1-noise_gate_dist,
                                          engamma1+noise_gate_dist, engamma1+noise_gate_dist+noise_gate_width);
-//
-        if (proj_y->GetEntries()<Entries_threashold) {
-            delete proj_y;
-            continue;
-        }
-
 
         //Fitting Y projection
-        std::string pars_file_y_name = "files/fitparams_absolutey_";
-        pars_file_y_name += file_name.substr(0, file_name.find(".root"));
-        pars_file_y_name += ".txt";
-
         Fitter fitter_y(*proj_y, energies_y);
-        //fitter_y.EnableCanvas();
+        fitter_y.EnableCanvas();
 
         if (read_pars_from_file)
-            fitter_y.ReadParsFromFile(pars_file_y_name, fit_y_idx++);
-        else
-            fitter_y.WriteParsOnFile(pars_file_y_name, fit_y_idx++);
+            fitter_y.ReadParsFromFile(pars_file_y_name, cnt);
+        else {
+            fitter_y.WriteParsOnFile(pars_file_y_name, cnt);
+        }
 
         auto results_y = fitter_y.Fit();
         double  integral_y = results_y[0].integral.first;
         double  integral_y_err = results_y[0].integral.second;
-//
-//        if (integral2 < Integral_threashold2){
-//            delete projy;
-//            continue;
-//        }
-//
+
+        //Computing efficiency
         double eff = integral_y/(integral_x*branching2);
         double eff_err = 1./branching2* sqrt(pow(integral_y_err/(integral_x),2.)+pow(integral_y*integral_x_err/(integral_x*integral_x),2.));
+
+        if (eff>1.)
+            continue;
+
         X.push_back(engamma2);
         X_err.push_back(0.);
 
@@ -171,7 +169,6 @@ void SpectrumAnalyzer::GenerateAbsoluteEffGraph() {
         Y_eff_err.push_back(eff_err);
 
         delete proj_y;
-//
     }
     absolute_eff_graph = TGraphErrors(X.size(), &X[0], &Y_eff[0], &X_err[0], &Y_eff_err[0]);
     absolute_eff_graph.SetName("absolute_eff_graph");
