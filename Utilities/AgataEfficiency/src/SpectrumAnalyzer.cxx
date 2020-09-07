@@ -92,6 +92,20 @@ void SpectrumAnalyzer::GenerateAbsoluteEffGraph() {
     pars_file_y_name += file_name.substr(0, file_name.find(".root"));
     pars_file_y_name += ".txt";
 
+    if (read_pars_from_file){
+        std::ifstream test_file_x(pars_file_x_name);
+        if (!test_file_x.good())
+            read_pars_from_file = false;
+        else
+            test_file_x.close();
+
+        std::ifstream test_file_y(pars_file_y_name);
+        if (!test_file_y.good())
+            read_pars_from_file = false;
+        else
+            test_file_y.close();
+    }
+
     if (!read_pars_from_file){
         std::ofstream pars_x_file(pars_file_x_name);
         pars_x_file << "List of parameters X" << std::endl;
@@ -119,7 +133,7 @@ void SpectrumAnalyzer::GenerateAbsoluteEffGraph() {
 
         //Fitting X projection
         Fitter fitter_x(proj_x, energies_x);
-        fitter_x.EnableCanvas();
+        //fitter_x.EnableCanvas();
 
         if (read_pars_from_file)
             fitter_x.ReadParsFromFile(pars_file_x_name, cnt);
@@ -143,7 +157,7 @@ void SpectrumAnalyzer::GenerateAbsoluteEffGraph() {
 
         //Fitting Y projection
         Fitter fitter_y(*proj_y, energies_y);
-        fitter_y.EnableCanvas();
+        //fitter_y.EnableCanvas();
 
         if (read_pars_from_file)
             fitter_y.ReadParsFromFile(pars_file_y_name, cnt);
@@ -295,11 +309,20 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
     pars_file_name += file_name.substr(0,file_name.find(".root"));
     pars_file_name += ".txt";
 
+    if (read_pars_from_file){
+        std::ifstream test_file(pars_file_name);
+        if (!test_file.good())
+            read_pars_from_file = false;
+        else
+            test_file.close();
+    }
+
     if (!read_pars_from_file) {
         std::ofstream pars_file(pars_file_name);
         pars_file << "List of parameters" << std::endl;
         pars_file.close();
     }
+
 
     for (const auto& it_transition: seen_transitions){
         std::vector<std::pair<double, double>> energies;
@@ -308,7 +331,7 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
             energies.push_back(eu152_intensities[it]);
         }
         Fitter fitter(spect, energies);
-        fitter.EnableCanvas();
+        //fitter.EnableCanvas();
 
         if (read_pars_from_file)
             fitter.ReadParsFromFile(pars_file_name,fit_idx++);
