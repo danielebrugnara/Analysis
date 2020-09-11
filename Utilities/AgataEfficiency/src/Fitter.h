@@ -24,7 +24,7 @@
 
 class Fitter {
 public:
-    Fitter(const TH1D& spec, std::vector<std::pair<double,double>> energies);
+    Fitter(const TH1D&, std::vector<std::pair<double,double>>, const bool& left_tail=true);
     void EnableCanvas(bool canvas_enabled=true);
     ~Fitter();
     struct FitRes{
@@ -55,6 +55,7 @@ private:
     void FindParameters();
     TF1 fitfunc;
     TH1D spec;
+    bool left_tail;
     std::vector<std::pair<double, double>> energies;
     bool canvas_enabled;
 

@@ -1,7 +1,8 @@
 #include "Fitter.h"
 
-Fitter::Fitter(const TH1D& spec, std::vector<std::pair<double, double>> energies):
+Fitter::Fitter(const TH1D& spec, std::vector<std::pair<double, double>> energies, const bool& left_tail):
         spec(spec),
+        left_tail(left_tail),
         energies(std::move(energies)),
         canvas_enabled(false){
 }
@@ -64,12 +65,14 @@ std::vector<Fitter::FitRes> Fitter::Fit(){
     std::vector<RooGaussModel*> gaussians;
     std::vector<RooDecay*> smeared_gaussians;
     RooArgList smeared_gaussians_list;
+    RooArgList simple_gaussians_list;
     RooArgList signals_list;
 //    std::vector<RooAbsPdf*> partial_model;
     for (int i=0; i<ngauss; ++i){
         gaussians.push_back(new RooGaussModel(Form("gaussian_%i",i),Form("gaussian_%i",i), x, *params[i].mean, *params[i].sigma));
         smeared_gaussians.push_back(new RooDecay(Form("smeared_gaussian_%i", i),Form("smeared_gaussian_%i", i),x,*params[i].tau,*gaussians[i],RooDecay::Flipped));
         smeared_gaussians_list.add(*smeared_gaussians.back());
+        simple_gaussians_list.add(*gaussians.back());
         //signals_list.add(*params[i].fracsignal);
     }
     RooRealVar pol1("pol1", "pol1", 0, -0.01, 0.01);
@@ -83,15 +86,22 @@ std::vector<Fitter::FitRes> Fitter::Fit(){
     }
     params[ngauss-1].fracsignal = sign_y;
 
-    RooAddPdf signal(Form("signal"),
-                     Form("signal"),
-                     smeared_gaussians_list,
-                     signals_list);
-
+    RooAddPdf* signal = nullptr;
+    if (left_tail) {
+        signal = new RooAddPdf(Form("signal"),
+                            Form("signal"),
+                                smeared_gaussians_list,
+                                signals_list);
+    }else{
+        signal = new RooAddPdf(Form("signal"),
+                                Form("signal"),
+                                simple_gaussians_list,
+                                signals_list);
+    }
 
     auto* model = new RooAddPdf(Form("bkg_gaus%i",ngauss-1),
                                 Form("bkg_gaus%i", ngauss-1),
-                                RooArgList(signal,bkg),
+                                RooArgList(*signal,bkg),
                                 RooArgList(*sign_y,*bkg_y));
 
     dh.plotOn(frame);

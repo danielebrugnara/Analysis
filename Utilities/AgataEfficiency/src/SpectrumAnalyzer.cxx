@@ -132,8 +132,10 @@ void SpectrumAnalyzer::GenerateAbsoluteEffGraph() {
         std::vector<std::pair<double, double>> energies_y = {std::make_pair(engamma2, 1.)};
 
         //Fitting X projection
-        Fitter fitter_x(proj_x, energies_x);
-        //fitter_x.EnableCanvas();
+        bool left_tails = !simulation;
+        Fitter fitter_x(proj_x, energies_x, left_tails);
+        if (debug_canvas)
+            fitter_x.EnableCanvas();
 
         if (read_pars_from_file)
             fitter_x.ReadParsFromFile(pars_file_x_name, cnt);
@@ -156,8 +158,9 @@ void SpectrumAnalyzer::GenerateAbsoluteEffGraph() {
                                          engamma1+noise_gate_dist, engamma1+noise_gate_dist+noise_gate_width);
 
         //Fitting Y projection
-        Fitter fitter_y(*proj_y, energies_y);
-        //fitter_y.EnableCanvas();
+        Fitter fitter_y(*proj_y, energies_y, left_tails);
+        if (debug_canvas)
+            fitter_y.EnableCanvas();
 
         if (read_pars_from_file)
             fitter_y.ReadParsFromFile(pars_file_y_name, cnt);
@@ -298,10 +301,10 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
     }
 
     std::vector<double> X, X_err, Y_eff, Y_eff_err, Y_sigma, Y_sigma_err, Y_tau, Y_tau_err;
-    std::vector<double> blacklisted_energies;
-//    std::vector<double> blacklisted_energies = {
-//            329.425,330.54,503.474,764.9,768.944,926.317,930.58,937.05,1249.94,1457.64
-//    };
+//    std::vector<double> blacklisted_energies;
+    std::vector<double> blacklisted_energies = {
+          295.939, 503.474,586.2648,656.487,719.349,1249.938, 1457.643
+    };
     int fit_idx = 0;
 
     bool read_pars_from_file = true;
@@ -330,8 +333,10 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
         for (const auto & it: it_transition){
             energies.push_back(eu152_intensities[it]);
         }
-        Fitter fitter(spect, energies);
-        //fitter.EnableCanvas();
+        bool left_tails = !simulation;
+        Fitter fitter(spect, energies, left_tails);
+        if (debug_canvas)
+            fitter.EnableCanvas();
 
         if (read_pars_from_file)
             fitter.ReadParsFromFile(pars_file_name,fit_idx++);
