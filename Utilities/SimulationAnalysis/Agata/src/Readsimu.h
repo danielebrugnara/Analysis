@@ -65,7 +65,7 @@ int readsimu(const std::string& inputfile, const std::string& rootoutput, bool S
 	if(input.is_open()){
 		while(input.good()){
 			if(iteration>it_max && it_max !=-1) break;
-			if(iteration % 10000==0) std::cout<<"\r" <<iteration;
+			if(iteration != 0 && iteration % 10000==0) std::cout<<"\r" <<iteration;
 			std::getline(input,aLine);
 			if (Classify(aLine, gun)==HEADER_END) Line_skip=false;
 			if(aLine.empty()||Line_skip) continue;
@@ -153,7 +153,10 @@ int readsimu(const std::string& inputfile, const std::string& rootoutput, bool S
 				default:{}
 			}            
 		}
-	}else{std::cout<<"unable to open\n";};
+	}else{
+	    std::cerr<<"unable to open\n";
+	    return 0;
+	};
 
 	theTree->Write();
 	output->Close();

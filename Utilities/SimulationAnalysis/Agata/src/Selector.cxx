@@ -101,40 +101,40 @@ void Selector::SlaveBegin(TTree * /*tree*/)
 
     nearby_det[0] = {1, 2, 3, 12, 13};
     nearby_det[1] = {0, 2, 3, 5, 20, 22};
-    nearby_det[2] = {1, 2, 13, 16, 17, 20};
+    nearby_det[2] = {0, 1, 13, 16, 17, 20};
     nearby_det[3] = {0, 1, 4, 5, 6};
     nearby_det[4] = {3, 5, 6, 8};
     nearby_det[5] = {1, 3, 4, 22, 23};
     nearby_det[6] = {3, 4, 7, 8, 9};
-    nearby_det[7] = {6, 8, 9, 11};
+    nearby_det[7] = {6, 8, 9, 11, 26};
     nearby_det[8] = {4, 6, 7, 26};
     nearby_det[9] = {6, 7, 10, 11, 12};
     nearby_det[10] = {9, 11, 12, 14, 29, 31};
     nearby_det[11] = {7, 9, 10, 29};
     nearby_det[12] = {0, 9, 10, 13, 14};
-    nearby_det[13] = {0, 2, 12, 14, 16, 13};
+    nearby_det[13] = {0, 2, 12, 14, 16, 35};
     nearby_det[14] = {10, 12, 13, 31, 32, 35};
-    nearby_det[15] = {};
-    nearby_det[16] = {2, 13, 17, 35};
-    nearby_det[17] = {2, 16, 20};
-    nearby_det[18] = {};
-    nearby_det[19] = {};
-    nearby_det[20] = {1, 2, 17, 22};
-    nearby_det[21] = {};
-    nearby_det[22] = {1, 5, 20, 23};
-    nearby_det[23] = {5, 22};
-    nearby_det[24] = {};
-    nearby_det[25] = {};
-    nearby_det[26] = {7, 8};
-    nearby_det[27] = {};
-    nearby_det[28] = {};
-    nearby_det[29] = {10, 11, 31};
-    nearby_det[30] = {};
-    nearby_det[31] = {10, 14, 29, 23};
-    nearby_det[32] = {14, 31, 35};
-    nearby_det[33] = {};
-    nearby_det[34] = {};
-    nearby_det[35] = {13, 14, 16, 0};
+    nearby_det[15] = {16, 17, 33};
+    nearby_det[16] = {2, 13, 15, 17, 33, 35};
+    nearby_det[17] = {2, 15, 16, 19, 20};
+    nearby_det[18] = {19, 20, 21, 22};
+    nearby_det[19] = {17, 18, 20};
+    nearby_det[20] = {1, 2, 17, 18, 19, 22};
+    nearby_det[21] = {18, 22, 23};
+    nearby_det[22] = {1, 5, 18, 20, 21, 23};
+    nearby_det[23] = {5, 21, 22};
+    nearby_det[24] = {25, 26};
+    nearby_det[25] = {24, 26};
+    nearby_det[26] = {7, 8, 24, 25};
+    nearby_det[27] = {28, 29, 30, 31};
+    nearby_det[28] = {27, 29};
+    nearby_det[29] = {10, 11, 27, 28, 31};
+    nearby_det[30] = {27, 31, 32};
+    nearby_det[31] = {10, 14, 27, 29, 30, 32};
+    nearby_det[32] = {14, 30, 31, 34, 35};
+    nearby_det[33] = {15, 16, 34, 35};
+    nearby_det[34] = {32, 33, 35};
+    nearby_det[35] = {13, 14, 16, 32, 33, 34};
 
     std::vector<graphEdge<bool>> edges;
     std::vector<Crystal> payloads;
@@ -248,7 +248,9 @@ Bool_t Selector::Process(Long64_t entry)
             dist->Fill(distance);
             dist_coreID->Fill(distance, (double)hh.first);
             coreID_coreID->Fill((double)hh.first,(double)hh2.first);
-            core_dist[hh.first]->Fill(hh2.first, distance);
+            try {
+                core_dist.at(hh.first)->Fill(hh2.first, distance);
+            }catch(...){};
 
             core_gg->Fill(hh.second.GetEnergy(), hh2.second.GetEnergy());
             core_gg_DC->Fill(ComputeDoppler(vec,hh.second.GetEnergy()),
