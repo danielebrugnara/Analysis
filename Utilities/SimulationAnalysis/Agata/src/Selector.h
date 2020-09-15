@@ -84,6 +84,7 @@ public :
     TH1D * dist;
     TH2D * coreID_coreID;
     TH2D * dist_coreID;
+    TH1D * target_spec;
     std::unordered_map<int, TH2D*> core_dist;
 
     const double beta;

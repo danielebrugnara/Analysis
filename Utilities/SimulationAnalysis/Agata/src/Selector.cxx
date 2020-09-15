@@ -95,6 +95,8 @@ void Selector::SlaveBegin(TTree * /*tree*/)
         core_dist[ii] = new TH2D(Form("core_%i", ii), Form("core_%i", ii), 60, 0, 60, 3000, 0, 300);
         //fOutput->Add(core_dist.at(ii));
     }
+    target_spec   = new TH1D("target_spec", "target_spec", 3000, 0, 3000);
+    fOutput->Add(target_spec);
 
     std::unordered_map<int, std::vector<int>> nearby_det;
     nearby_det.reserve(35);
@@ -250,6 +252,8 @@ Bool_t Selector::Process(Long64_t entry)
     }
 
     //Filling histograms
+    if (target_hit != nullptr)
+        target_spec->Fill(target_hit->GetEnergy());
 
     double tot_en = 0;
     for (const auto & hh: hits_analyzed){
