@@ -5,15 +5,20 @@
 
 
 RunSelector::RunSelector(std::string file_name):nevts(0){
-    if (file_name.compare(file_name.size()-5, 5, ".root")){
+    bool run_readsimu = false;
+    if (file_name.compare(file_name.size()-5, 5, ".root")) {
+        run_readsimu = true;
+    }
+
+    if (run_readsimu){
     //is not a root file, generate it!
         bool smearing = true;
         int it_max = -1;
-        std::cout << "Calling readsimu\n";
+        std::cout << "Converting simulation\n";
         nevts = readsimu(file_name, file_name+".root", smearing, it_max);
         file_name = file_name+".root";
+        std::cout << "\nnevts read by readimu: " << nevts << std::endl;
     }
-    std::cout << "\nnevts read by readimu: " << nevts << std::endl;
 
 	auto* file = new TFile(file_name.c_str());
     if (!file) throw std::runtime_error("File not valid\n");

@@ -352,13 +352,19 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
                 if (abs(energies[ii].first-it_blacklist)<0.1)
                     skip = true;
             }
+            double rel_max_err = 0.07;
+            double eff = results[ii].integral.first/energies[ii].second;
+            double eff_error = results[ii].integral.second/energies[ii].second;
+
+            //if (eff>1.) continue;
+            if (abs(eff_error/eff) > rel_max_err) continue;
             if (skip) continue;
 
             X.push_back(energies[ii].first);
             X_err.push_back(0);
 
-            Y_eff.push_back(results[ii].integral.first/energies[ii].second);
-            Y_eff_err.push_back(results[ii].integral.second/energies[ii].second);
+            Y_eff.push_back(eff);
+            Y_eff_err.push_back(eff_error);
 
             Y_sigma.push_back(results[ii].sigma_gauss.first);
             Y_sigma_err.push_back(results[ii].sigma_gauss.second);
