@@ -1,5 +1,8 @@
 #include "RunSelector.h"
+
+#include "Selector.h"
 #include "Readsimu.h"
+
 
 RunSelector::RunSelector(std::string file_name):nevts(0){
     if (file_name.compare(file_name.size()-5, 5, ".root")){
@@ -10,7 +13,8 @@ RunSelector::RunSelector(std::string file_name):nevts(0){
         nevts = readsimu(file_name, file_name+".root", smearing, it_max);
         file_name = file_name+".root";
     }
-    std::cout << "nevts read by readimu: " << nevts << std::endl;
+    std::cout << "\nnevts read by readimu: " << nevts << std::endl;
+
 	auto* file = new TFile(file_name.c_str());
     if (!file) throw std::runtime_error("File not valid\n");
     auto* tree = (TTree*)file->Get("SimulatedAgata");
@@ -27,6 +31,8 @@ RunSelector::RunSelector(std::string file_name):nevts(0){
     while ((obj=iter())){
         obj->Write();
     }
+    TVector2 start_stop(0.,nevts);
+    start_stop.Write("start_stop");
     out_file->Close();
     delete selector;
 }   

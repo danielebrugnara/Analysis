@@ -23,6 +23,7 @@
 // Headers needed by this particular selector
 #include <utility>
 #include <vector>
+#include <memory>
 #include <sstream>
 #include <unordered_map>
 

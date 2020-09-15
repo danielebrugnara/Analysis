@@ -182,18 +182,38 @@ Bool_t Selector::Process(Long64_t entry)
     //Merge hits in the same crystal
     std::unordered_map<int,Hit> hits_analyzed;
     std::unordered_map<int,Hit>::iterator hits_analyzed_it;
+    std::unique_ptr<Hit> target_hit = nullptr;
     int cr;
     for (const auto & h: Hits){
-        if ((hits_analyzed_it = hits_analyzed.find(cr = h.GetCrystal()))== hits_analyzed.end()){
-            hits_analyzed.emplace(cr, h);
+        if (h.GetDetector() == 0){//Agata hit
+            if ((hits_analyzed_it = hits_analyzed.find(cr = h.GetCrystal()))== hits_analyzed.end()){
+                hits_analyzed.emplace(cr, h);
+            }else{
+                hits_analyzed_it->second = Hit(
+                        cr,
+                        h.GetEnergy()+hits_analyzed_it->second.GetEnergy(),
+                        (h.GetX()*h.GetEnergy()+hits_analyzed_it->second.GetX()*hits_analyzed_it->second.GetEnergy())/(h.GetEnergy()+hits_analyzed_it->second.GetEnergy()),
+                        (h.GetY()*h.GetEnergy()+hits_analyzed_it->second.GetY()*hits_analyzed_it->second.GetEnergy())/(h.GetEnergy()+hits_analyzed_it->second.GetEnergy()),
+                        (h.GetZ()*h.GetEnergy()+hits_analyzed_it->second.GetZ()*hits_analyzed_it->second.GetEnergy())/(h.GetEnergy()+hits_analyzed_it->second.GetEnergy()),
+                        h.GetEnergy()>hits_analyzed_it->second.GetEnergy() ? h.GetSegment() : hits_analyzed_it->second.GetSegment(),
+                        h.GetDetector()
+                                            );
+            }
+        }else if (h.GetDetector() == 3){
+            if (target_hit == nullptr )
+                target_hit.reset(new Hit(h));
+            else
+                target_hit.reset(new Hit(
+                        cr,
+                        h.GetEnergy()+target_hit->GetEnergy(),
+                        (h.GetX()*h.GetEnergy()+target_hit->GetX()*target_hit->GetEnergy())/(h.GetEnergy()+target_hit->GetEnergy()),
+                        (h.GetY()*h.GetEnergy()+target_hit->GetY()*target_hit->GetEnergy())/(h.GetEnergy()+target_hit->GetEnergy()),
+                        (h.GetZ()*h.GetEnergy()+target_hit->GetZ()*target_hit->GetEnergy())/(h.GetEnergy()+target_hit->GetEnergy()),
+                        h.GetEnergy()>target_hit->GetEnergy() ? h.GetSegment() : target_hit->GetSegment(),
+                        h.GetDetector()
+));
         }else{
-            hits_analyzed_it->second = Hit(cr,
-                                           h.GetEnergy()+hits_analyzed_it->second.GetEnergy(),
-                                           (h.GetX()*h.GetEnergy()+hits_analyzed_it->second.GetX()*hits_analyzed_it->second.GetEnergy())/(h.GetEnergy()+hits_analyzed_it->second.GetEnergy()),
-                                           (h.GetY()*h.GetEnergy()+hits_analyzed_it->second.GetY()*hits_analyzed_it->second.GetEnergy())/(h.GetEnergy()+hits_analyzed_it->second.GetEnergy()),
-                                           (h.GetZ()*h.GetEnergy()+hits_analyzed_it->second.GetZ()*hits_analyzed_it->second.GetEnergy())/(h.GetEnergy()+hits_analyzed_it->second.GetEnergy()),
-                                           h.GetEnergy()>hits_analyzed_it->second.GetEnergy() ? h.GetSegment() : hits_analyzed_it->second.GetSegment(),
-                                           h.GetDetector());
+            throw std::runtime_error("Hit detector not recognized\n");
         }
     }
 
@@ -213,23 +233,23 @@ Bool_t Selector::Process(Long64_t entry)
             }
             if(present) {
                 int new_key = addback_it1->second.GetEnergy() > addback_it2->second.GetEnergy() ? addback_it1->first
-                                                                                                : addback_it2->first;
+                    : addback_it2->first;
                 int delete_key = addback_it1->second.GetEnergy() < addback_it2->second.GetEnergy() ? addback_it1->first
-                                                                                                   : addback_it2->first;
+                    : addback_it2->first;
 
                 addback[new_key] = Hit(new_key,
-                                       addback[new_key].GetEnergy() + addback[delete_key].GetEnergy(),
-                                       addback[new_key].GetX(),
-                                       addback[new_key].GetY(),
-                                       addback[new_key].GetZ(),
-                                       addback[new_key].GetSegment(),
-                                       addback[new_key].GetDetector());
+                        addback[new_key].GetEnergy() + addback[delete_key].GetEnergy(),
+                        addback[new_key].GetX(),
+                        addback[new_key].GetY(),
+                        addback[new_key].GetZ(),
+                        addback[new_key].GetSegment(),
+                        addback[new_key].GetDetector());
                 addback.erase(delete_key);
             }
         }
     }
 
-
+    //Filling histograms
 
     double tot_en = 0;
     for (const auto & hh: hits_analyzed){
@@ -254,11 +274,11 @@ Bool_t Selector::Process(Long64_t entry)
 
             core_gg->Fill(hh.second.GetEnergy(), hh2.second.GetEnergy());
             core_gg_DC->Fill(ComputeDoppler(vec,hh.second.GetEnergy()),
-                             ComputeDoppler(vec2, hh2.second.GetEnergy()));
+                    ComputeDoppler(vec2, hh2.second.GetEnergy()));
             core_gg_DC_pos_1->Fill(  ComputeDoppler(vec,em_position_1,hh.second.GetEnergy()),
-                                     ComputeDoppler(vec2,em_position_1,hh2.second.GetEnergy()));
+                    ComputeDoppler(vec2,em_position_1,hh2.second.GetEnergy()));
             core_gg_DC_pos_2->Fill(  ComputeDoppler(vec,em_position_2,hh.second.GetEnergy()),
-                                     ComputeDoppler(vec2,em_position_2,hh2.second.GetEnergy()));
+                    ComputeDoppler(vec2,em_position_2,hh2.second.GetEnergy()));
         }
     }
 
@@ -279,11 +299,11 @@ Bool_t Selector::Process(Long64_t entry)
 
             addb_gg->Fill(hh.second.GetEnergy(), hh2.second.GetEnergy());
             addb_gg_DC->Fill(ComputeDoppler(vec,hh.second.GetEnergy()),
-                             ComputeDoppler(vec2, hh2.second.GetEnergy()));
+                    ComputeDoppler(vec2, hh2.second.GetEnergy()));
             addb_gg_DC_pos_1->Fill(  ComputeDoppler(vec,em_position_1,hh.second.GetEnergy()),
-                                     ComputeDoppler(vec2,em_position_1,hh2.second.GetEnergy()));
+                    ComputeDoppler(vec2,em_position_1,hh2.second.GetEnergy()));
             addb_gg_DC_pos_2->Fill(  ComputeDoppler(vec,em_position_2,hh.second.GetEnergy()),
-                                     ComputeDoppler(vec2,em_position_2,hh2.second.GetEnergy()));
+                    ComputeDoppler(vec2,em_position_2,hh2.second.GetEnergy()));
         }
 
     }

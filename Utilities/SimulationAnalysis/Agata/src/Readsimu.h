@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -27,6 +29,7 @@ enum LineType {
 	DIAMANT_HIT,
 	AGATA_HIT,
 	LABR_HIT,
+	TARGET_HIT,
 	HEADER_END,
 	UNKNOWN_EVENT
 };
@@ -143,6 +146,12 @@ int readsimu(const std::string& inputfile, const std::string& rootoutput, bool S
 						      hits.push_back(tmp_hit);
 						      break;
 					      }
+				case TARGET_HIT:{//Hit on cryo target
+						      oneline >> crystal >> Energy >> posX >> posY >> posZ >> segment;
+						      Hit tmp_hit(crystal, Energy, posX, posY, posZ, segment, 3);
+						      hits.push_back(tmp_hit);
+						      break;
+					      }
 				case HEADER_END:{//Line whithout information
 							//  Line_skip=false;
 							break;
@@ -190,9 +199,11 @@ enum LineType Classify(const std::string& Line, bool gun){
 		return DIAMANT_HIT;
 	if (!Line.compare(0, 5, "18002"))
 		return LABR_HIT;
+	if (!Line.compare(0, 5, " 4000"))
+		return TARGET_HIT;
 	if (!Line.compare(0, 1, "$"))
 		return HEADER_END;
-	if(([Line](){try{return (std::stoi(Line.substr(0, 5))>=0);}
+	if(([Line](){try{return (std::stoi(Line.substr(0, 5))>=0 && std::stoi(Line.substr(0, 5))<=100);}
 		    catch(const std::invalid_argument & err){return false;}}()))
 		return AGATA_HIT;
 	else
@@ -204,7 +215,3 @@ double Resolution_AGATA(const double& energy){
 //   2  p1           2.06151e-03           nan          -nan          -nan
     return 8.12318e-01+2.06151e-03*energy;
 }
-
-
-
-
