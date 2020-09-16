@@ -86,7 +86,7 @@ def CreateFolders(data_directories, use_previous):
                 
     
     ##Copying the configuration files to the replay directory
-    configurations=['Conf', 'ConfVAMOS', 'gen_conf.py', 'ADF.conf', 'Topology.conf', 'startReplay.sh']
+    configurations=['Conf', 'ConfVAMOS', 'gen_conf.py', 'ADF.conf', 'Topology.conf', 'startReplay.sh', 'Topology_noancillary.conf','startReplay_noancillary.sh']
     if not use_previous:
         for run in replay_directories.keys():
             print('Linking run :', run)
@@ -102,6 +102,7 @@ def CreateFolders(data_directories, use_previous):
 #####Runs the genconf on all directories
 def RunGenConf(replay_directories):
     for directory in replay_directories.keys():
+        print("Running gen_conf for : "+replay_directories[directory])
         command = replay_directories[directory]+'/gen_conf.py'
         os.chdir(replay_directories[directory])
         os.system(command)
@@ -227,14 +228,19 @@ def main():
         os.rename(replay_current_dir+'/Topology.conf',replay_current_dir+'/Topology_old.conf' )
         os.rename(replay_current_dir+'/Topology_tmp.conf',replay_current_dir+'/Topology.conf' )
 
-    
+    def TouchPSAFile(crystal, replay_current_dir):
+        command = "touch "+replay_current_dir+"/Data/"+crystal+"/SRM_AGATA_psa_0000.adf"
+        os.system(command) 
+ 
     #####Is the current job in the runs to exclude in the stop file?
     def Stop(current_run):
         with open(configs_dir+'/StopFile.txt', 'r') as stop_file:
             line = stop_file.readline()
             while line:
+                print(line)
                 if len(line)==5:
                     if line.strip()==current_run:
+                        print("Stopping run :", current_run)
                         return True
                     else:
                         line = stop_file.readline()
@@ -247,11 +253,16 @@ def main():
         
         replay_current_dir = replay_directories[current_run]
         command = 'ssh '+username+'@'+machines['agata0'+str(machine_nr)]+' \'cd '+replay_current_dir+'; sh startReplay.sh\''
+        command_noancillary = 'ssh '+username+'@'+machines['agata0'+str(machine_nr)]+' \'cd '+replay_current_dir+'; sh startReplay_noancillary.sh\''
 
         ##Removing previous logs
         for name in glob.glob(replay_current_dir+'/*log.txt'):
             print ("Removing logs:", name)
-            os.remove(name)
+            try:
+                os.remove(name)
+            except OSError as error:
+    	        print(error) 
+    	        print("File path can not be removed") 
         
         
         ##Loop to identify missing crstals
@@ -276,11 +287,23 @@ def main():
                 missing_crystal = error[1][:3]
                 error_log.write(missing_crystal)
                 error_log.write('\n')
+                #error_log.write(lines[18])
                 error_log.close()
+                if missing_crystal == "vam":
+                    command = command_noancillary
+                    os.system("touch "+replay_current_dir+"/NOANCILLARYINRUN.txt")
+                else:
+                    print("Touching missing psa.adf for crystal:", missing_crystal)
+                    TouchPSAFile(missing_crystal, replay_current_dir)
                 ##Removing missing crystal from topology and trying again
                 
-                RemoveFromTopology(missing_crystal, replay_current_dir)
+                #the following will remove it completely from the topology
+                #print("Removing missing crystal from topology :", missing_crystal)
+		#RemoveFromTopology(missing_crystal, replay_current_dir)
+		
                 iteration+=1
+                if iteration>30:
+                    break
                 continue
             if 'TreeBuilder' in lines[19]:
                 ##All is ok
