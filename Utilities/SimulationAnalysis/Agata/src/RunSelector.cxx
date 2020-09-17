@@ -21,7 +21,7 @@ RunSelector::RunSelector(std::string file_name):nevts(0){
     }
 
 	auto* file = new TFile(file_name.c_str());
-    if (!file) throw std::runtime_error("File not valid\n");
+    if (! file->IsOpen()) throw std::runtime_error("File not valid\n");
     auto* tree = (TTree*)file->Get("SimulatedAgata");
     if (!tree) throw std::runtime_error("Tree not valid\n");
 	auto* selector = new Selector();

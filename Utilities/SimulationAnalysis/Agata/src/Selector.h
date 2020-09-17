@@ -19,6 +19,7 @@
 #include <TVector3.h>
 #include <TH1D.h>
 #include <TH2D.h>
+#include <TH3D.h>
 
 // Headers needed by this particular selector
 #include <utility>
@@ -64,6 +65,7 @@ public :
     double ComputeDoppler(const TVector3 &, const TVector3 &, const double &);
    //ClassDef(Selector,0);
 
+    TH3D * geom;
     TH1D * cal_spec;
     TH1D * core_spec;
     TH1D * core_spec_DC;
@@ -106,6 +108,7 @@ public :
         }
     };
     DiaGraph<bool,Crystal>* addback_graph;
+    std::unordered_map<int, bool> active_crystals;
 
 };
 

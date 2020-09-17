@@ -71,9 +71,11 @@ public :
    virtual void    SlaveTerminate();
    virtual void    Terminate();
 
-   TH1D* hspec;
    TH2D* mspec_core;
-   TH2D* mgamma_gamma;
+   TH1D* data_addb_spec;
+   TH2D* data_addb_gg;
+   TH1D* data_core_spec;
+   TH2D* data_core_gg;
 
    //ClassDef(Selector,0);
 

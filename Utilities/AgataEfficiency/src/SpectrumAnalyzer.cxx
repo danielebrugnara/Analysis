@@ -1,6 +1,6 @@
 #include "SpectrumAnalyzer.h"
 
-SpectrumAnalyzer::SpectrumAnalyzer(const std::string & file_name, const bool& debug_canvas):
+SpectrumAnalyzer::SpectrumAnalyzer(const std::string & file_name, const bool& debug_canvas, const bool& use_cores):
         file_name(file_name),
         debug_canvas(debug_canvas),
         simulation(false),
@@ -15,25 +15,42 @@ SpectrumAnalyzer::SpectrumAnalyzer(const std::string & file_name, const bool& de
     if (!file->IsOpen())
         throw std::runtime_error("File not found\n");
 
-    auto gg_ptr = dynamic_cast<TH2D*>(file->Get("mgamma_gamma"));
-    auto hspec_ptr = dynamic_cast<TH1D*>(file->Get("hspec"));
+    TH2D* gg_ptr = nullptr;
+    TH1D* hspec_ptr = nullptr;
 
-    if (gg_ptr == nullptr || hspec_ptr == nullptr) {
-        simulation = true;
-        gg_ptr = dynamic_cast<TH2D *>(file->Get("addb_gg"));
-        hspec_ptr = dynamic_cast<TH1D *>(file->Get("addb_spec"));
-        auto* tmp =  dynamic_cast<TVector2 *>(file->Get("start_stop"));
-        nevts = tmp->Y();
+    std::string spect_name;
+    std::string gg_name;
+    if (!use_cores) {
+        gg_name = "data_addb_gg";
+        spect_name = "data_addb_spec";
+    }else{
+        gg_name = "data_core_gg";
+        spect_name = "data_core_spec";
     }
 
-    if (gg_ptr == nullptr || hspec_ptr == nullptr)
-        throw std::runtime_error("gamma_gamma or spec not found\n");
+    gg_ptr = dynamic_cast<TH2D*>(file->Get(gg_name.c_str()));
+    hspec_ptr = dynamic_cast<TH1D*>(file->Get(spect_name.c_str()));
+    auto* start_stop_ptr= dynamic_cast<TVector2*>(file->Get("start_stop"));
+    if (start_stop_ptr == nullptr)
+        throw std::runtime_error("No start_stop vector, do you need to run the selector?\n");
+    start_stop = *start_stop_ptr;
+    if (gg_ptr == nullptr || hspec_ptr == nullptr) {//probabily a simulation
+        simulation = true;
+        gg_name = gg_name.substr(5);
+        spect_name = spect_name.substr(5);
+        gg_ptr = dynamic_cast<TH2D *>(file->Get(gg_name.c_str()));
+        hspec_ptr = dynamic_cast<TH1D *>(file->Get(spect_name.c_str()));
+        auto* tmp =  dynamic_cast<TVector2 *>(file->Get("start_stop"));
+        if (tmp != nullptr) {
+            start_stop = *tmp;
+            nevts = tmp->Y();
+        }
+    }
 
-    if (!simulation)
-        start_stop = *dynamic_cast<TVector2*>(file->Get("start_stop"));
-    else
-        start_stop = TVector2();
-
+    if (gg_ptr == nullptr)
+        throw std::runtime_error("gamma_gamma not found, do you need to run the selector?\n");
+    if (hspec_ptr == nullptr)
+        throw std::runtime_error("spectrum not found, do you need to run the selector?\n");
 
     gg = *gg_ptr;
     hspec = *hspec_ptr;
@@ -123,7 +140,7 @@ void SpectrumAnalyzer::GenerateAbsoluteEffGraph() {
             meaningful_combinations.end())
             continue;
 
-        std::cout << "~~" << *it.first << " -> " << *it.second << std::endl;
+        std::cout << "\n\n\n------------------------gammma-gamma--->" << *it.first << " -> " << *it.second << "\n\n\n";
         double engamma1 = it.first->Egamma.first / UNITS::keV;
         double engamma2 = it.second->Egamma.first / UNITS::keV;
         double branching2 = it.second->Br.first;
@@ -152,10 +169,22 @@ void SpectrumAnalyzer::GenerateAbsoluteEffGraph() {
         double noise_gate_width = 50.;
         double noise_gate_dist = 10.;
 
-        TH1D* proj_y = ProjectAndSubtract(gg,
-                                         engamma1-gate_width/2., engamma1+gate_width/2.,
-                                         engamma1-noise_gate_dist-noise_gate_width, engamma1-noise_gate_dist,
-                                         engamma1+noise_gate_dist, engamma1+noise_gate_dist+noise_gate_width);
+        bool subtract_bkg = true;
+        TH1D* proj_y = nullptr;
+
+        if (subtract_bkg) {
+            proj_y = ProjectAndSubtract(gg,
+                                        engamma1 - gate_width / 2.,
+                                        engamma1 + gate_width / 2.,
+                                        engamma1 - noise_gate_dist - noise_gate_width,
+                                        engamma1 - noise_gate_dist,
+                                        engamma1 + noise_gate_dist,
+                                        engamma1 + noise_gate_dist + noise_gate_width);
+        }else{
+            proj_y = new TH1D(*(gg.ProjectionY("proj_nog",
+                                gg.GetXaxis()->FindBin(engamma1-gate_width/2.),
+                                gg.GetXaxis()->FindBin(engamma1+gate_width/2.))));
+        }
 
         //Fitting Y projection
         Fitter fitter_y(*proj_y, energies_y, left_tails);
@@ -174,7 +203,8 @@ void SpectrumAnalyzer::GenerateAbsoluteEffGraph() {
 
         //Computing efficiency
         double eff = integral_y/(integral_x*branching2);
-        double eff_err = 1./branching2* sqrt(pow(integral_y_err/(integral_x),2.)+pow(integral_y*integral_x_err/(integral_x*integral_x),2.));
+        double eff_err = 1./branching2* sqrt(pow(integral_y_err/(integral_x),2.)+
+                                                pow(integral_y*integral_x_err/(integral_x*integral_x),2.));
 
         if (eff>1.)
             continue;
@@ -192,6 +222,7 @@ void SpectrumAnalyzer::GenerateAbsoluteEffGraph() {
     absolute_eff_graph.SetTitle("Absolute eff graph");
     absolute_eff_graph.SetMarkerColor(7);
     absolute_eff_graph.SetMarkerStyle(21);
+    absolute_eff_graph.SetDrawOption("AP");
 }
 
 TH1D* SpectrumAnalyzer::ProjectAndSubtract(  const TH2D& mat,
@@ -294,7 +325,8 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
         if(eu152_intensities[ii].second < 0.001) continue;
         std::vector<int> tmp_vec;
         tmp_vec.push_back(ii);
-        while(ii<eu152_intensities.size() && abs(eu152_intensities[ii+1].first-eu152_intensities[ii].first)<near_peak_threash){
+        while(ii<eu152_intensities.size() &&
+                abs(eu152_intensities[ii+1].first-eu152_intensities[ii].first)<near_peak_threash){
             tmp_vec.push_back(++ii);
         }
         seen_transitions.push_back(tmp_vec);

@@ -49,6 +49,8 @@ void Selector::SlaveBegin(TTree * /*tree*/)
     fOutput->Add(cal_spec);
 
     //Core graphs
+    geom   = new TH3D("geom", "geom", 100, -350, 350, 100, -350, 350, 100, -350, 350);
+    fOutput->Add(geom);
     core_spec   = new TH1D("core_spec", "core_spec", 3000, 0, 3000);
     fOutput->Add(core_spec);
     core_spec_DC   = new TH1D("core_spec_DC", "core_spec_DC", 3000, 0, 3000);
@@ -98,8 +100,22 @@ void Selector::SlaveBegin(TTree * /*tree*/)
     target_spec   = new TH1D("target_spec", "target_spec", 3000, 0, 3000);
     fOutput->Add(target_spec);
 
+
+    for (int i=0; i<42; ++i){
+        active_crystals[i] = true;
+    }
+
+    active_crystals[4] = false;    
+    active_crystals[6] = false;    
+    active_crystals[7] = false;    
+    active_crystals[13] = false;    
+    active_crystals[20] = false;    
+    active_crystals[20] = false;    
+    active_crystals[26] = false;    
+
     std::unordered_map<int, std::vector<int>> nearby_det;
     nearby_det.reserve(35);
+
 
     nearby_det[0] = {1, 2, 3, 12, 13};
     nearby_det[1] = {0, 2, 3, 5, 20, 22};
@@ -194,6 +210,7 @@ Bool_t Selector::Process(Long64_t entry)
     int cr;
     for (const auto & h: Hits){
         if (h.GetDetector() == 0){//Agata hit
+            if (!active_crystals[h.GetCrystal()]) continue;
             if ((hits_analyzed_it = hits_analyzed.find(cr = h.GetCrystal()))== hits_analyzed.end()){
                 hits_analyzed.emplace(cr, h);
             }else{
@@ -266,6 +283,7 @@ Bool_t Selector::Process(Long64_t entry)
         tot_en += hh.second.GetEnergy();
         TVector3 vec(hh.second.GetX(),hh.second.GetY(),hh.second.GetZ());
 
+        geom->Fill(hh.second.GetX(), hh.second.GetY(), hh.second.GetZ());
         core_spec->Fill(hh.second.GetEnergy());
         core_spec_DC->Fill( ComputeDoppler(vec, hh.second.GetEnergy()));
         core_spec_DC_pos_1->Fill( ComputeDoppler(vec,em_position_1, hh.second.GetEnergy()));
