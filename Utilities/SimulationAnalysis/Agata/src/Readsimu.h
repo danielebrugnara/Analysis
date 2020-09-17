@@ -213,5 +213,5 @@ enum LineType Classify(const std::string& Line, bool gun){
 double Resolution_AGATA(const double& energy){
 //   1  p0           8.12318e-01           nan          -nan          -nan
 //   2  p1           2.06151e-03           nan          -nan          -nan
-    return 8.12318e-01+2.06151e-03*energy;
+    return (8.12318e-01+2.06151e-03*energy)/2.;
 }

@@ -180,6 +180,8 @@ void Selector::SlaveBegin(TTree * /*tree*/)
     }
 
     addback_graph = new DiaGraph<bool, Crystal>(edges,payloads);
+
+    energy_threashold = 30.;
     //std::cout << *addback_graph;
 }
 
@@ -203,83 +205,129 @@ Bool_t Selector::Process(Long64_t entry)
 
     fReader.SetLocalEntry(entry);
 
-    //Merge hits in the same crystal
-    std::unordered_map<int,Hit> hits_analyzed;
-    std::unordered_map<int,Hit>::iterator hits_analyzed_it;
+    //Merge hits in the same crystal and segment
+    std::unordered_map<int,std::unordered_map<int,Hit>> hits_analyzed; //key: crystal, segment
     std::unique_ptr<Hit> target_hit = nullptr;
-    int cr;
     for (const auto & h: Hits){
         if (h.GetDetector() == 0){//Agata hit
-            if (!active_crystals[h.GetCrystal()]) continue;
-            if ((hits_analyzed_it = hits_analyzed.find(cr = h.GetCrystal()))== hits_analyzed.end()){
-                hits_analyzed.emplace(cr, h);
+            int crystal = h.GetCrystal();
+            if (!active_crystals[crystal]) continue;
+            if (hits_analyzed.find(crystal) == hits_analyzed.end()){
+                //First hit in crystal
+                std::unordered_map<int, Hit> tmp;
+                tmp.emplace(h.GetSegment(),h);
+                hits_analyzed.emplace(crystal, tmp);
             }else{
-                hits_analyzed_it->second = Hit(
-                        cr,
-                        h.GetEnergy()+hits_analyzed_it->second.GetEnergy(),
-                        (h.GetX()*h.GetEnergy()+hits_analyzed_it->second.GetX()*hits_analyzed_it->second.GetEnergy())/(h.GetEnergy()+hits_analyzed_it->second.GetEnergy()),
-                        (h.GetY()*h.GetEnergy()+hits_analyzed_it->second.GetY()*hits_analyzed_it->second.GetEnergy())/(h.GetEnergy()+hits_analyzed_it->second.GetEnergy()),
-                        (h.GetZ()*h.GetEnergy()+hits_analyzed_it->second.GetZ()*hits_analyzed_it->second.GetEnergy())/(h.GetEnergy()+hits_analyzed_it->second.GetEnergy()),
-                        h.GetEnergy()>hits_analyzed_it->second.GetEnergy() ? h.GetSegment() : hits_analyzed_it->second.GetSegment(),
-                        h.GetDetector()
-                                            );
+                //Crystal already hit
+                int segment = h.GetSegment();
+                if (hits_analyzed.at(crystal).find(segment) == hits_analyzed.at(crystal).end()){
+                    //First hit in segment
+                    hits_analyzed.at(crystal).emplace(segment, h);
+                }else{
+                    //Segment already hit
+                    double esum = h.GetEnergy()+hits_analyzed.at(crystal).at(segment).GetEnergy();
+                    Hit tmp_hit(    crystal,
+                                    esum,
+                                    (h.GetX()*h.GetEnergy()+hits_analyzed.at(crystal).at(segment).GetX()*hits_analyzed.at(crystal).at(segment).GetEnergy())/esum,
+                                    (h.GetY()*h.GetEnergy()+hits_analyzed.at(crystal).at(segment).GetY()*hits_analyzed.at(crystal).at(segment).GetEnergy())/esum,
+                                    (h.GetZ()*h.GetEnergy()+hits_analyzed.at(crystal).at(segment).GetZ()*hits_analyzed.at(crystal).at(segment).GetEnergy())/esum,
+                                    segment,
+                                    h.GetDetector());
+                    hits_analyzed.at(crystal).at(segment) = tmp_hit;
+                }
             }
-        }else if (h.GetDetector() == 3){
+        }else if (h.GetDetector() == 3){//Target hit
             if (target_hit == nullptr )
                 target_hit.reset(new Hit(h));
             else
                 target_hit.reset(new Hit(
-                        cr,
+                        h.GetCrystal(),
                         h.GetEnergy()+target_hit->GetEnergy(),
                         (h.GetX()*h.GetEnergy()+target_hit->GetX()*target_hit->GetEnergy())/(h.GetEnergy()+target_hit->GetEnergy()),
                         (h.GetY()*h.GetEnergy()+target_hit->GetY()*target_hit->GetEnergy())/(h.GetEnergy()+target_hit->GetEnergy()),
                         (h.GetZ()*h.GetEnergy()+target_hit->GetZ()*target_hit->GetEnergy())/(h.GetEnergy()+target_hit->GetEnergy()),
-                        h.GetEnergy()>target_hit->GetEnergy() ? h.GetSegment() : target_hit->GetSegment(),
-                        h.GetDetector()
-));
-        }else{
+                        target_hit->GetSegment(),
+                        h.GetDetector()));
+        }else{//Nothing should be here
             throw std::runtime_error("Hit detector not recognized\n");
         }
     }
 
-    //Compute addback
-    std::unordered_map<int, Hit> addback = hits_analyzed;
-    std::unordered_map<int, Hit>::iterator addback_it1;
-    std::unordered_map<int, Hit>::iterator addback_it2;
-    for (addback_it1 = addback.begin(); addback_it1 != addback.end(); ++addback_it1){
-        if (addback.find(addback_it1->first) == addback.end()) continue;
-        auto near_crystals = addback_graph->getAdjacent(addback_it1->first);
-        for (addback_it2 = addback.begin(); addback_it2 != addback.end(); ++addback_it2){
-            if (addback.find(addback_it1->first) == addback.end()) break;
-            bool present = false;
-            for (const auto& it: near_crystals){
-                if (it.second->ID == addback_it2->first)
-                    present = true;
-            }
-            if(present) {
-                int new_key = addback_it1->second.GetEnergy() > addback_it2->second.GetEnergy() ? addback_it1->first
-                    : addback_it2->first;
-                int delete_key = addback_it1->second.GetEnergy() < addback_it2->second.GetEnergy() ? addback_it1->first
-                    : addback_it2->first;
+    std::unordered_map<int, Hit> cores;
 
-                addback[new_key] = Hit(new_key,
-                        addback[new_key].GetEnergy() + addback[delete_key].GetEnergy(),
-                        addback[new_key].GetX(),
-                        addback[new_key].GetY(),
-                        addback[new_key].GetZ(),
-                        addback[new_key].GetSegment(),
-                        addback[new_key].GetDetector());
-                addback.erase(delete_key);
-            }
+    for (const auto& it_cry: hits_analyzed){
+        std::pair<int,double> max_en = {-1,0}; //Segment, energy
+        double total_en = 0;
+        for (const auto& it_segm: hits_analyzed.at(it_cry.first)){
+            total_en += it_segm.second.GetEnergy();
+            if (it_segm.second.GetEnergy() > max_en.second)
+                max_en = std::make_pair(it_segm.first, it_segm.second.GetEnergy());
+        }
+        if (max_en.first == -1) continue;
+        cores.emplace(  it_cry.first,
+                        Hit( it_cry.first,
+                                total_en,
+                                it_cry.second.at(max_en.first).GetX(),
+                                it_cry.second.at(max_en.first).GetY(),
+                                it_cry.second.at(max_en.first).GetZ(),
+                                max_en.first,
+                                it_cry.second.at(max_en.first).GetDetector()));
+    }
+
+    //Deleting under-threashold stuff
+    for (auto it=cores.cbegin(); it !=cores.cend();){
+        if (it->second.GetEnergy()<energy_threashold){
+            cores.erase(it++);
+        }else{
+            ++it;
         }
     }
+
+    //Compute addback
+    std::unordered_map<int, Hit> addback;
+    std::unordered_map<int, bool> visited;
+    std::deque<int> visit_que;
+
+    for (const auto& it_core: cores){
+        if (visited.find(it_core.first) != visited.end()) continue;
+        visit_que.push_back(it_core.first);
+        std::pair<int, double> max_element = {-1, 0};
+        double total_energy = 0;
+        while(!visit_que.empty()){
+            auto element = visit_que.front();
+            visit_que.pop_front();
+            visited.emplace(element,true);
+
+            double element_energy = cores.at(element).GetEnergy();
+            total_energy += element_energy;
+            if (max_element.second < element_energy)
+                max_element = std::make_pair(element, element_energy);
+
+            auto near_crystals = addback_graph->getAdjacent(it_core.first);
+            for (const auto& it_near: near_crystals){
+                if (visited.find(it_near.second->ID) != visited.end()) continue;
+                if (cores.find(it_near.second->ID) == cores.end()) continue;
+                visit_que.push_back( it_near.second->ID);
+            }
+        }
+
+        const Hit& maxhit = cores.at(max_element.first);
+        addback.emplace(max_element.first, Hit( max_element.first,
+                                                total_energy,
+                                                maxhit.GetX(),
+                                                maxhit.GetY(),
+                                                maxhit.GetZ(),
+                                                maxhit.GetSegment(),
+                                                maxhit.GetDetector()));
+    }
+
 
     //Filling histograms
     if (target_hit != nullptr)
         target_spec->Fill(target_hit->GetEnergy());
 
     double tot_en = 0;
-    for (const auto & hh: hits_analyzed){
+    for (const auto & hh: cores){
         tot_en += hh.second.GetEnergy();
         TVector3 vec(hh.second.GetX(),hh.second.GetY(),hh.second.GetZ());
 
@@ -289,7 +337,7 @@ Bool_t Selector::Process(Long64_t entry)
         core_spec_DC_pos_1->Fill( ComputeDoppler(vec,em_position_1, hh.second.GetEnergy()));
         core_spec_DC_pos_2->Fill( ComputeDoppler(vec,em_position_2, hh.second.GetEnergy()));
 
-        for (const auto & hh2: hits_analyzed){
+        for (const auto & hh2: cores){
             if (hh.first == hh2.first) continue;
             TVector3 vec2(hh2.second.GetX(),hh2.second.GetY(),hh2.second.GetZ());
             double distance = (vec-vec2).Mag();

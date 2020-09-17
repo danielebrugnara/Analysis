@@ -67,6 +67,11 @@ void Selector::SlaveBegin(TTree * /*tree*/)
                           4000, 0, 4000);
     fOutput->Add(mspec_core);
 
+    geom   = new TH3D("geom", "geom",
+                      100, -350, 350,
+                      100, -350, 350,
+                      100, -350, 350);
+    fOutput->Add(geom);
 }
 
 Bool_t Selector::Process(Long64_t entry)
@@ -88,6 +93,31 @@ Bool_t Selector::Process(Long64_t entry)
     // The return value is currently not used.
 
     fReader.SetLocalEntry(entry);
+
+    std::unordered_map<int, double> coreEn;
+    std::unordered_map<int, double> coreX;
+    std::unordered_map<int, double> coreY;
+    std::unordered_map<int, double> coreZ;
+    for (unsigned int i=0; i<hitE.GetSize(); ++i){
+        int id = hitId.At(i);
+        if (coreEn.find(id) == coreEn.end()){
+            coreEn.emplace(id, hitE.At(i));
+            coreX.emplace(id, hitGX.At(i));
+            coreY.emplace(id, hitGY.At(i));
+            coreZ.emplace(id, hitGZ.At(i));
+        }else{
+            if (coreEn.at(id)<hitE.At(i)){
+                coreX.at(id) = hitGX.At(i);
+                coreY.at(id) = hitGY.At(i);
+                coreZ.at(id) = hitGZ.At(i);
+            }
+            coreEn.at(id) += hitE.At(i);
+        }
+    }
+
+    for (const auto& it: coreEn){
+        geom->Fill(coreX.at(it.first),coreY.at(it.first), coreZ.at(it.first));
+    }
 
     for (const auto & en1: AddE){
         data_addb_spec->Fill(en1);

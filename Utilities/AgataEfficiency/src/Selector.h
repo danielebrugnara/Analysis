@@ -18,6 +18,7 @@
 
 #include <TH1D.h>
 #include <TH2D.h>
+#include <TH3D.h>
 
 // Headers needed by this particular selector
 
@@ -76,6 +77,7 @@ public :
    TH2D* data_addb_gg;
    TH1D* data_core_spec;
    TH2D* data_core_gg;
+   TH3D* geom;
 
    //ClassDef(Selector,0);
 

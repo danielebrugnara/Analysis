@@ -63,6 +63,7 @@ public :
 
     double ComputeDoppler(const TVector3 &, const double &);
     double ComputeDoppler(const TVector3 &, const TVector3 &, const double &);
+    double energy_threashold;
    //ClassDef(Selector,0);
 
     TH3D * geom;
