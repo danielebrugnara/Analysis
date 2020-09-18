@@ -45,7 +45,7 @@ void Selector::SlaveBegin(TTree * /*tree*/)
     TString option = GetOption();
 
 
-    cal_spec    = new TH1D("cal_spec", "cal_spec", 3000, 0, 3000);
+    cal_spec   = new TH1D("cal_spec", "cal_spec", 3000, 0, 3000);
     fOutput->Add(cal_spec);
 
     //Core graphs
@@ -180,8 +180,6 @@ void Selector::SlaveBegin(TTree * /*tree*/)
     }
 
     addback_graph = new DiaGraph<bool, Crystal>(edges,payloads);
-
-    energy_threashold = 30.;
     //std::cout << *addback_graph;
 }
 
@@ -208,10 +206,13 @@ Bool_t Selector::Process(Long64_t entry)
     //Merge hits in the same crystal and segment
     std::unordered_map<int,std::unordered_map<int,Hit>> hits_analyzed; //key: crystal, segment
     std::unique_ptr<Hit> target_hit = nullptr;
+    double ecal = 0;
     for (const auto & h: Hits){
+        if (h.GetEnergy() <= 0 ) continue;
         if (h.GetDetector() == 0){//Agata hit
             int crystal = h.GetCrystal();
             if (!active_crystals[crystal]) continue;
+            ecal += h.GetEnergy();
             if (hits_analyzed.find(crystal) == hits_analyzed.end()){
                 //First hit in crystal
                 std::unordered_map<int, Hit> tmp;
@@ -296,6 +297,7 @@ Bool_t Selector::Process(Long64_t entry)
         while(!visit_que.empty()){
             auto element = visit_que.front();
             visit_que.pop_front();
+            //if (visited.find(element) != visited.end()) continue;
             visited.emplace(element,true);
 
             double element_energy = cores.at(element).GetEnergy();
@@ -306,6 +308,7 @@ Bool_t Selector::Process(Long64_t entry)
             auto near_crystals = addback_graph->getAdjacent(it_core.first);
             for (const auto& it_near: near_crystals){
                 if (visited.find(it_near.second->ID) != visited.end()) continue;
+                if (std::find(visit_que.begin(), visit_que.end(),it_near.second->ID) != visit_que.end()) continue;
                 if (cores.find(it_near.second->ID) == cores.end()) continue;
                 visit_que.push_back( it_near.second->ID);
             }
@@ -321,14 +324,30 @@ Bool_t Selector::Process(Long64_t entry)
                                                 maxhit.GetDetector()));
     }
 
+    //Consistency check on cores and addback
+    double core_tot_en = 0;
+    for (const auto & it: cores) {
+        core_tot_en += it.second.GetEnergy();
+        if (it.second.GetEnergy() > ecal + energy_check_tolerance)
+            throw std::runtime_error("Something wrong in cores energy\n");
+    }
+    if (energy_threashold == 0 && abs(core_tot_en-ecal)>energy_check_tolerance)
+        throw std::runtime_error("Something wrong in cores energy\n");
+
+    double addback_tot_en = 0;
+    for (const auto & it: addback) {
+        addback_tot_en += it.second.GetEnergy();
+        if (it.second.GetEnergy() > ecal + energy_check_tolerance)
+            throw std::runtime_error("Something wrong in addback energy\n");
+    }
+    if (energy_threashold == 0 && abs(addback_tot_en-ecal)>energy_check_tolerance)
+        throw std::runtime_error("Something wrong in addback energy\n");
 
     //Filling histograms
     if (target_hit != nullptr)
         target_spec->Fill(target_hit->GetEnergy());
 
-    double tot_en = 0;
     for (const auto & hh: cores){
-        tot_en += hh.second.GetEnergy();
         TVector3 vec(hh.second.GetX(),hh.second.GetY(),hh.second.GetZ());
 
         geom->Fill(hh.second.GetX(), hh.second.GetY(), hh.second.GetZ());
@@ -359,7 +378,6 @@ Bool_t Selector::Process(Long64_t entry)
     }
 
     for (const auto& hh: addback){
-        tot_en += hh.second.GetEnergy();
         TVector3 vec(hh.second.GetX(),hh.second.GetY(),hh.second.GetZ());
 
         addb_spec->Fill(hh.second.GetEnergy());
@@ -384,7 +402,7 @@ Bool_t Selector::Process(Long64_t entry)
 
     }
 
-    cal_spec->Fill(tot_en);
+    cal_spec->Fill(ecal);
     return kTRUE;
 }
 

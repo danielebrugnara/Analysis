@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <string>
+#include <memory>
 
 #include "TFile.h"
 #include "TTree.h"
@@ -9,7 +10,6 @@
 
 class RunSelector{
     public:
-    RunSelector(std::string);
+    RunSelector(TTree&, const std::string&);
     int nevts;
-    std::string file_out_name;
 };

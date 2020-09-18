@@ -63,7 +63,6 @@ public :
 
     double ComputeDoppler(const TVector3 &, const double &);
     double ComputeDoppler(const TVector3 &, const TVector3 &, const double &);
-    double energy_threashold;
    //ClassDef(Selector,0);
 
     TH3D * geom;
@@ -111,6 +110,8 @@ public :
     DiaGraph<bool,Crystal>* addback_graph;
     std::unordered_map<int, bool> active_crystals;
 
+    double energy_threashold {0.};
+    double energy_check_tolerance {0.01};
 };
 
 
