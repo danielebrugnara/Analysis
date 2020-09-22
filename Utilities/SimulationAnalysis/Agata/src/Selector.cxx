@@ -204,38 +204,32 @@ Bool_t Selector::Process(Long64_t entry)
     fReader.SetLocalEntry(entry);
 
     //Merge hits in the same crystal and segment
-    std::unordered_map<int,std::unordered_map<int,Hit>> hits_analyzed; //key: crystal, segment
+    //std::unordered_map<int,std::unordered_map<int,Hit>> hits_analyzed; //key: crystal, segment
+    std::map<std::pair<int, int>, Hit> hits_analyzed; //key: crystal, segment
+    std::map<std::pair<int, int>, Hit>::iterator hits_analyzed_iterator;
+
     std::unique_ptr<Hit> target_hit = nullptr;
     double ecal = 0;
     for (const auto & h: Hits){
         if (h.GetEnergy() <= 0 ) continue;
         if (h.GetDetector() == 0){//Agata hit
             int crystal = h.GetCrystal();
+            int segment = h.GetSegment();
+            std::pair<int, int > key(crystal, segment);
             if (!active_crystals[crystal]) continue;
             ecal += h.GetEnergy();
-            if (hits_analyzed.find(crystal) == hits_analyzed.end()){
-                //First hit in crystal
-                std::unordered_map<int, Hit> tmp;
-                tmp.emplace(h.GetSegment(),h);
-                hits_analyzed.emplace(crystal, tmp);
+            if ((hits_analyzed_iterator = hits_analyzed.find(key)) == hits_analyzed.end()){
+                hits_analyzed.emplace(key, h);
             }else{
-                //Crystal already hit
-                int segment = h.GetSegment();
-                if (hits_analyzed.at(crystal).find(segment) == hits_analyzed.at(crystal).end()){
-                    //First hit in segment
-                    hits_analyzed.at(crystal).emplace(segment, h);
-                }else{
-                    //Segment already hit
-                    double esum = h.GetEnergy()+hits_analyzed.at(crystal).at(segment).GetEnergy();
-                    Hit tmp_hit(    crystal,
-                                    esum,
-                                    (h.GetX()*h.GetEnergy()+hits_analyzed.at(crystal).at(segment).GetX()*hits_analyzed.at(crystal).at(segment).GetEnergy())/esum,
-                                    (h.GetY()*h.GetEnergy()+hits_analyzed.at(crystal).at(segment).GetY()*hits_analyzed.at(crystal).at(segment).GetEnergy())/esum,
-                                    (h.GetZ()*h.GetEnergy()+hits_analyzed.at(crystal).at(segment).GetZ()*hits_analyzed.at(crystal).at(segment).GetEnergy())/esum,
-                                    segment,
-                                    h.GetDetector());
-                    hits_analyzed.at(crystal).at(segment) = tmp_hit;
-                }
+                double ensum = hits_analyzed_iterator->second.GetEnergy() + h.GetEnergy();
+                auto& found = hits_analyzed_iterator->second;
+                found = Hit(   crystal,
+                               ensum,
+                               (found.GetX()*found.GetEnergy()+h.GetX()*h.GetEnergy())/ensum,
+                               (found.GetY()*found.GetEnergy()+h.GetY()*h.GetEnergy())/ensum,
+                               (found.GetZ()*found.GetEnergy()+h.GetZ()*h.GetEnergy())/ensum,
+                               segment,
+                               h.GetDetector());
             }
         }else if (h.GetDetector() == 3){//Target hit
             if (target_hit == nullptr )
@@ -254,25 +248,34 @@ Bool_t Selector::Process(Long64_t entry)
         }
     }
 
-    std::unordered_map<int, Hit> cores;
-
-    for (const auto& it_cry: hits_analyzed){
-        std::pair<int,double> max_en = {-1,0}; //Segment, energy
-        double total_en = 0;
-        for (const auto& it_segm: hits_analyzed.at(it_cry.first)){
-            total_en += it_segm.second.GetEnergy();
-            if (it_segm.second.GetEnergy() > max_en.second)
-                max_en = std::make_pair(it_segm.first, it_segm.second.GetEnergy());
+    std::unordered_map<int, int> max_keys_map; //key: crystal, content segment with highest energy
+    std::unordered_map<int, double> etot_cores_map;
+    for (const auto& it: hits_analyzed) {
+        int crystal = it.first.first;
+        int segment = it.first.second;
+        if (etot_cores_map.find(crystal) == etot_cores_map.end()){
+            max_keys_map.emplace(crystal, segment);
+            etot_cores_map.emplace(crystal, it.second.GetEnergy());
+        }else{
+            etot_cores_map.at(crystal) += it.second.GetEnergy();
+            if (it.second.GetEnergy() > hits_analyzed.find(std::make_pair(crystal, max_keys_map.at(crystal)))->second.GetEnergy()){
+                 max_keys_map.at(crystal) = segment;
+            }
         }
-        if (max_en.first == -1) continue;
-        cores.emplace(  it_cry.first,
-                        Hit( it_cry.first,
-                                total_en,
-                                it_cry.second.at(max_en.first).GetX(),
-                                it_cry.second.at(max_en.first).GetY(),
-                                it_cry.second.at(max_en.first).GetZ(),
-                                max_en.first,
-                                it_cry.second.at(max_en.first).GetDetector()));
+    }
+
+    std::unordered_map<int, Hit> cores;
+    for (const auto& it: max_keys_map){
+        auto max = hits_analyzed.find(std::make_pair(it.first,it.second));
+        cores.emplace(  it.first,
+                        Hit(    it.first,
+                                etot_cores_map.at(it.first),
+                                max->second.GetX(),
+                                max->second.GetY(),
+                                max->second.GetZ(),
+                                max->second.GetSegment(),
+                                max->second.GetDetector()
+                            ));
     }
 
     //Deleting under-threashold stuff
