@@ -14,10 +14,16 @@ int main(int argc, char* argv[]){
     if (argc < 2)    throw std::runtime_error("set inputs correctly\n");
     std::vector<std::string> root_files;
     bool sum_all = false;
+    bool is_gun = false;
     for (int ii=1; ii<argc;++ii) {
         if (std::string(argv[ii]).compare("--sum-all") == 0) {
             std::cout << "Summing all spectra in output : spectra_simu.root\n";
             sum_all = true;
+            continue;
+        }
+        if (std::string(argv[ii]).compare("--gun") == 0) {
+            std::cout << "Is gun simulation\n";
+            is_gun = true;
             continue;
         }
         std::string file_name = argv[ii];
@@ -25,7 +31,7 @@ int main(int argc, char* argv[]){
             bool smearing = true;
             int it_max = -1;
             std::cout << "Converting simulation for: " << file_name << std::endl;
-            int nevts = readsimu(file_name, file_name + ".root", smearing, it_max);
+            int nevts = readsimu(file_name, file_name + ".root", smearing, it_max, is_gun);
             file_name = file_name + ".root";
             root_files.push_back(file_name);
             std::cout << "\nnNumber of events read by readimu: " << nevts << std::endl;

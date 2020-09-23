@@ -171,7 +171,7 @@ int readsimu(const std::string& inputfile, const std::string& rootoutput, bool S
 	output->Close();
 
     if (iteration == 0){
-        return readsimu( inputfile, rootoutput, SMEARING, it_max, true);
+        return readsimu( inputfile, rootoutput, SMEARING, it_max, !gun);
     }
     return iteration-1;
 }
