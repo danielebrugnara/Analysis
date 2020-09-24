@@ -72,6 +72,15 @@ void Selector::SlaveBegin(TTree * /*tree*/)
                       100, -350, 350,
                       100, -350, 350);
     fOutput->Add(geom);
+
+
+    //Individual crystal core spectra
+    for(int i=0; i<=45; ++i){
+        crystal_spectra.push_back(new TH1D(Form("crtstal_spectra_%i", i),
+                                           Form("crtstal_spectra_%i", i),
+                                           4000, 0, 4000));
+        fOutput->Add(crystal_spectra.back());;
+    }
 }
 
 Bool_t Selector::Process(Long64_t entry)
@@ -135,8 +144,10 @@ Bool_t Selector::Process(Long64_t entry)
             data_core_gg->Fill(en2, en1);
         }
     }
+
     for (unsigned long ii=0; ii<coreE0.GetSize(); ++ii) {
         mspec_core->Fill(coreId[ii], coreE0[ii]);
+        crystal_spectra[coreId[ii]]->Fill(coreE0[ii]);
     }
     return kTRUE;
 }
@@ -155,4 +166,50 @@ void Selector::Terminate()
     // a query. It always runs on the client, it can be used to present
     // the results graphically or save the results to file.
 
+    std::vector<TF1> threasholds;
+    bool show_canvas = false;
+    for (unsigned int i=0; i<crystal_spectra.size(); ++i){
+        RooRealVar x("x", "x", 0, 150);
+        x.setRange("fullrange", 0, 150);
+        x.setRange("partial",1, 149);
+
+        RooDataHist dh("dh", "dh", x, RooFit::Import(*(crystal_spectra[i])));
+
+        //RooRealVar scale("scale", "scale", 1000/2., 1, 1000/2.*10);
+        RooRealVar threashold("threashold", "threashold", 80., 10, 180);
+        RooRealVar lambda("lambda", "lambda", 20., 1, 60.);
+        RooGenericPdf model(Form("model_%i", i),
+                                Form("model_%i", i),
+                                "(1+erf((x-threashold)/lambda))",
+                                RooArgSet(x, threashold, lambda));
+
+        RooRealVar nsig("nsig", "nsig", 200, 0, 20000 );
+        RooExtendPdf esig("esig","esig", model, nsig, "fullrange" );
+
+
+        //Plotting
+        RooPlot* frame = x.frame(RooFit::Title(Form("Threashold_%i", i)));
+        dh.plotOn(frame);
+        auto *result = esig.fitTo(dh, RooFit::Extended(kTRUE), RooFit::Range("partial"), RooFit::Save());
+        esig.plotOn(frame);
+
+        RooArgList pars(*esig.getParameters(RooArgSet(x)));
+        RooArgSet prodset(esig);
+        RooProduct normPdf(Form("normmodel_%i", i),
+                           Form("normmodel_%i", i),
+                           prodset);
+
+        threasholds.push_back(*normPdf.asTF(RooArgList(x), pars));
+        threasholds.back().SaveAs(Form("tmp_threa_%i.root", i));
+
+        if (show_canvas) {
+            auto* cv = new TCanvas();
+            frame->Draw();
+            cv->WaitPrimitive();
+            delete cv;
+        }
+    }
+    //Note that write does not behave correctly, so saveas is needed
+    system("hadd threasholds.root tmp_threa_*.root");
+    system("rm tmp_threa_*.root");
 }

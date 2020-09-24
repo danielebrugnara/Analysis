@@ -19,6 +19,17 @@
 #include <TH1D.h>
 #include <TH2D.h>
 #include <TH3D.h>
+#include <TF1.h>
+#include <TCanvas.h>
+
+#include <RooRealVar.h>
+#include <RooPlot.h>
+#include <RooProduct.h>
+#include <RooExtendPdf.h>
+#include <RooGenericPdf.h>
+#include <RooDataHist.h>
+#include "RooDataSet.h"
+
 
 // Headers needed by this particular selector
 
@@ -78,6 +89,8 @@ public :
    TH1D* data_core_spec;
    TH2D* data_core_gg;
    TH3D* geom;
+
+   std::vector<TH1D*> crystal_spectra;
 
    //ClassDef(Selector,0);
 
