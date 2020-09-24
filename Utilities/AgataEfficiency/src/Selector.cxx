@@ -183,18 +183,14 @@ void Selector::Terminate()
                                 "(1+erf((x-threashold)/lambda))",
                                 RooArgSet(x, threashold, lambda));
 
-        RooRealVar nsig("nsig", "nsig", 200, 0, 20000 );
-        RooExtendPdf esig("esig","esig", model, nsig, "fullrange" );
-
-
         //Plotting
         RooPlot* frame = x.frame(RooFit::Title(Form("Threashold_%i", i)));
         dh.plotOn(frame);
-        auto *result = esig.fitTo(dh, RooFit::Extended(kTRUE), RooFit::Range("partial"), RooFit::Save());
-        esig.plotOn(frame);
+        auto *result = model.fitTo(dh, RooFit::Save());
+        model.plotOn(frame);
 
-        RooArgList pars(*esig.getParameters(RooArgSet(x)));
-        RooArgSet prodset(esig);
+        RooArgList pars(*model.getParameters(RooArgSet(x)));
+        RooArgSet prodset(model);
         RooProduct normPdf(Form("normmodel_%i", i),
                            Form("normmodel_%i", i),
                            prodset);
