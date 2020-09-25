@@ -20,6 +20,7 @@
 #include <TH1D.h>
 #include <TH2D.h>
 #include <TH3D.h>
+#include <TF1.h>
 
 // Headers needed by this particular selector
 #include <utility>
@@ -83,11 +84,8 @@ public :
     TH2D * addb_gg_DC;
     TH2D * addb_gg_DC_pos_1;
     TH2D * addb_gg_DC_pos_2;
-    TH1D * dist;
-    TH2D * coreID_coreID;
-    TH2D * dist_coreID;
     TH1D * target_spec;
-    std::unordered_map<int, TH2D*> core_dist;
+    std::vector<TH1D*> crystal_spectra;
 
     const double beta;
     const double velocity; //mm/ns
@@ -110,7 +108,11 @@ public :
     DiaGraph<bool,Crystal>* addback_graph;
     std::unordered_map<int, bool> active_crystals;
 
-    double energy_threashold {0.};
+    std::unordered_map<int, int> simu_to_data;
+    std::unordered_map<int, int> data_to_simu;
+    bool use_threasholds{false};
+    std::unordered_map<int,TF1*> threasholds;
+
     double energy_check_tolerance {0.01};
 };
 

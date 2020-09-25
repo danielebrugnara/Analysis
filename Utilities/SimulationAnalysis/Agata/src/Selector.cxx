@@ -86,32 +86,29 @@ void Selector::SlaveBegin(TTree * /*tree*/)
     addb_gg_DC_pos_2  = new TH2D("addb_gg_DC_pos_2", "addb_gg_DC_pos_2", 3000, 0, 3000, 3000, 0, 3000);
     fOutput->Add(addb_gg_DC_pos_2);
 
-    //Other Graphs
-    dist        = new TH1D("dist_spec", "dist_spec", 3000, 0, 300);
-    fOutput->Add(dist);
-    coreID_coreID   = new TH2D("coreID_coreID", "coreID_coreID", 100, 0, 100, 100, 0, 100);
-    fOutput->Add(coreID_coreID);
-    dist_coreID        = new TH2D("dist_cireID", "dist_coreID", 3000, 0, 300, 60, 0, 60);
-    fOutput->Add(dist_coreID);
-    for (int ii=0; ii<60; ++ii){
-        core_dist[ii] = new TH2D(Form("core_%i", ii), Form("core_%i", ii), 60, 0, 60, 3000, 0, 300);
-        //fOutput->Add(core_dist.at(ii));
-    }
     target_spec   = new TH1D("target_spec", "target_spec", 3000, 0, 3000);
     fOutput->Add(target_spec);
+
+    //Individual crystal core spectra
+    for(int i=0; i<=45; ++i){
+        crystal_spectra.push_back(new TH1D(Form("crtstal_spectra_%i", i),
+                                           Form("crtstal_spectra_%i", i),
+                                           4000, 0, 4000));
+        fOutput->Add(crystal_spectra.back());;
+    }
 
 
     for (int i=0; i<42; ++i){
         active_crystals[i] = true;
     }
 
-    active_crystals[4] = false;    
-    active_crystals[6] = false;    
-    active_crystals[7] = false;    
-    active_crystals[13] = false;    
-    active_crystals[20] = false;    
-    active_crystals[20] = false;    
-    active_crystals[26] = false;    
+    active_crystals[4] = false;
+    active_crystals[6] = false;
+    active_crystals[7] = false;
+    active_crystals[13] = false;
+    active_crystals[20] = false;
+    active_crystals[20] = false;
+    active_crystals[26] = false;
 
     std::unordered_map<int, std::vector<int>> nearby_det;
     nearby_det.reserve(35);
@@ -181,6 +178,66 @@ void Selector::SlaveBegin(TTree * /*tree*/)
 
     addback_graph = new DiaGraph<bool, Crystal>(edges,payloads);
     //std::cout << *addback_graph;
+
+    simu_to_data[0] = 0;
+    simu_to_data[1] = 1;
+    simu_to_data[2] = 2;
+    simu_to_data[3] = 3;
+    simu_to_data[4] = 4;
+    simu_to_data[5] = 5;
+    simu_to_data[6] = 6;
+    simu_to_data[7] = 7;
+    simu_to_data[8] = 8;
+    simu_to_data[9] = 9;
+    simu_to_data[10] = 10;
+    simu_to_data[11] = 11;
+    simu_to_data[12] = 12;
+    simu_to_data[13] = 13;
+    simu_to_data[14] = 14;
+    simu_to_data[15] = 15;
+    simu_to_data[16] = 16;
+    simu_to_data[17] = 17;
+    simu_to_data[18] = 18;
+    simu_to_data[19] = 19;
+    simu_to_data[20] = 20;
+    simu_to_data[21] = 21;
+    simu_to_data[22] = 22;
+    simu_to_data[23] = 23;
+    simu_to_data[24] = 28;
+    simu_to_data[25] = 29;
+    //simu_to_data[26] = 26;
+    simu_to_data[27] = 30;
+    simu_to_data[28] = 31;
+    simu_to_data[29] = 32;
+    simu_to_data[30] = 33;
+    simu_to_data[31] = 34;
+    simu_to_data[32] = 35;
+    simu_to_data[33] = 36;
+    simu_to_data[34] = 37;
+    simu_to_data[35] = 38;
+    simu_to_data[36] = 39;
+    simu_to_data[37] = 40;
+    simu_to_data[38] = 41;
+    simu_to_data[39] = 42;
+    simu_to_data[40] = 43;
+    simu_to_data[41] = 44;
+
+    for (const auto& it: simu_to_data){
+        //Making bijection of map
+        data_to_simu[it.second] = it.first;
+    }
+
+    auto* threashold_file = new TFile("threasholds.root", "read");
+    if (threashold_file->IsOpen())
+        use_threasholds = true;
+    else
+        std::cerr << "Threasholds file not found!!\n";
+
+    if (use_threasholds){
+        for(const auto& it: data_to_simu){
+            threasholds.emplace(it.second, (TF1*)threashold_file->Get(Form("normmodel_%i", it.first)));
+        }
+    }
 }
 
 Bool_t Selector::Process(Long64_t entry)
@@ -259,7 +316,7 @@ Bool_t Selector::Process(Long64_t entry)
         }else{
             etot_cores_map.at(crystal) += it.second.GetEnergy();
             if (it.second.GetEnergy() > hits_analyzed.find(std::make_pair(crystal, max_keys_map.at(crystal)))->second.GetEnergy()){
-                 max_keys_map.at(crystal) = segment;
+                max_keys_map.at(crystal) = segment;
             }
         }
     }
@@ -275,15 +332,17 @@ Bool_t Selector::Process(Long64_t entry)
                                 max->second.GetZ(),
                                 max->second.GetSegment(),
                                 max->second.GetDetector()
-                            ));
+                        ));
     }
 
     //Deleting under-threashold stuff
-    for (auto it=cores.cbegin(); it !=cores.cend();){
-        if (it->second.GetEnergy()<energy_threashold){
-            cores.erase(it++);
-        }else{
-            ++it;
+    if (use_threasholds){
+        for (auto it=cores.cbegin(); it !=cores.cend();){
+            if (it->second.GetEnergy()<threasholds.at(it->second.GetCrystal())->GetRandom()){
+                cores.erase(it++);
+            }else{
+                ++it;
+            }
         }
     }
 
@@ -334,7 +393,7 @@ Bool_t Selector::Process(Long64_t entry)
         if (it.second.GetEnergy() > ecal + energy_check_tolerance)
             throw std::runtime_error("Something wrong in cores energy\n");
     }
-    if (energy_threashold == 0 && abs(core_tot_en-ecal)>energy_check_tolerance)
+    if (!use_threasholds && abs(core_tot_en-ecal)>energy_check_tolerance)
         throw std::runtime_error("Something wrong in cores energy\n");
 
     double addback_tot_en = 0;
@@ -343,7 +402,7 @@ Bool_t Selector::Process(Long64_t entry)
         if (it.second.GetEnergy() > ecal + energy_check_tolerance)
             throw std::runtime_error("Something wrong in addback energy\n");
     }
-    if (energy_threashold == 0 && abs(addback_tot_en-ecal)>energy_check_tolerance)
+    if (!use_threasholds && abs(addback_tot_en-ecal)>energy_check_tolerance)
         throw std::runtime_error("Something wrong in addback energy\n");
 
     //Filling histograms
@@ -358,25 +417,20 @@ Bool_t Selector::Process(Long64_t entry)
         core_spec_DC->Fill( ComputeDoppler(vec, hh.second.GetEnergy()));
         core_spec_DC_pos_1->Fill( ComputeDoppler(vec,em_position_1, hh.second.GetEnergy()));
         core_spec_DC_pos_2->Fill( ComputeDoppler(vec,em_position_2, hh.second.GetEnergy()));
+        crystal_spectra[hh.second.GetCrystal()]->Fill(hh.second.GetEnergy());
 
         for (const auto & hh2: cores){
             if (hh.first == hh2.first) continue;
             TVector3 vec2(hh2.second.GetX(),hh2.second.GetY(),hh2.second.GetZ());
-            double distance = (vec-vec2).Mag();
-            dist->Fill(distance);
-            dist_coreID->Fill(distance, (double)hh.first);
-            coreID_coreID->Fill((double)hh.first,(double)hh2.first);
-            try {
-                core_dist.at(hh.first)->Fill(hh2.first, distance);
-            }catch(...){};
+            //double distance = (vec-vec2).Mag();
 
             core_gg->Fill(hh.second.GetEnergy(), hh2.second.GetEnergy());
             core_gg_DC->Fill(ComputeDoppler(vec,hh.second.GetEnergy()),
-                    ComputeDoppler(vec2, hh2.second.GetEnergy()));
+                             ComputeDoppler(vec2, hh2.second.GetEnergy()));
             core_gg_DC_pos_1->Fill(  ComputeDoppler(vec,em_position_1,hh.second.GetEnergy()),
-                    ComputeDoppler(vec2,em_position_1,hh2.second.GetEnergy()));
+                                     ComputeDoppler(vec2,em_position_1,hh2.second.GetEnergy()));
             core_gg_DC_pos_2->Fill(  ComputeDoppler(vec,em_position_2,hh.second.GetEnergy()),
-                    ComputeDoppler(vec2,em_position_2,hh2.second.GetEnergy()));
+                                     ComputeDoppler(vec2,em_position_2,hh2.second.GetEnergy()));
         }
     }
 
@@ -391,16 +445,15 @@ Bool_t Selector::Process(Long64_t entry)
         for (const auto & hh2: addback){
             if (hh.first == hh2.first) continue;
             TVector3 vec2(hh2.second.GetX(),hh2.second.GetY(),hh2.second.GetZ());
-            double distance = (vec-vec2).Mag();
-            dist->Fill(distance);
+            //double distance = (vec-vec2).Mag();
 
             addb_gg->Fill(hh.second.GetEnergy(), hh2.second.GetEnergy());
             addb_gg_DC->Fill(ComputeDoppler(vec,hh.second.GetEnergy()),
-                    ComputeDoppler(vec2, hh2.second.GetEnergy()));
+                             ComputeDoppler(vec2, hh2.second.GetEnergy()));
             addb_gg_DC_pos_1->Fill(  ComputeDoppler(vec,em_position_1,hh.second.GetEnergy()),
-                    ComputeDoppler(vec2,em_position_1,hh2.second.GetEnergy()));
+                                     ComputeDoppler(vec2,em_position_1,hh2.second.GetEnergy()));
             addb_gg_DC_pos_2->Fill(  ComputeDoppler(vec,em_position_2,hh.second.GetEnergy()),
-                    ComputeDoppler(vec2,em_position_2,hh2.second.GetEnergy()));
+                                     ComputeDoppler(vec2,em_position_2,hh2.second.GetEnergy()));
         }
 
     }
