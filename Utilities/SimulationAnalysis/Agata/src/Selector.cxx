@@ -227,7 +227,7 @@ void Selector::SlaveBegin(TTree * /*tree*/)
         data_to_simu[it.second] = it.first;
     }
 
-    auto* threashold_file = new TFile("threasholds.root", "read");
+    auto* threashold_file = new TFile("simuthreasholds.root", "read");
     if (threashold_file->IsOpen())
         use_threasholds = true;
     else
@@ -475,6 +475,177 @@ void Selector::Terminate()
     // The Terminate() function is the last function to be called during
     // a query. It always runs on the client, it can be used to present
     // the results graphically or save the results to file.
+    auto* threashold_data_file = new TFile("threasholds.root", "read");
+    if (threashold_data_file->IsOpen() && !use_threasholds)
+        compute_threasholds = true;
+
+    if (!compute_threasholds)
+        return;
+
+    std::unordered_map<int, TF1*> data_threasholds;
+    for(const auto& it: data_to_simu){
+        data_threasholds.emplace(it.second, (TF1*)threashold_data_file->Get(Form("normmodel_%i", it.first)));
+    }
+
+    //std::vector<TF1> simu_threasholds;
+    bool show_canvas = true;
+    for (unsigned int i=0; i<crystal_spectra.size(); ++i){
+        RooRealVar x("x", "x", 0, 150);
+        x.setRange("fullrange", 0, 150);
+        x.setRange("partial",1, 149);
+
+        RooDataHist dh("dh", "dh", x, RooFit::Import(*(crystal_spectra[i])));
+
+        //RooRealVar scale("scale", "scale", 1000/2., 1, 1000/2.*10);
+        RooRealVar a0("a0", "a0", 10, 0, 10);
+        RooRealVar a1("a1", "a1", 1., -100, 10.);
+        RooRealVar a2("a2", "a2", 1., -10, 10.);
+        //RooChebychev model(Form("model_%i", i),
+        //                    Form("model_%i", i),
+        //                    x,
+        //                    RooArgSet(a0, a1));
+        RooPolynomial model(Form("model_%i", i),
+                            Form("model_%i", i),
+                            x,
+                            RooArgSet(a0, a1, a2));
+
+
+        //Plotting
+        RooPlot* frame = x.frame(RooFit::Title(Form("Threashold_%i", i)));
+        dh.plotOn(frame);
+        auto *result = model.fitTo(dh, RooFit::Save());
+        model.plotOn(frame);
+
+        RooArgList pars(*model.getParameters(RooArgSet(x)));
+        RooArgSet prodset(model);
+        RooProduct normPdf(Form("normmodel_%i", i),
+                           Form("normmodel_%i", i),
+                           prodset);
+
+        if (show_canvas) {
+            auto* cv = new TCanvas();
+            frame->Draw();
+            cv->WaitPrimitive();
+            delete cv;
+        }
+
+        //simu_threasholds.push_back(*normPdf.asTF(RooArgList(x), pars));
+        //simu_threasholds.back().SaveAs(Form("tmp_threa_%i.root", i));
+
+        int Npts = 2000;
+
+        //Simu fourier transform
+        TF1* tmp_simu_thresh = normPdf.asTF(RooArgList(x), pars);
+        tmp_simu_thresh->SetNpx(Npts);
+        TH1* histo_simu = tmp_simu_thresh->GetHistogram();
+        histo_simu->Scale(1./(Npts*histo_simu->Integral()));
+//        histo_simu->SaveAs("simu.root");
+
+        TVirtualFFT::SetTransform(0);
+        TH1* histo_simu_m = nullptr;
+        histo_simu_m = histo_simu->FFT(histo_simu_m, "MAG");
+
+        TH1* histo_simu_p = nullptr;
+        histo_simu_p = histo_simu->FFT(histo_simu_p, "PH");
+//        if (show_canvas) {
+//            auto* cv = new TCanvas();
+//            histo_simu_m->Draw();
+//            histo_simu_p->Draw("same");
+//            cv->WaitPrimitive();
+//            delete cv;
+//        }
+
+        TVirtualFFT *fft_simu = TVirtualFFT::GetCurrentTransform();
+        auto* re_simu = new double[Npts];
+        auto* im_simu = new double[Npts];
+        fft_simu->GetPointsComplex(re_simu, im_simu);
+
+        bool test_inverse{true};
+        if (test_inverse && show_canvas){
+            TVirtualFFT *fft_simu_back = TVirtualFFT::FFT(1, &Npts, "C2R M K");
+            fft_simu_back->SetPointsComplex(re_simu, im_simu);
+            fft_simu_back->Transform();
+
+            TH1* test_re = nullptr;
+            test_re = TH1::TransformHisto(fft_simu_back, test_re, "Re");
+
+            auto* cv = new TCanvas();
+            //histo_simu->Draw("");
+            test_re->Draw("");
+            data_threasholds.at(i)->Draw("same");
+            cv->WaitPrimitive();
+            delete cv;
+            delete test_re;
+            delete fft_simu_back;
+        }//
+
+        //Data fourier transform
+        TF1* tmp_data_thresh = data_threasholds.at(i);
+        tmp_data_thresh->SetNpx(Npts);
+        TH1* histo_data = tmp_data_thresh->GetHistogram();
+        histo_data->Scale(1./(Npts*histo_data->Integral()));
+//        histo_data->SaveAs("data.root");
+
+        TVirtualFFT::SetTransform(0);
+        TH1* histo_data_m = nullptr;
+        histo_data_m = histo_data->FFT(histo_data_m, "MAG");
+
+        TH1* histo_data_p = nullptr;
+        histo_data_p = histo_data->FFT(histo_data_p, "PH");
+
+        TVirtualFFT *fft_data = TVirtualFFT::GetCurrentTransform();
+        auto* re_data = new double[Npts];
+        auto* im_data = new double[Npts];
+        fft_data->GetPointsComplex(re_data, im_data);
+
+        if (test_inverse && show_canvas){
+            TVirtualFFT *fft_data_back = TVirtualFFT::FFT(1, &Npts, "C2R M K");
+            fft_data_back->SetPointsComplex(re_data, im_data);
+            fft_data_back->Transform();
+
+            TH1* test_re = nullptr;
+            test_re = TH1::TransformHisto(fft_data_back, test_re, "Re");
+
+            auto* cv = new TCanvas();
+            //histo_simu->Draw("");
+            test_re->Draw("");
+            data_threasholds.at(i)->Draw("same");
+            cv->WaitPrimitive();
+            delete cv;
+            delete test_re;
+            delete fft_data_back;
+        }//
+
+        //Deconvolution
+        auto* re_deconv = new double[Npts];
+        auto* im_deconv = new double[Npts];
+        for(int ii = 0; ii<Npts; ++ii){//This is the ratio of complex numbers
+            double coeff = 1./(pow(re_simu[ii],2)+pow(im_simu[ii], 2));
+            re_deconv[ii] = coeff*(re_simu[ii] * re_data[ii] + im_simu[ii] * im_data[ii]);
+            im_deconv[ii] = coeff*(re_data[ii] * im_simu[ii] - re_simu[ii] * im_data[ii]);
+        }
+
+        TVirtualFFT::SetTransform(0);
+        TVirtualFFT *fft_inv = TVirtualFFT::FFT(1, &Npts, "C2R M K");
+        fft_inv->SetPointsComplex(re_deconv,im_deconv);
+        std::cout << "BEFORE TRANSFORM\n";
+        fft_inv->Transform();
+        std::cout << "AFTER TRANSFORM\n";
+        TH1 *h_inv = nullptr;
+        //Let's look at the output
+        h_inv = TH1::TransformHisto(fft_inv,h_inv,"Re");
+        std::cout << "AFTER TRANSFORM2\n";
+        if (show_canvas) {
+            auto* cv = new TCanvas();
+            h_inv->Draw();
+            cv->WaitPrimitive();
+            delete cv;
+        }
+
+    }
+    //Note that write does not behave correctly, so saveas is needed
+    //system("hadd -f simupdf.root tmp_threa_*.root");
+    //system("rm tmp_threa_*.root");
 
 }
 

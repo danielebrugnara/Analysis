@@ -30,9 +30,7 @@
 #include <RooDataHist.h>
 #include "RooDataSet.h"
 
-
 // Headers needed by this particular selector
-
 
 class Selector : public TSelector {
 public :

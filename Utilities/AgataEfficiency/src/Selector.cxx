@@ -206,6 +206,6 @@ void Selector::Terminate()
         }
     }
     //Note that write does not behave correctly, so saveas is needed
-    system("hadd threasholds.root tmp_threa_*.root");
+    system("hadd -f threasholds.root tmp_threa_*.root");
     system("rm tmp_threa_*.root");
 }

@@ -10,7 +10,7 @@
 
 int main(int argc, char* argv[]){
 
-    TApplication theApp("app", new int, new char*);
+    TApplication theApp("app", new int(0), new char*);
     std::cout << "Starting analysis now \n";
     if (argc < 2)    throw std::runtime_error("set inputs correctly\n");
     bool run_selector = false;

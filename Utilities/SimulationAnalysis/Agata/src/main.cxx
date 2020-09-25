@@ -8,8 +8,10 @@
 #include <TFile.h>
 #include <TChain.h>
 #include <TVector2.h>
+#include <TApplication.h>
 
 int main(int argc, char* argv[]){
+    TApplication theApp("app", new int(0), new char*);
     std::cout << "Starting analysis now \n";
     if (argc < 2)    throw std::runtime_error("set inputs correctly\n");
     std::vector<std::string> root_files;
