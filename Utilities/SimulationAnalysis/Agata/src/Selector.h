@@ -15,7 +15,8 @@
 #include <TTreeReader.h>
 #include <TTreeReaderValue.h>
 #include <TTreeReaderArray.h>
-#include <TVirtualFFT.h>
+//#include <TVirtualFFT.h>
+#include <TRandom.h>
 
 
 
@@ -34,6 +35,8 @@
 #include <RooDataHist.h>
 #include <RooDataSet.h>
 #include <RooChebychev.h>
+#include <RooAddPdf.h>
+#include <RooProdPdf.h>
 #include <RooPolynomial.h>
 
 // Headers needed by this particular selector
@@ -126,7 +129,9 @@ public :
     std::unordered_map<int, int> data_to_simu;
     bool use_threasholds{false};
     bool compute_threasholds{false};
-    std::unordered_map<int,TF1*> threasholds;
+    std::unordered_map<int,TH1*> threasholds;
+    TRandom rand;
+
 
     double energy_check_tolerance {0.01};
 };

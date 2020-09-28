@@ -187,6 +187,7 @@ void Selector::Terminate()
         RooPlot* frame = x.frame(RooFit::Title(Form("Threashold_%i", i)));
         dh.plotOn(frame);
         auto *result = model.fitTo(dh, RooFit::Save());
+
         model.plotOn(frame);
 
         RooArgList pars(*model.getParameters(RooArgSet(x)));
