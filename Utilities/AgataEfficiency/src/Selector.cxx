@@ -76,8 +76,8 @@ void Selector::SlaveBegin(TTree * /*tree*/)
 
     //Individual crystal core spectra
     for(int i=0; i<=45; ++i){
-        crystal_spectra.push_back(new TH1D(Form("crtstal_spectra_%i", i),
-                                           Form("crtstal_spectra_%i", i),
+        crystal_spectra.push_back(new TH1D(Form("crystal_spectra_%i", i),
+                                           Form("crystal_spectra_%i", i),
                                            4000, 0, 4000));
         fOutput->Add(crystal_spectra.back());;
     }
