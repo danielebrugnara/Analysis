@@ -87,9 +87,11 @@ public :
    TH1D* data_core_spec;
    TH2D* data_core_gg;
    TH3D* geom;
+   TH3D* geom_abovethr;
 
    std::vector<TH1D*> crystal_spectra;
-
+   double hit_pattern_thr {300};
+   //double hit_pattern_thr {1000};
    //ClassDef(Selector,0);
 
 };

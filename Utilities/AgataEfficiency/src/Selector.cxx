@@ -72,6 +72,12 @@ void Selector::SlaveBegin(TTree * /*tree*/)
                       100, -350, 350,
                       100, -350, 350);
     fOutput->Add(geom);
+    
+    geom_abovethr   = new TH3D("geom_abovethr", "geom_abovethr",
+                      100, -350, 350,
+                      100, -350, 350,
+                      100, -350, 350);
+    fOutput->Add(geom_abovethr);
 
 
     //Individual crystal core spectra
@@ -126,6 +132,9 @@ Bool_t Selector::Process(Long64_t entry)
 
     for (const auto& it: coreEn){
         geom->Fill(coreX.at(it.first),coreY.at(it.first), coreZ.at(it.first));
+        if (coreEn.at(it.first)>hit_pattern_thr)
+            geom_abovethr->Fill(coreX.at(it.first),coreY.at(it.first), coreZ.at(it.first));
+        
     }
 
     for (const auto & en1: AddE){

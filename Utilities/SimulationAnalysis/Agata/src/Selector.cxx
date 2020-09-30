@@ -48,9 +48,13 @@ void Selector::SlaveBegin(TTree * /*tree*/)
     cal_spec   = new TH1D("cal_spec", "cal_spec", 3000, 0, 3000);
     fOutput->Add(cal_spec);
 
-    //Core graphs
+    //Hit pattern graph
     geom   = new TH3D("geom", "geom", 100, -350, 350, 100, -350, 350, 100, -350, 350);
     fOutput->Add(geom);
+    geom_abovethr   = new TH3D("geom_abovethr", "geom_abovethr", 100, -350, 350, 100, -350, 350, 100, -350, 350);
+    fOutput->Add(geom_abovethr);
+
+    //Core graphs
     core_spec   = new TH1D("core_spec", "core_spec", 3000, 0, 3000);
     fOutput->Add(core_spec);
     core_spec_DC   = new TH1D("core_spec_DC", "core_spec_DC", 3000, 0, 3000);
@@ -412,8 +416,12 @@ Bool_t Selector::Process(Long64_t entry)
 
     for (const auto & hh: cores){
         TVector3 vec(hh.second.GetX(),hh.second.GetY(),hh.second.GetZ());
-
+        
         geom->Fill(hh.second.GetX(), hh.second.GetY(), hh.second.GetZ());
+        
+        if (hh.second.GetEnergy()>hit_pattern_thr)
+            geom_abovethr->Fill(hh.second.GetX(), hh.second.GetY(), hh.second.GetZ());
+            
         core_spec->Fill(hh.second.GetEnergy());
         core_spec_DC->Fill( ComputeDoppler(vec, hh.second.GetEnergy()));
         core_spec_DC_pos_1->Fill( ComputeDoppler(vec,em_position_1, hh.second.GetEnergy()));

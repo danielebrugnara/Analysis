@@ -84,6 +84,7 @@ public :
    //ClassDef(Selector,0);
 
     TH3D * geom;
+    TH3D * geom_abovethr;
     TH1D * cal_spec;
     TH1D * core_spec;
     TH1D * core_spec_DC;
@@ -134,6 +135,8 @@ public :
 
 
     double energy_check_tolerance {0.01};
+    double hit_pattern_thr {300};
+    //double hit_pattern_thr {1000};
 };
 
 
