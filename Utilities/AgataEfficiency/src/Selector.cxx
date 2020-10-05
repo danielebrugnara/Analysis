@@ -176,7 +176,7 @@ void Selector::Terminate()
     // the results graphically or save the results to file.
 
     std::vector<TF1> threasholds;
-    bool show_canvas = false;
+    bool show_canvas = true;
     for (unsigned int i=0; i<crystal_spectra.size(); ++i){
         RooRealVar x("x", "x", 0, 150);
         x.setRange("fullrange", 0, 150);

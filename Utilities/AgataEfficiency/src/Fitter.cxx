@@ -139,9 +139,9 @@ std::vector<Fitter::FitRes> Fitter::Fit(){
     std::vector<Fitter::FitRes> results;
     x.setRange("increased_range", parameters.left_interval-10, parameters.right_interval+10);
     //RooAbsReal* integral_res = model->createIntegral(RooArgSet(x),RooArgSet(x),"x");
-    double int_signal = sign_y->getVal();
-    double int_signal_err = sign_y->getError();
-    double int_bkg = bkg_y->getVal();
+    double int_signal = sign_y->getVal()/spec.GetBinWidth(0);
+    double int_signal_err = sign_y->getError()/spec.GetBinWidth(0);
+    double int_bkg = bkg_y->getVal()/spec.GetBinWidth(0);
     //double integral_err = integral->getPropagatedError(*result,RooArgSet(x));
     //RooAbsReal* model_counts = model->createIntegral(x,RooFit::NormSet(x), RooFit::Range("x"));
     for(int ii=0; ii<ngauss; ++ii) {
