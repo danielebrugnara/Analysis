@@ -424,8 +424,8 @@ Bool_t Selector::Process(Long64_t entry)
             
         core_spec->Fill(hh.second.GetEnergy());
         core_spec_DC->Fill( ComputeDoppler(vec, hh.second.GetEnergy()));
-        core_spec_DC_pos_1->Fill( ComputeDoppler(vec,em_position_1, hh.second.GetEnergy()));
-        core_spec_DC_pos_2->Fill( ComputeDoppler(vec,em_position_2, hh.second.GetEnergy()));
+        core_spec_DC_pos_1->Fill( ComputeDoppler(vec,em_position_1+agata_shift, hh.second.GetEnergy()));
+        core_spec_DC_pos_2->Fill( ComputeDoppler(vec,em_position_2+agata_shift, hh.second.GetEnergy()));
         crystal_spectra[hh.second.GetCrystal()]->Fill(hh.second.GetEnergy());
 
         for (const auto & hh2: cores){
@@ -436,10 +436,10 @@ Bool_t Selector::Process(Long64_t entry)
             core_gg->Fill(hh.second.GetEnergy(), hh2.second.GetEnergy());
             core_gg_DC->Fill(ComputeDoppler(vec,hh.second.GetEnergy()),
                              ComputeDoppler(vec2, hh2.second.GetEnergy()));
-            core_gg_DC_pos_1->Fill(  ComputeDoppler(vec,em_position_1,hh.second.GetEnergy()),
-                                     ComputeDoppler(vec2,em_position_1,hh2.second.GetEnergy()));
-            core_gg_DC_pos_2->Fill(  ComputeDoppler(vec,em_position_2,hh.second.GetEnergy()),
-                                     ComputeDoppler(vec2,em_position_2,hh2.second.GetEnergy()));
+            core_gg_DC_pos_1->Fill(  ComputeDoppler(vec,em_position_1+agata_shift,hh.second.GetEnergy()),
+                                     ComputeDoppler(vec2,em_position_1+agata_shift,hh2.second.GetEnergy()));
+            core_gg_DC_pos_2->Fill(  ComputeDoppler(vec,em_position_2+agata_shift,hh.second.GetEnergy()),
+                                     ComputeDoppler(vec2,em_position_2+agata_shift,hh2.second.GetEnergy()));
         }
     }
 
@@ -448,8 +448,8 @@ Bool_t Selector::Process(Long64_t entry)
 
         addb_spec->Fill(hh.second.GetEnergy());
         addb_spec_DC->Fill( ComputeDoppler(vec, hh.second.GetEnergy()));
-        addb_spec_DC_pos_1->Fill( ComputeDoppler(vec,em_position_1, hh.second.GetEnergy()));
-        addb_spec_DC_pos_2->Fill( ComputeDoppler(vec,em_position_2, hh.second.GetEnergy()));
+        addb_spec_DC_pos_1->Fill( ComputeDoppler(vec,em_position_1+agata_shift, hh.second.GetEnergy()));
+        addb_spec_DC_pos_2->Fill( ComputeDoppler(vec,em_position_2+agata_shift, hh.second.GetEnergy()));
 
         for (const auto & hh2: addback){
             if (hh.first == hh2.first) continue;
@@ -459,10 +459,10 @@ Bool_t Selector::Process(Long64_t entry)
             addb_gg->Fill(hh.second.GetEnergy(), hh2.second.GetEnergy());
             addb_gg_DC->Fill(ComputeDoppler(vec,hh.second.GetEnergy()),
                              ComputeDoppler(vec2, hh2.second.GetEnergy()));
-            addb_gg_DC_pos_1->Fill(  ComputeDoppler(vec,em_position_1,hh.second.GetEnergy()),
-                                     ComputeDoppler(vec2,em_position_1,hh2.second.GetEnergy()));
-            addb_gg_DC_pos_2->Fill(  ComputeDoppler(vec,em_position_2,hh.second.GetEnergy()),
-                                     ComputeDoppler(vec2,em_position_2,hh2.second.GetEnergy()));
+            addb_gg_DC_pos_1->Fill(  ComputeDoppler(vec,em_position_1+agata_shift,hh.second.GetEnergy()),
+                                     ComputeDoppler(vec2,em_position_1+agata_shift,hh2.second.GetEnergy()));
+            addb_gg_DC_pos_2->Fill(  ComputeDoppler(vec,em_position_2+agata_shift,hh.second.GetEnergy()),
+                                     ComputeDoppler(vec2,em_position_2+agata_shift,hh2.second.GetEnergy()));
         }
 
     }

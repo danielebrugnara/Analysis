@@ -3,14 +3,9 @@ ROOT_GENERATE_DICTIONARY(G__Globals Globals.h LINKDEF GlobalsLinkDef.h)
 add_library(Globals STATIC G__Globals.cxx)
 target_link_libraries(Globals ${ROOT_LIBRARIES})
 
-
 ROOT_GENERATE_DICTIONARY(G__Plotter Plotter.h LINKDEF PlotterLinkDef.h)
 add_library(Plotter STATIC Plotter.cxx G__Plotter.cxx)
 target_link_libraries(Plotter ${ROOT_LIBRARIES})
-
-ROOT_GENERATE_DICTIONARY(G__Fitter Fitter.h LINKDEF FitterLinkDef.h)
-add_library(Fitter STATIC Fitter.cxx G__Fitter.cxx)
-target_link_libraries(Fitter ${ROOT_LIBRARIES})
 
 ROOT_GENERATE_DICTIONARY(G__Selector Selector.h LINKDEF SelectorLinkDef.h)
 add_library(Selector STATIC Selector.cxx G__Selector.cxx)

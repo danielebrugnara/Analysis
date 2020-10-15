@@ -89,7 +89,8 @@ public:
     void Set_betacm         (TVector3 const &);
     void Set_Fixed          (bool const &);
     void Set_ExFixed        (bool const &);
-    inline void Set_Invariant (double const & Inv){Invariant=Inv;};
+    inline void Set_Invariant (double const & Inv){ Invariant=Inv;
+                                                    if(Inv < 0) throw std::runtime_error("Negative invariant\n");};
     bool Check_Consistent   ();
 
     //Getter methods

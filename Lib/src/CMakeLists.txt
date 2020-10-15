@@ -21,6 +21,11 @@ add_library(Interpolation SHARED Interpolation.cxx G__Interpolation.cxx)
 set_target_properties(Interpolation PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
 target_link_libraries(Interpolation ${ROOT_LIBRARIES})
 
+ROOT_GENERATE_DICTIONARY(G__Fitter Fitter.h LINKDEF ${analysis_SOURCE_DIR}/Lib/inc/FitterLinkDef.h)
+add_library(Fitter SHARED Fitter.cxx G__Fitter.cxx)
+set_target_properties(Fitter PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
+target_link_libraries(Fitter ${ROOT_LIBRARIES})
+
 ROOT_GENERATE_DICTIONARY(G__EnergyLoss EnergyLoss.h LINKDEF ${analysis_SOURCE_DIR}/Lib/inc/EnergyLossLinkDef.h)
 add_library(EnergyLoss SHARED EnergyLoss.cxx G__EnergyLoss.cxx)
 set_target_properties(EnergyLoss PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)

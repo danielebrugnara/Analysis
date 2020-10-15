@@ -63,7 +63,13 @@ public :
    TTreeReaderArray<Hit> Hits = {fReader, "Hits"};
 
 
-   Selector(TTree * /*tree*/ =0):beta(0.117769),velocity(35.3), t12_1(1.1), t12_2(6.3+t12_1), em_position_1(0., 0., velocity*t12_1), em_position_2(0., 0., velocity*t12_2) { }
+   Selector(TTree * /*tree*/ =0):   beta(0.117769),
+                                    velocity(35.3),
+                                    t12_1(1.1),
+                                    t12_2(6.3+t12_1),
+                                    em_position_1(0., 0., velocity*t12_1),
+                                    em_position_2(0., 0., velocity*t12_2),
+                                    agata_shift(0., 0., 26){ }
    virtual ~Selector() {delete addback_graph; }//Do not delete histograms
    virtual Int_t   Version() const { return 2; }
    virtual void    Begin(TTree *tree);
@@ -109,6 +115,7 @@ public :
     const double velocity; //mm/ns
     const double t12_1; //ns
     const double t12_2; //ns
+    const TVector3 agata_shift; //mm/ns
     const TVector3 em_position_1; //mm/ns
     const TVector3 em_position_2; //mm/ns
 

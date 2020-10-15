@@ -25,6 +25,7 @@
 class Fitter {
 public:
     Fitter(const TH1D&, std::vector<std::pair<double,double>>, const bool& left_tail=true);
+    Fitter()=default;
     void EnableCanvas(bool canvas_enabled=true);
     ~Fitter();
     struct FitRes{

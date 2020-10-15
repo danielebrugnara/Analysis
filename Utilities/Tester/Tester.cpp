@@ -16,8 +16,10 @@ int main(){
     reaction.SetBeamEnergy(800 * UNITS::MeV);
     //reaction.Set_Ek(6232.4*UNITS::MeV);
     reaction.ChooseFixed(3);
+    double debug = reaction.GetFixedFragment().Get_M()/UNITS::MeV;
+    debug = reaction.GetFreeFragment().Get_M()/UNITS::MeV;
     //double en = (reaction.GetFixedFragment().Get_M())/UNITS::PHYSICS::amu_c2 * 224 * UNITS::MeV;
-    reaction.Set_Ek(380.43*UNITS::MeV);
+    reaction.Set_Ek(400*UNITS::MeV);
     const ReactionFragment & ref = reaction.GetReactionFragment(3);
     double value = ref.Get_P().Vect().Theta();
     return 0;

@@ -200,7 +200,6 @@ std::vector<Fitter::FitRes> Fitter::Fit(){
         delete cv;
     }
     return results;
-
 }
 
 void Fitter::FindParameters() {

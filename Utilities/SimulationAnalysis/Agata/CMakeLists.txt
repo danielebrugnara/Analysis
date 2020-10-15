@@ -13,7 +13,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 #Verbose option for debugging cmake .. -DVERBOSE_DEBUG=ON
@@ -47,6 +47,5 @@ get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY LINK_DIRECTORIE
 foreach(dir ${dirs})
 	  message(STATUS "selected linking dir='${dir}'")
 endforeach()
-
 
 add_subdirectory(src)
