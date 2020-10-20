@@ -7,25 +7,31 @@
 class Particle: public TObject{
     public:
     Particle(){};
-    Particle(int type, double Energy, double x, double y, double z, int nr){
+    Particle(int type, double energy, double x, double y, double z, int nr, double beta=0, double mass=0){
         this->type=type;
-        this->Energy=Energy;
+        this->energy=energy;
+        this->beta=beta;
+        this->mass=mass;
         this->x=x;
         this->y=y;
         this->z=z;
         this->nr=nr;
     };
  //   std::vector <Hit> hits;
+    void SetMass(double mass){this->mass = mass;};
+    void SetEnergy(double energy){this->energy = energy;};
     private:
     int type;
 //    int hits_number;
-    double Energy;
+    double energy;
+    double beta;
+    double mass;
     double x;
     double y;
     double z;
     int nr;
     
-    ClassDef(Particle, 1);
+    ClassDef(Particle, 3);
 }; 
 
 #endif

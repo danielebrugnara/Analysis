@@ -1,10 +1,16 @@
 #include "Fitter.h"
 
 Fitter::Fitter(const TH1D& spec, std::vector<std::pair<double, double>> energies, const bool& left_tail):
+        mean_around_center_min(5.),mean_around_center_max(5.),
+        initial_sigma(1.), sigma_min(0.5), sigma_max(0.02*energies.back().first),
+        initial_tau(1.3), tau_min(0.001), tau_max(10),
+        fitting_min(energies.front().first-15), fitting_max(energies.back().first+15),
         spec(spec),
         left_tail(left_tail),
         energies(std::move(energies)),
-        canvas_enabled(false){
+        canvas_enabled(false),
+        mean_fixed(false),
+        relative_amplitude_fixed(true){
 }
 
 std::vector<Fitter::FitRes> Fitter::Fit(){
@@ -167,6 +173,8 @@ std::vector<Fitter::FitRes> Fitter::Fit(){
         }
         double integral = int_signal * ampl;
         double integral_err = sqrt(pow(int_signal * ampl_err,2)+pow(int_signal_err*ampl,2)); //TODO: APPTOXIMATED!! https://root-forum.cern.ch/t/getting-number-of-events-or-fraction-of-events-in-a-range/28624 https://root-forum.cern.ch/t/integral-uncertainty-with-roofit/12622/3
+        double mean_gauss = parameters.mean[ii].fitted_value.first;
+        double mean_gauss_err = parameters.mean[ii].fitted_value.second;
         double sigma_gauss = parameters.sigma[ii].fitted_value.first;
         double sigma_gauss_err = parameters.sigma[ii].fitted_value.second;
         double tail = parameters.tau[ii].fitted_value.first;
@@ -190,6 +198,7 @@ std::vector<Fitter::FitRes> Fitter::Fit(){
                 energies[ii].first,
                 integral, integral_err,
                 ampl, ampl_err,
+                mean_gauss, mean_gauss_err,
                 sigma_gauss, sigma_gauss_err,
                 tail, tail_err);
     }
@@ -227,13 +236,13 @@ void Fitter::FindParameters() {
         //initialpars.ampl[ii].initial_value = 0.5;
         initialpars.ampl[ii].min = 0.;
         initialpars.ampl[ii].max = 1.;
-        initialpars.ampl[ii].fixed = true;
+        initialpars.ampl[ii].fixed = relative_amplitude_fixed;
         initialpars.ampl[ii].name = "Ampl_"+std::to_string(ii);
 
         initialpars.mean[ii].initial_value = energies[ii].first;
-        initialpars.mean[ii].min = energies[ii].first - 5.;
-        initialpars.mean[ii].max = energies[ii].first + 5.;
-        initialpars.mean[ii].fixed = false;
+        initialpars.mean[ii].min = energies[ii].first - mean_around_center_min;
+        initialpars.mean[ii].max = energies[ii].first + mean_around_center_max;
+        initialpars.mean[ii].fixed = mean_fixed;
         initialpars.mean[ii].name = "Mean_"+std::to_string(ii);
 
         initialpars.sigma[ii].initial_value = 1.;

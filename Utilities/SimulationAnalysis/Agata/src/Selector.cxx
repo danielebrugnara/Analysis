@@ -81,6 +81,31 @@ void Selector::SlaveBegin(TTree * /*tree*/)
     fOutput->Add(addb_spec_DC_pos_1);
     addb_spec_DC_pos_2  = new TH1D("addb_spec_pos_2", "addb_spec_pos_2", 3000, 0, 3000);
     fOutput->Add(addb_spec_DC_pos_2);
+
+    //Emission position scan
+    const int nscans = 30;
+    const double scan_pos_min = 0;
+    const double scan_pos_max = em_position_2.z()*1.2;
+    const double step_pos = (scan_pos_max -scan_pos_min)/nscans;
+    //const double scan_beta_min = 0.1115;
+    const double scan_beta_min = 0.105;
+    const double scan_beta_max = 0.1145;
+    const double step_beta = (scan_beta_max -scan_beta_min)/nscans;
+    for (double d_pos=scan_pos_min; d_pos<scan_pos_max; d_pos+=step_pos) {
+        std::unordered_map<double, TH1D*> tmp_map;
+        for (double d_beta=scan_beta_min; d_beta<scan_beta_max; d_beta+=step_beta) {
+            tmp_map.emplace(d_beta, new TH1D(Form("addb_spec_DC_scan_pos%f_beta%f", d_pos, d_beta),
+                                                           Form("addb_spec_DC_scan_pos%f_beta%f", d_pos, d_beta),
+                                                            3000, 0, 3000));
+        }
+        addb_spec_DC_scan.emplace(d_pos, tmp_map);
+    }
+    for(auto& it_pos: addb_spec_DC_scan ){
+        for(auto& it_beta: it_pos.second ){
+            fOutput->Add(it_beta.second);
+        }
+    }
+
     addb_gg   = new TH2D("addb_gg", "addb_gg", 3000, 0, 3000, 3000, 0, 3000);
     fOutput->Add(addb_gg);
     addb_gg_DC   = new TH2D("addb_gg_DC", "addb_gg_DC", 3000, 0, 3000, 3000, 0, 3000);
@@ -89,7 +114,6 @@ void Selector::SlaveBegin(TTree * /*tree*/)
     fOutput->Add(addb_gg_DC_pos_1);
     addb_gg_DC_pos_2  = new TH2D("addb_gg_DC_pos_2", "addb_gg_DC_pos_2", 3000, 0, 3000, 3000, 0, 3000);
     fOutput->Add(addb_gg_DC_pos_2);
-
     target_spec   = new TH1D("target_spec", "target_spec", 3000, 0, 3000);
     fOutput->Add(target_spec);
 
@@ -244,8 +268,7 @@ void Selector::SlaveBegin(TTree * /*tree*/)
     }
 }
 
-Bool_t Selector::Process(Long64_t entry)
-{
+Bool_t Selector::Process(Long64_t entry) {
     // The Process() function is called for each entry in the tree (or possibly
     // keyed object in the case of PROOF) to be processed. The entry argument
     // specifies which entry in the currently loaded tree is to be processed.
@@ -271,81 +294,86 @@ Bool_t Selector::Process(Long64_t entry)
 
     std::unique_ptr<Hit> target_hit = nullptr;
     double ecal = 0;
-    for (const auto & h: Hits){
-        if (h.GetEnergy() <= 0 ) continue;
-        if (h.GetDetector() == 0){//Agata hit
+    for (const auto &h: Hits) {
+        if (h.GetEnergy() <= 0) continue;
+        if (h.GetDetector() == 0) {//Agata hit
             int crystal = h.GetCrystal();
             int segment = h.GetSegment();
-            std::pair<int, int > key(crystal, segment);
+            std::pair<int, int> key(crystal, segment);
             if (!active_crystals[crystal]) continue;
             ecal += h.GetEnergy();
-            if ((hits_analyzed_iterator = hits_analyzed.find(key)) == hits_analyzed.end()){
+            if ((hits_analyzed_iterator = hits_analyzed.find(key)) == hits_analyzed.end()) {
                 hits_analyzed.emplace(key, h);
-            }else{
+            } else {
                 double ensum = hits_analyzed_iterator->second.GetEnergy() + h.GetEnergy();
-                auto& found = hits_analyzed_iterator->second;
-                found = Hit(   crystal,
-                               ensum,
-                               (found.GetX()*found.GetEnergy()+h.GetX()*h.GetEnergy())/ensum,
-                               (found.GetY()*found.GetEnergy()+h.GetY()*h.GetEnergy())/ensum,
-                               (found.GetZ()*found.GetEnergy()+h.GetZ()*h.GetEnergy())/ensum,
-                               segment,
-                               h.GetDetector());
+                auto &found = hits_analyzed_iterator->second;
+                found = Hit(crystal,
+                            ensum,
+                            (found.GetX() * found.GetEnergy() + h.GetX() * h.GetEnergy()) / ensum,
+                            (found.GetY() * found.GetEnergy() + h.GetY() * h.GetEnergy()) / ensum,
+                            (found.GetZ() * found.GetEnergy() + h.GetZ() * h.GetEnergy()) / ensum,
+                            segment,
+                            h.GetDetector());
             }
-        }else if (h.GetDetector() == 3){//Target hit
-            if (target_hit == nullptr )
+        } else if (h.GetDetector() == 3) {//Target hit
+            if (target_hit == nullptr)
                 target_hit.reset(new Hit(h));
             else
                 target_hit.reset(new Hit(
                         h.GetCrystal(),
-                        h.GetEnergy()+target_hit->GetEnergy(),
-                        (h.GetX()*h.GetEnergy()+target_hit->GetX()*target_hit->GetEnergy())/(h.GetEnergy()+target_hit->GetEnergy()),
-                        (h.GetY()*h.GetEnergy()+target_hit->GetY()*target_hit->GetEnergy())/(h.GetEnergy()+target_hit->GetEnergy()),
-                        (h.GetZ()*h.GetEnergy()+target_hit->GetZ()*target_hit->GetEnergy())/(h.GetEnergy()+target_hit->GetEnergy()),
+                        h.GetEnergy() + target_hit->GetEnergy(),
+                        (h.GetX() * h.GetEnergy() + target_hit->GetX() * target_hit->GetEnergy()) /
+                        (h.GetEnergy() + target_hit->GetEnergy()),
+                        (h.GetY() * h.GetEnergy() + target_hit->GetY() * target_hit->GetEnergy()) /
+                        (h.GetEnergy() + target_hit->GetEnergy()),
+                        (h.GetZ() * h.GetEnergy() + target_hit->GetZ() * target_hit->GetEnergy()) /
+                        (h.GetEnergy() + target_hit->GetEnergy()),
                         target_hit->GetSegment(),
                         h.GetDetector()));
-        }else{//Nothing should be here
+        } else {//Nothing should be here
             throw std::runtime_error("Hit detector not recognized\n");
         }
     }
 
     std::unordered_map<int, int> max_keys_map; //key: crystal, content segment with highest energy
     std::unordered_map<int, double> etot_cores_map;
-    for (const auto& it: hits_analyzed) {
+    for (const auto &it: hits_analyzed) {
         int crystal = it.first.first;
         int segment = it.first.second;
-        if (etot_cores_map.find(crystal) == etot_cores_map.end()){
+        if (etot_cores_map.find(crystal) == etot_cores_map.end()) {
             max_keys_map.emplace(crystal, segment);
             etot_cores_map.emplace(crystal, it.second.GetEnergy());
-        }else{
+        } else {
             etot_cores_map.at(crystal) += it.second.GetEnergy();
-            if (it.second.GetEnergy() > hits_analyzed.find(std::make_pair(crystal, max_keys_map.at(crystal)))->second.GetEnergy()){
+            if (it.second.GetEnergy() >
+                hits_analyzed.find(std::make_pair(crystal, max_keys_map.at(crystal)))->second.GetEnergy()) {
                 max_keys_map.at(crystal) = segment;
             }
         }
     }
 
     std::unordered_map<int, Hit> cores;
-    for (const auto& it: max_keys_map){
-        auto max = hits_analyzed.find(std::make_pair(it.first,it.second));
-        cores.emplace(  it.first,
-                        Hit(    it.first,
-                                etot_cores_map.at(it.first),
-                                max->second.GetX(),
-                                max->second.GetY(),
-                                max->second.GetZ(),
-                                max->second.GetSegment(),
-                                max->second.GetDetector()
-                        ));
+    for (const auto &it: max_keys_map) {
+        auto max = hits_analyzed.find(std::make_pair(it.first, it.second));
+        cores.emplace(it.first,
+                      Hit(it.first,
+                          etot_cores_map.at(it.first),
+                          max->second.GetX(),
+                          max->second.GetY(),
+                          max->second.GetZ(),
+                          max->second.GetSegment(),
+                          max->second.GetDetector()
+                      ));
     }
 
     //Deleting under-threashold stuff
-    if (use_threasholds){
-        for (auto it=cores.cbegin(); it !=cores.cend();){
-            TH1* histo_ptr = threasholds.at(it->second.GetCrystal());
-            if (it->second.GetEnergy()<150 && rand.Uniform()>histo_ptr->GetBinContent(histo_ptr->FindBin(it->second.GetEnergy()))){
+    if (use_threasholds) {
+        for (auto it = cores.cbegin(); it != cores.cend();) {
+            TH1 *histo_ptr = threasholds.at(it->second.GetCrystal());
+            if (it->second.GetEnergy() < 150 &&
+                rand.Uniform() > histo_ptr->GetBinContent(histo_ptr->FindBin(it->second.GetEnergy()))) {
                 cores.erase(it++);
-            }else{
+            } else {
                 ++it;
             }
         }
@@ -356,16 +384,16 @@ Bool_t Selector::Process(Long64_t entry)
     std::unordered_map<int, bool> visited;
     std::deque<int> visit_que;
 
-    for (const auto& it_core: cores){
+    for (const auto &it_core: cores) {
         if (visited.find(it_core.first) != visited.end()) continue;
         visit_que.push_back(it_core.first);
         std::pair<int, double> max_element = {-1, 0};
         double total_energy = 0;
-        while(!visit_que.empty()){
+        while (!visit_que.empty()) {
             auto element = visit_que.front();
             visit_que.pop_front();
             //if (visited.find(element) != visited.end()) continue;
-            visited.emplace(element,true);
+            visited.emplace(element, true);
 
             double element_energy = cores.at(element).GetEnergy();
             total_energy += element_energy;
@@ -373,102 +401,109 @@ Bool_t Selector::Process(Long64_t entry)
                 max_element = std::make_pair(element, element_energy);
 
             auto near_crystals = addback_graph->getAdjacent(it_core.first);
-            for (const auto& it_near: near_crystals){
+            for (const auto &it_near: near_crystals) {
                 if (visited.find(it_near.second->ID) != visited.end()) continue;
-                if (std::find(visit_que.begin(), visit_que.end(),it_near.second->ID) != visit_que.end()) continue;
+                if (std::find(visit_que.begin(), visit_que.end(), it_near.second->ID) != visit_que.end()) continue;
                 if (cores.find(it_near.second->ID) == cores.end()) continue;
-                visit_que.push_back( it_near.second->ID);
+                visit_que.push_back(it_near.second->ID);
             }
         }
 
-        const Hit& maxhit = cores.at(max_element.first);
-        addback.emplace(max_element.first, Hit( max_element.first,
-                                                total_energy,
-                                                maxhit.GetX(),
-                                                maxhit.GetY(),
-                                                maxhit.GetZ(),
-                                                maxhit.GetSegment(),
-                                                maxhit.GetDetector()));
+        const Hit &maxhit = cores.at(max_element.first);
+        addback.emplace(max_element.first, Hit(max_element.first,
+                                               total_energy,
+                                               maxhit.GetX(),
+                                               maxhit.GetY(),
+                                               maxhit.GetZ(),
+                                               maxhit.GetSegment(),
+                                               maxhit.GetDetector()));
     }
 
     //Consistency check on cores and addback
     double core_tot_en = 0;
-    for (const auto & it: cores) {
+    for (const auto &it: cores) {
         core_tot_en += it.second.GetEnergy();
         if (it.second.GetEnergy() > ecal + energy_check_tolerance)
             throw std::runtime_error("Something wrong in cores energy\n");
     }
-    if (!use_threasholds && abs(core_tot_en-ecal)>energy_check_tolerance)
+    if (!use_threasholds && abs(core_tot_en - ecal) > energy_check_tolerance)
         throw std::runtime_error("Something wrong in cores energy\n");
 
     double addback_tot_en = 0;
-    for (const auto & it: addback) {
+    for (const auto &it: addback) {
         addback_tot_en += it.second.GetEnergy();
         if (it.second.GetEnergy() > ecal + energy_check_tolerance)
             throw std::runtime_error("Something wrong in addback energy\n");
     }
-    if (!use_threasholds && abs(addback_tot_en-ecal)>energy_check_tolerance)
+    if (!use_threasholds && abs(addback_tot_en - ecal) > energy_check_tolerance)
         throw std::runtime_error("Something wrong in addback energy\n");
 
     //Filling histograms
     if (target_hit != nullptr)
         target_spec->Fill(target_hit->GetEnergy());
 
-    for (const auto & hh: cores){
-        TVector3 vec(hh.second.GetX(),hh.second.GetY(),hh.second.GetZ());
-        
+    for (const auto &hh: cores) {
+        TVector3 vec(hh.second.GetX(), hh.second.GetY(), hh.second.GetZ());
+
         geom->Fill(hh.second.GetX(), hh.second.GetY(), hh.second.GetZ());
-        
-        if (hh.second.GetEnergy()>hit_pattern_thr)
+
+        if (hh.second.GetEnergy() > hit_pattern_thr)
             geom_abovethr->Fill(hh.second.GetX(), hh.second.GetY(), hh.second.GetZ());
-            
+
         core_spec->Fill(hh.second.GetEnergy());
-        core_spec_DC->Fill( ComputeDoppler(vec, hh.second.GetEnergy()));
-        core_spec_DC_pos_1->Fill( ComputeDoppler(vec,em_position_1+agata_shift, hh.second.GetEnergy()));
-        core_spec_DC_pos_2->Fill( ComputeDoppler(vec,em_position_2+agata_shift, hh.second.GetEnergy()));
+        core_spec_DC->Fill(ComputeDoppler(vec, hh.second.GetEnergy()));
+        core_spec_DC_pos_1->Fill(ComputeDoppler(vec, em_position_1 + agata_shift, hh.second.GetEnergy()));
+        core_spec_DC_pos_2->Fill(ComputeDoppler(vec, em_position_2 + agata_shift, hh.second.GetEnergy()));
         crystal_spectra[hh.second.GetCrystal()]->Fill(hh.second.GetEnergy());
 
-        for (const auto & hh2: cores){
+        for (const auto &hh2: cores) {
             if (hh.first == hh2.first) continue;
-            TVector3 vec2(hh2.second.GetX(),hh2.second.GetY(),hh2.second.GetZ());
+            TVector3 vec2(hh2.second.GetX(), hh2.second.GetY(), hh2.second.GetZ());
             //double distance = (vec-vec2).Mag();
 
             core_gg->Fill(hh.second.GetEnergy(), hh2.second.GetEnergy());
-            core_gg_DC->Fill(ComputeDoppler(vec,hh.second.GetEnergy()),
+            core_gg_DC->Fill(ComputeDoppler(vec, hh.second.GetEnergy()),
                              ComputeDoppler(vec2, hh2.second.GetEnergy()));
-            core_gg_DC_pos_1->Fill(  ComputeDoppler(vec,em_position_1+agata_shift,hh.second.GetEnergy()),
-                                     ComputeDoppler(vec2,em_position_1+agata_shift,hh2.second.GetEnergy()));
-            core_gg_DC_pos_2->Fill(  ComputeDoppler(vec,em_position_2+agata_shift,hh.second.GetEnergy()),
-                                     ComputeDoppler(vec2,em_position_2+agata_shift,hh2.second.GetEnergy()));
+            core_gg_DC_pos_1->Fill(ComputeDoppler(vec, em_position_1 + agata_shift, hh.second.GetEnergy()),
+                                   ComputeDoppler(vec2, em_position_1 + agata_shift, hh2.second.GetEnergy()));
+            core_gg_DC_pos_2->Fill(ComputeDoppler(vec, em_position_2 + agata_shift, hh.second.GetEnergy()),
+                                   ComputeDoppler(vec2, em_position_2 + agata_shift, hh2.second.GetEnergy()));
         }
     }
 
-    for (const auto& hh: addback){
-        TVector3 vec(hh.second.GetX(),hh.second.GetY(),hh.second.GetZ());
+    for (const auto &hh: addback) {
+        TVector3 vec(hh.second.GetX(), hh.second.GetY(), hh.second.GetZ());
 
         addb_spec->Fill(hh.second.GetEnergy());
-        addb_spec_DC->Fill( ComputeDoppler(vec, hh.second.GetEnergy()));
-        addb_spec_DC_pos_1->Fill( ComputeDoppler(vec,em_position_1+agata_shift, hh.second.GetEnergy()));
-        addb_spec_DC_pos_2->Fill( ComputeDoppler(vec,em_position_2+agata_shift, hh.second.GetEnergy()));
+        addb_spec_DC->Fill(ComputeDoppler(vec, hh.second.GetEnergy()));
+        addb_spec_DC_pos_1->Fill(ComputeDoppler(vec, em_position_1 + agata_shift, hh.second.GetEnergy()));
+        addb_spec_DC_pos_2->Fill(ComputeDoppler(vec, em_position_2 + agata_shift, hh.second.GetEnergy()));
+        for (auto &it_pos: addb_spec_DC_scan) {
+            for (auto &it_beta: it_pos.second) {
+                it_beta.second->Fill(ComputeDoppler(vec,
+                                                    TVector3(0., 0., it_pos.first) + agata_shift,
+                                                    hh.second.GetEnergy(),
+                                                    it_beta.first));
+            }
+            for (const auto &hh2: addback) {
+                if (hh.first == hh2.first) continue;
+                TVector3 vec2(hh2.second.GetX(), hh2.second.GetY(), hh2.second.GetZ());
+                //double distance = (vec-vec2).Mag();
 
-        for (const auto & hh2: addback){
-            if (hh.first == hh2.first) continue;
-            TVector3 vec2(hh2.second.GetX(),hh2.second.GetY(),hh2.second.GetZ());
-            //double distance = (vec-vec2).Mag();
+                addb_gg->Fill(hh.second.GetEnergy(), hh2.second.GetEnergy());
+                addb_gg_DC->Fill(ComputeDoppler(vec, hh.second.GetEnergy()),
+                                 ComputeDoppler(vec2, hh2.second.GetEnergy()));
+                addb_gg_DC_pos_1->Fill(ComputeDoppler(vec, em_position_1 + agata_shift, hh.second.GetEnergy()),
+                                       ComputeDoppler(vec2, em_position_1 + agata_shift, hh2.second.GetEnergy()));
+                addb_gg_DC_pos_2->Fill(ComputeDoppler(vec, em_position_2 + agata_shift, hh.second.GetEnergy()),
+                                       ComputeDoppler(vec2, em_position_2 + agata_shift, hh2.second.GetEnergy()));
+            }
 
-            addb_gg->Fill(hh.second.GetEnergy(), hh2.second.GetEnergy());
-            addb_gg_DC->Fill(ComputeDoppler(vec,hh.second.GetEnergy()),
-                             ComputeDoppler(vec2, hh2.second.GetEnergy()));
-            addb_gg_DC_pos_1->Fill(  ComputeDoppler(vec,em_position_1+agata_shift,hh.second.GetEnergy()),
-                                     ComputeDoppler(vec2,em_position_1+agata_shift,hh2.second.GetEnergy()));
-            addb_gg_DC_pos_2->Fill(  ComputeDoppler(vec,em_position_2+agata_shift,hh.second.GetEnergy()),
-                                     ComputeDoppler(vec2,em_position_2+agata_shift,hh2.second.GetEnergy()));
         }
 
+        cal_spec->Fill(ecal);
+        return kTRUE;
     }
-
-    cal_spec->Fill(ecal);
-    return kTRUE;
 }
 
 void Selector::SlaveTerminate()
@@ -485,6 +520,27 @@ void Selector::Terminate()
     // a query. It always runs on the client, it can be used to present
     // the results graphically or save the results to file.
     //auto* threashold_data_file = new TFile("threasholds.root", "read");
+
+    ComputeThreasholds();
+}
+
+double Selector::ComputeDoppler(const TVector3 & vec, const double & en){
+    return en/(sqrt(1-beta*beta)*(1. + beta*vec.CosTheta()));
+}
+
+double Selector::ComputeDoppler(const TVector3 & vec,const TVector3 & pos, const double & en){
+    return en/(sqrt(1-beta*beta)*(1. + beta*(vec-pos).CosTheta()));
+}
+
+double Selector::ComputeDoppler(const TVector3 & vec,const TVector3 & pos, const double & en, const double& beta){
+    return en/(sqrt(1-beta*beta)*(1. + beta*(vec-pos).CosTheta()));
+}
+
+double Selector::ComputeDoppler(const TVector3 & vec,const double & pos, const double & en){
+    return en/(sqrt(1-beta*beta)*(1. + beta*(vec-TVector3(0., 0., pos)).CosTheta()));
+}
+
+void Selector::ComputeThreasholds() {
     auto* threashold_data_file = new TFile("threasholds.root", "read");
     if (threashold_data_file->IsOpen() && !use_threasholds)
         compute_threasholds = true;
@@ -524,9 +580,9 @@ void Selector::Terminate()
         RooRealVar la_s("la_s", "la_s", 20, 1, 60);
         RooRealVar la2_s("la2_s", "la2_s", 0.05, 0.001, 0.2);
         RooGenericPdf pol(Form("pol_%i", i),
-                            Form("pol_%i", i),
-                            "(1+erf((th_s-x)/la_s))*(1-exp(-x*la2_s))",
-                            RooArgSet(x,th_s, la_s, la2_s));
+                          Form("pol_%i", i),
+                          "(1+erf((th_s-x)/la_s))*(1-exp(-x*la2_s))",
+                          RooArgSet(x,th_s, la_s, la2_s));
 
         RooRealVar threashold("threashold", "threashold", data_threasholds.at(i)->GetParameter("threashold"));
         threashold.setConstant();
@@ -534,15 +590,15 @@ void Selector::Terminate()
         lambda.setConstant();
 
         RooGenericPdf erf(Form("erf_%i", i),
-                            Form("erf_%i", i),
-                            "(1+erf((x-threashold)/lambda))",
-                            RooArgSet(x, threashold, lambda));
+                          Form("erf_%i", i),
+                          "(1+erf((x-threashold)/lambda))",
+                          RooArgSet(x, threashold, lambda));
 
         RooRealVar sign_p("sign_p","sign_p", 0.5, 0.,1.);
         RooAddPdf model(Form("model_%i", i),
                         Form("model_%i", i),
                         RooArgList(pol, erf),
-                            RooArgList(sign_p));
+                        RooArgList(sign_p));
         //Plotting
         RooPlot* frame = x.frame(RooFit::Title(Form("Threashold_%i", i)));
         dh.plotOn(frame);
@@ -613,10 +669,3 @@ void Selector::Terminate()
 
 }
 
-double Selector::ComputeDoppler(const TVector3 & vec, const double & en){
-    return en/(sqrt(1-beta*beta)*(1. + beta*vec.CosTheta()));
-}
-
-double Selector::ComputeDoppler(const TVector3 & vec,const TVector3 & pos, const double & en){
-    return en/(sqrt(1-beta*beta)*(1. + beta*(vec-pos).CosTheta()));
-}

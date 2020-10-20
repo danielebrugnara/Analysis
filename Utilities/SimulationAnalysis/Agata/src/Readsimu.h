@@ -21,6 +21,7 @@
 enum LineType {
 	EVENT_START,
 	BLANK_EVENT,
+    EMITTER_EVENT,
 	GAMMA_EVENT,
 	POSITRON_EVENT,
 	ELECTRON_EVENT,
@@ -43,12 +44,14 @@ int readsimu(const std::string& inputfile, const std::string& rootoutput, bool S
 
 	Particle* tmp_particle=0;
 	std::vector <Particle> particles;
+	Particle ion;
 	std::vector <Hit> hits;
 
 	auto *output = new TFile(rootoutput.c_str(),"recreate");
 	auto *theTree = new TTree("SimulatedAgata","SimulatedAgata");
 	TBranch *branch_particle = theTree->Branch("Particle", &particles);
 	TBranch *branch_hit = theTree->Branch("Hits", &hits);
+    TBranch *branch_ion = theTree->Branch("Ion", &ion);
 	std::string aLine;
 	bool Line_skip=true;
     std::istringstream();
@@ -58,7 +61,7 @@ int readsimu(const std::string& inputfile, const std::string& rootoutput, bool S
 	//double Resolution_AGATA=0.002;
 	//double Resolution_AGATA=0.003/2.355;//numerator is FWHM
 
-	double Energy, posX, posY, posZ;
+	double Energy, posX, posY, posZ, mass, beta;
 	int nr, type, segment, crystal;
 
 	int iteration =0;
@@ -118,8 +121,16 @@ int readsimu(const std::string& inputfile, const std::string& rootoutput, bool S
 						       break;
 					       }
 				case SPECTROMETER_EVENT:{//Spectrometer original event
-						       break;
+				                oneline >> type >> Energy >> mass;
+				                ion.SetEnergy(Energy);
+				                ion.SetMass(mass);
+						        break;
 					       }
+                case EMITTER_EVENT:{//Spectrometer original event
+                    oneline >> type >> beta >> posX >> posY >> posZ;
+                    ion = Particle(type, 0, posX, posY, posZ, 0, beta);
+                    break;
+                }
 				case DIAMANT_HIT:{//Hit on Diamant
 							 oneline >> crystal >> Energy >> posX >> posY >> posZ >> segment;
 							 if (SMEARING && Energy>0){
@@ -177,37 +188,39 @@ int readsimu(const std::string& inputfile, const std::string& rootoutput, bool S
 }
 
 enum LineType Classify(const std::string& Line, bool gun){
-	if(!Line.compare(0, 4, "-100"))
-		return EVENT_START;
-	if(!Line.compare(0, 5, " -101")||!Line.compare(0, 5, " -102"))
-		return BLANK_EVENT;
-	if (!Line.compare(0, 5, "   -1"))
-		return GAMMA_EVENT;
-	if (!Line.compare(0, 5, "  -98"))
-		return POSITRON_EVENT;
-	if (!Line.compare(0, 5, "  -97"))
-		return ELECTRON_EVENT;
-	if (!Line.compare(0, 5, "   -8")){
-		if(!gun)
-			return ION_EVENT;
-		else
-			return EVENT_START;
+   if(!Line.compare(0, 4, "-100"))
+       return EVENT_START;
+   if(!Line.compare(0, 5, " -101"))
+	    return EMITTER_EVENT;
+   if(!Line.compare(0, 5, " -102"))
+	    return BLANK_EVENT;
+   if(!Line.compare(0, 5, " -104"))
+       return SPECTROMETER_EVENT;
+   if (!Line.compare(0, 5, "   -1"))
+	    return GAMMA_EVENT;
+   if (!Line.compare(0, 5, "  -98"))
+	    return POSITRON_EVENT;
+   if (!Line.compare(0, 5, "  -97"))
+	    return ELECTRON_EVENT;
+   if (!Line.compare(0, 5, "   -8")){
+	    if(!gun)
+	        return ION_EVENT;
+	    else
+	        return EVENT_START;
 	}
-	if(!Line.compare(0, 5, " -104"))
-		return SPECTROMETER_EVENT;
-	if (!Line.compare(0, 3, " 80"))
-		return DIAMANT_HIT;
-	if (!Line.compare(0, 5, "18002"))
-		return LABR_HIT;
-	if (!Line.compare(0, 5, " 4000"))
-		return TARGET_HIT;
-	if (!Line.compare(0, 1, "$"))
-		return HEADER_END;
-	if(([Line](){try{return (std::stoi(Line.substr(0, 5))>=0 && std::stoi(Line.substr(0, 5))<=100);}
+   if (!Line.compare(0, 3, " 80"))
+	    return DIAMANT_HIT;
+   if (!Line.compare(0, 5, "18002"))
+       return LABR_HIT;
+   if (!Line.compare(0, 5, " 4000"))
+       return TARGET_HIT;
+   if (!Line.compare(0, 1, "$"))
+	    return HEADER_END;
+   if(([Line](){try{return (std::stoi(Line.substr(0, 5))>=0 && std::stoi(Line.substr(0, 5))<=100);}
 		    catch(const std::invalid_argument & err){return false;}}()))
-		return AGATA_HIT;
-	else
-		return UNKNOWN_EVENT;
+	    return AGATA_HIT;
+   else
+	    return UNKNOWN_EVENT;
 }
 
 double Resolution_AGATA(const double& energy){

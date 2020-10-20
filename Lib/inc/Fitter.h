@@ -27,11 +27,32 @@ public:
     Fitter(const TH1D&, std::vector<std::pair<double,double>>, const bool& left_tail=true);
     Fitter()=default;
     void EnableCanvas(bool canvas_enabled=true);
+
+public:
+    void SetMeanIntervalAroundCenter(const double& min, const double&max)
+                    {mean_around_center_min=min; mean_around_center_max=max;};
+    void SetInitialSigma(const double& val){initial_sigma=val;};
+    void SetSigmaInterval(const double& min, const double&max){sigma_min=min; sigma_max=max;};
+    void SetInitialTau(const double& val){initial_tau=val;};
+    void SetTauInterval(const double& min, const double&max){tau_min=min; tau_max=max;};
+
+private:
+    double mean_around_center_min, mean_around_center_max;
+    double initial_sigma;
+    double sigma_min, sigma_max;
+    double initial_tau;
+    double tau_min, tau_max;
+
+
+    void SetFittingInterval(const double& min, const double& max){fitting_min=min; fitting_max=max;};
+    double fitting_min, fitting_max;
+public:
     ~Fitter();
     struct FitRes{
         double energy;
         std::pair<double, double> integral;
         std::pair<double, double> ampl;
+        std::pair<double, double> mean_gauss;
         std::pair<double, double> sigma_gauss;
         std::pair<double, double> tail;
         FitRes(const double& energy,
@@ -39,6 +60,8 @@ public:
                const double& integral_err,
                const double& ampl,
                const double& ampl_err,
+               const double& mean_gauss,
+               const double& mean_gauss_err,
                const double& sigma_gauss,
                const double& sigma_gauss_err,
                const double& tail,
@@ -46,6 +69,7 @@ public:
                 energy(energy),
                 integral(std::make_pair(integral, integral_err)),
                 ampl(std::make_pair(ampl, ampl_err)),
+                mean_gauss(std::make_pair(mean_gauss, mean_gauss_err)),
                 sigma_gauss(std::make_pair(sigma_gauss, sigma_gauss_err)),
                 tail(std::make_pair(tail, tail_err)){}
     };
@@ -141,7 +165,13 @@ private:
         }
     };
     InitializationParameters parameters;
+    bool mean_fixed;
+    bool relative_amplitude_fixed;
 public:
+    void SetMeanFixed(const bool& mean_fixed = true)
+            { this->mean_fixed = mean_fixed;};
+    void SetRelativeAmplitudeFixed(const bool& relative_amplitude_fixed = true)
+            { this->relative_amplitude_fixed = relative_amplitude_fixed;};
     void WriteParsOnFile(const std::string&, const int&);
     void ReadParsFromFile(const std::string&, const int&);
 private:

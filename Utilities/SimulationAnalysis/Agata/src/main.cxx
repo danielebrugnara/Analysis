@@ -19,6 +19,7 @@ int main(int argc, char* argv[]){
     bool is_gun = false;
     bool infinite_resolution = false;
     std::vector<double> fit_energies;
+    std::string fit_histogram_name;
     for (unsigned int ii=1; ii<(unsigned int)argc;++ii) {
         if (std::string(argv[ii]) == "--sum-all") {
             std::cout << "Summing all spectra in output : spectra_simu.root\n";
@@ -37,6 +38,7 @@ int main(int argc, char* argv[]){
         }
         if (std::string(argv[ii]) == "--fit-efficiency"){
             try {
+                fit_histogram_name = argv[++ii];
                 fit_energies.resize(std::stoi(argv[++ii]));
                 std::cout << "Fitting n=" << fit_energies.size() << " energies\n";
                 for(double & fit_energy : fit_energies){
@@ -69,7 +71,7 @@ int main(int argc, char* argv[]){
             chain.Add(it.c_str());
         }
         RunSelector run(chain, "spectra_sum_all.root");
-        run.Run(fit_energies);
+        run.Run(fit_energies, fit_histogram_name);
     }else{
         for (const auto &it: root_files) {
             std::cout << "Running selector for : "<< it << std::endl;
@@ -81,7 +83,7 @@ int main(int argc, char* argv[]){
             std::string file_out_name = it;
             file_out_name.insert(0, "spectra_");
             RunSelector run(*tree, file_out_name);
-            run.Run(fit_energies);
+            run.Run(fit_energies, fit_histogram_name);
             file->Close();
         }
     }
