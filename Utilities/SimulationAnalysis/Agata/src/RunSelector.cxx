@@ -71,7 +71,7 @@ void RunSelector::Run(const std::vector<double>& energies, const std::string& fi
                 sigmas_tot.at(i).SetPoint(sigmas_tot.at(i).GetN(),
                                           position,
                                           beta,
-                                          sqrt(pow(results.at("sigmas").at(i), 2)+pow(results.at("centroids").at(i),2)));
+                                          sqrt(pow(results.at("sigmas").at(i), 2)+pow(results.at("taus").at(i),2)));
 
                 taus.at(i).SetPoint(taus.at(i).GetN(),
                                     position,

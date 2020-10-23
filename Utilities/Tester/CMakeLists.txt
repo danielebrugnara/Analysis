@@ -13,7 +13,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
+#set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 #Verbose option for debugging cmake .. -DVERBOSE_DEBUG=ON
@@ -28,7 +28,7 @@ list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 find_package(ROOT REQUIRED)
 include(${ROOT_USE_FILE})
 
-include_directories(${CMAKE_SOURCE_DIR}/../../Lib/inc ${ROOT_INCLUDE_DIRS})
+#include_directories(${CMAKE_SOURCE_DIR}/../../Lib/inc ${ROOT_INCLUDE_DIRS})
 add_definitions(${ROOT_CXX_FLAGS})
 
 add_library(Units SHARED Units.cxx)
