@@ -70,27 +70,25 @@ bool MugastIdentification::Initialize(const double &beam_energy,
 
     //Setup of reactions////////////////////////////////
 
-    //reaction["M47_Z19_m1_z1"] = new NPL::Reaction("46Ar(3He,p)48K@" + std::to_string(beam_energy));
-    //reaction["M47_Z19_m2_z1"] = new NPL::Reaction("46Ar(3He,d)47K@" + std::to_string(beam_energy));
-    //reaction["M47_Z19_m4_z2"] = new NPL::Reaction("46Ar(3He,4He)45Ar@" + std::to_string(beam_energy));
-
-    ReactionReconstruction2body::ReactionInput2body tmp_data{
-            ReactionFragment::FragmentSettings(46,18,17,beam_energy,0.),
-            ReactionFragment::FragmentSettings( 3, 2, 0,0,0.),
-            ReactionFragment::FragmentSettings(47,19,17,0,0.),
-            ReactionFragment::FragmentSettings(2,1,1,0,0.)
-    };
-
-    //Setup of masses////////////////////////////////
-    //Masses in MeV [M][Z] as ints
-    for (const auto &it_M : cuts_M)
-    {
-        for (const auto &it_Z : cuts_Z)
-        {
-            mass[it_M][it_Z] = ReactionFragment();
-        }
-    }
-    mass[46][18] = NPL::Nucleus(18, 46).Mass();
+    reaction.emplace("M47_Z19_m1_z1", new ReactionReconstruction2body(
+                                            ReactionReconstruction2body::ReactionInput2body({
+                                            ReactionFragment::FragmentSettings(46, 28, 0, beam_energy, 0),
+                                            ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
+                                            ReactionFragment::FragmentSettings(1, 1, 0, 0, 0),
+                                            ReactionFragment::FragmentSettings(47, 29, 0, 0, 0)})));
+    reaction.emplace("M47_Z19_m2_z1", new ReactionReconstruction2body(
+            ReactionReconstruction2body::ReactionInput2body({
+                                                                    ReactionFragment::FragmentSettings(46, 28, 0, beam_energy, 0),
+                                                                    ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
+                                                                    ReactionFragment::FragmentSettings(2, 1, 0, 0, 0),
+                                                                    ReactionFragment::FragmentSettings(47, 28, 0,0, 0)})));
+    reaction.emplace("M47_Z19_m4_z2", new ReactionReconstruction2body(
+            ReactionReconstruction2body::ReactionInput2body({
+                                                                    ReactionFragment::FragmentSettings(46, 28, 0, beam_energy, 0),
+                                                                    ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
+                                                                    ReactionFragment::FragmentSettings(4, 2, 0, 0, 0),
+                                                                    ReactionFragment::FragmentSettings(45, 27, 0,0, 0)})));
+    beam_ref = &reaction.at("M47_Z19_m2_z1")->GetReactionFragment(1);
 
     gas_thickness = new Interpolation("./Configs/Interpolations/He_thickness_500Torr.txt");
     havar_angle = new Interpolation("./Configs/Interpolations/Entrance_angle_500Torr.txt");
@@ -121,7 +119,6 @@ bool MugastIdentification::Initialize(const double &beam_energy,
     {
         ice_thickness = nullptr;
     }
-
 
     //Cuts Initialization///////////////////////////////////
     InitializeCuts();
@@ -325,7 +322,7 @@ bool MugastIdentification::Identify()
     //Evaluate Ice thickness
     //TODO: fix this not to make unnecessary calculations
     brho = TW_Brho_M46_Z18->Evaluate(**(data->TW));
-    final_beam_energy = sqrt(pow(brho / 3.3356E-3 * charge_state_interpolation, 2) + pow(mass[46][18], 2)) - (mass[46][18]);
+    final_beam_energy = sqrt(pow(brho / 3.3356E-3 * charge_state_interpolation, 2) + (double)beam_ref->Get_M2()) - ((double)beam_ref->Get_M2());
     initial_beam_energy = InitialBeamEnergy(final_beam_energy, current_ice_thickness.first);
 
     if (TW_vs_ice_thickness == nullptr)
@@ -455,12 +452,13 @@ bool MugastIdentification::Identify()
                                          "_" +
                                          fragment->Particle[ii])) != reaction.end())
         {
-            fragment->Ex[ii] = reaction_it->second
-                                    ->ReconstructRelativistic(fragment->E[ii],
-                                                             Get_ThetaLab(ii));
-            fragment->E_CM[ii] = reaction_it->second
-                                    ->EnergyLabToThetaCM(fragment->E[ii],
-                                                        fragment->EmissionDirection[ii].Theta());
+            fragment->Ex[ii] = reaction_it->second->Set_E_Theta(fragment->E[ii], Get_ThetaLab(ii));
+//                                    ->ReconstructRelativistic(fragment->E[ii],
+//                                                             Get_ThetaLab(ii));
+            fragment->E_CM[ii] = 0;
+//                        reaction_it->second                //THIS IS WRONG
+//                                    ->EnergyLabToThetaCM(fragment->E[ii],
+//                                                        fragment->EmissionDirection[ii].Theta());
         }
         else
         {
@@ -487,7 +485,7 @@ void MugastIdentification::IdentifyIceThickness()
     DEBUG("Computed initial beam energy : " , initial_beam_energy);
     DEBUG(" With thickness : " , current_ice_thickness.first);
     DEBUG(" With brho : " , brho);
-    DEBUG(" and mass : " , mass[46][18]);
+    DEBUG(" and mass : " , beam_ref->Get_M2());
 
     if (abs(beam_energy - initial_beam_energy) > beam_energy_match_threashold)
     {

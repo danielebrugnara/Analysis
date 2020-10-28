@@ -1,6 +1,6 @@
 #include <ReactionFragment.h>
 
-//#define sqrt sqrtl
+#include <iostream>
 
 ReactionFragment::ReactionFragment(FragmentSettings const & data):
         A           (data.A),
@@ -12,22 +12,19 @@ ReactionFragment::ReactionFragment(FragmentSettings const & data):
         Parity      (""),
         Name        (""),
         Ex          (data.Ex),
-        Invariant   (-1),
         Lab         (),
         Cm          (),
         Fixed       (true),
         ExFixed     (true),
-        precision   (1E-12)
+        precision   (1E-8)
 {
     GetFromData(A, Z);
     UpdateMass();
-    double energy = data.Ek + M;
+    long double energy = data.Ek + M;
     Lab.P = TLorentzVector( 0.,
                             0.,
-                            sqrt(energy*energy-M2),
+                            sqrtl(energy*energy-M2),
                             energy);
-    Lab.P.SetE(data.Ek+M);
-
 }
 
 void ReactionFragment::GetFromData(const int & A, const int & Z) {
@@ -144,33 +141,45 @@ void ReactionFragment::Extract(std::string const & line) {
 }
 
 void ReactionFragment::UpdateMass() {
-    M = A * UNITS::PHYSICS::amu_c2 + MassExcess - Q * UNITS::PHYSICS::emass_c2 + Ex;
+    M = A * UNITS::PHYSICS::amu_c2 + MassExcess - (Z-Q) * UNITS::PHYSICS::emass_c2 + Ex;
     M2 = M * M;
 }
 
-void ReactionFragment::Set_Ex(const double &Ex) {
+void ReactionFragment::Set_Ex(const long double &Ex) {
     this->Ex = Ex;
     UpdateMass();
     Lab.P.SetVectM(Lab.P.Vect(), M);
     BoostToCm();
 }
 
-void ReactionFragment::Set_Ek(const double &Ek) {
+void ReactionFragment::Set_Ek(const long double &Ek) {
     Set_E(Ek+M);
 }
 
-void ReactionFragment::Set_Ek_cm(const double &Ek) {
+void ReactionFragment::Set_Ek_cm(const long double &Ek) {
     Set_E_cm(Ek+M);
     BoostToLab();
 }
 
-void ReactionFragment::Set_E(const double &E) {
-    Lab.P.Vect().SetMag(sqrtl(E*E-M2));
+void ReactionFragment::Set_E(const long double &E) {
+    TVector3 tmp_vec = Lab.P.Vect();
+    if (tmp_vec.Mag()==0){
+        tmp_vec = sqrtl(E * E - M2)*TVector3(0., 0., 1.);
+    }else {
+        tmp_vec *= sqrtl(E * E - M2) / tmp_vec.Mag();
+    }
+    Lab.P.SetVectM(tmp_vec, M);
     BoostToCm();
 }
 
-void ReactionFragment::Set_E_cm(const double &E) {
-    Cm.P.Vect().SetMag(sqrtl(E*E-M2));
+void ReactionFragment::Set_E_cm(const long double &E) {
+    TVector3 tmp_vec = Cm.P.Vect();
+    if (tmp_vec.Mag()==0){
+        tmp_vec = sqrtl(E * E - M2)*TVector3(0., 0., 1.);
+    }else {
+        tmp_vec *= sqrtl(E * E - M2) / tmp_vec.Mag();
+    }
+    Cm.P.SetVectM(tmp_vec, M);
     BoostToLab();
 }
 
@@ -201,12 +210,14 @@ void ReactionFragment::Set_Beta_cm(const TVector3 &Beta) {
 }
 
 void ReactionFragment::Set_P(const TLorentzVector & P) {
-    if (precision > abs(P*P - M2)) {
+    if (sqrt(P*P - M2)< precision) {
         Lab.P = P;
     } else {
         throw std::runtime_error(std::string("Lorentz vector does not match, computed M : ") +
-                                 +(P * P)
-                                 + "\n");
+                                 +sqrt(P * P)
+                                 + " instead of : "
+                                 +M
+                                 +"\n");
     }
 }
 
@@ -227,52 +238,64 @@ void ReactionFragment::Set_P_cm(const TVector3 & P) {
     BoostToLab();
 }
 
-void ReactionFragment::Set_P(const double & P) {
+void ReactionFragment::Set_P(const long double & P) {
     Lab.P.SetVectM(P/Lab.P.Vect().Mag() * Lab.P.Vect(), M);
     BoostToCm();
 }
 
-void ReactionFragment::Set_P_cm(const double & P) {
+void ReactionFragment::Set_P_cm(const long double & P) {
     Cm.P.SetVectM(P/Cm.P.Vect().Mag() * Cm.P.Vect(), M);
     BoostToLab();
 }
 
-void ReactionFragment::Set_Theta_Phi(const double & Theta, const double & Phi) {
-    Lab.P.Vect().SetMagThetaPhi(Lab.P.Vect().Mag(), Theta, Phi);
+void ReactionFragment::Set_Theta_Phi(const long double & Theta, const long double & Phi) {
+    TVector3 tmp_vec = Lab.P.Vect();
+    tmp_vec.SetMagThetaPhi(Lab.P.Vect().Mag(), Theta, Phi);
+    Lab.P.SetVectM(tmp_vec, M);
     BoostToCm();
 }
 
-void ReactionFragment::Set_Theta_Phi_cm(const double & Theta, const double & Phi) {
+void ReactionFragment::Set_Theta_Phi_cm(const long double & Theta, const long double & Phi) {
     Cm.P.Vect().SetMagThetaPhi(Cm.P.Vect().Mag(), Theta, Phi);
     BoostToLab();
 }
 
-void ReactionFragment::Set_Theta(const double & Theta) {
-    Lab.P.Vect().SetTheta(Theta);
+void ReactionFragment::Set_Theta(const long double & Theta) {
+    TVector3 tmp_vec = Lab.P.Vect();
+    tmp_vec.SetTheta(Theta);
+    Lab.P.SetVectM(tmp_vec, M);
     BoostToCm();
 }
 
-void ReactionFragment::Set_Theta_cm(const double & Theta) {
-    Lab.P.Vect().SetTheta(Theta);
+void ReactionFragment::Set_Theta_cm(const long double & Theta) {
+    if (Cm.P.Vect().Mag2() == 0){
+        TVector3 tmp_vec(0., 0., 1.);
+        tmp_vec.SetTheta(Theta);
+        Cm.P.SetVectM(tmp_vec, M);
+    }else {
+        TVector3 tmp_vec = Cm.P.Vect();
+        tmp_vec.SetTheta(Theta);
+        Cm.P.SetVectM(tmp_vec, M);
+    }
     BoostToLab();
 }
 
-void ReactionFragment::Set_E_Theta(const double & E, const double & Theta){
-    Set_Theta(Theta);
+void ReactionFragment::Set_E_Theta(const long double & E, const long double & Theta){
     Set_E(E);
+    Set_Theta(Theta);
 }
 
-void ReactionFragment::Set_E_Theta_cm(const double & E, const double & Theta){
+void ReactionFragment::Set_E_Theta_cm(const long double & E, const long double & Theta){
     Set_Theta_cm(Theta);
     Set_E_cm(E);
 }
 
-void ReactionFragment::Set_E_Theta_Phi(const double & E, const double & Theta, const double & Phi){
-    Set_Theta_Phi(Theta, Phi);
+void ReactionFragment::Set_E_Theta_Phi(const long double & E, const long double & Theta, const long double & Phi){
     Set_E(E);
+    Set_Theta_Phi(Theta, Phi);
 }
 
-void ReactionFragment::Set_E_Theta_Phi_cm(const double & E, const double & Theta, const double & Phi){
+void ReactionFragment::Set_E_Theta_Phi_cm(const long double & E, const long double & Theta, const long double & Phi){
     Set_Theta_Phi_cm(Theta, Phi);
     Set_E_cm(E);
 }
@@ -307,4 +330,8 @@ void ReactionFragment::BoostToLab() {
         Lab.P = Cm.P;
         Lab.P.Boost(betacm.second);
     }
+}
+
+long double ReactionFragment::Get_BindingEnergy() const {
+    return Z*UNITS::PHYSICS::pmass_c2 + (A-Z)*UNITS::PHYSICS::nmass_c2 + (Z-Q)*UNITS::PHYSICS::emass_c2 - A * UNITS::PHYSICS::amu_c2 -  MassExcess;
 }

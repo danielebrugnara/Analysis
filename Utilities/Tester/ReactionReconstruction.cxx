@@ -9,30 +9,20 @@ ReactionReconstruction::ReactionReconstruction( ReactionFragment::FragmentSettin
         p2(p2),
         P_TOT(TLorentzVector()),
         changed_initial_conditions(true){
-    //UpdateVectors();
 }
 
 void ReactionReconstruction::SetBeamEnergy(const long double & Energy) {
     p1.Set_Ek(Energy);
-    changed_initial_conditions = true;
+    changed_initial_conditions=true;
     UpdateVectors();
 }
 
 void ReactionReconstruction::UpdateVectors() {
-    if (!changed_initial_conditions)
-        return;
     P_TOT = p1.Get_P() + p2.Get_P();
-
-//    long double debug1 = P_TOT*P_TOT;
-//    std::cout <<"prod: " <<debug1 << std::endl;
-//    long double debug = p1.Get_M2()+p2.Get_M2()+2*p1.Get_E()*p2.Get_M();
-//    std::cout << "comp : " <<debug << std::endl;
-    p1.Set_Invariant(P_TOT*P_TOT);
-///    long double debug2 = p1.Get_Invariant();
-    p2.Set_Invariant(p1.Get_Invariant());
-    p1.Set_betacm(P_TOT.BoostVector()); //Not necessary
-    p2.Set_betacm(P_TOT.BoostVector()); //Not necessary
-    changed_initial_conditions = false;
+    p1.Set_betacm(P_TOT.BoostVector());
+    p1.BoostToCm();
+    p2.Set_betacm(P_TOT.BoostVector());
+    p2.BoostToCm();
 }
 
 //2 body cass////////////////////////////////////////////////////////////////////////////////
@@ -161,11 +151,8 @@ void ReactionReconstruction2body::Set_E(const long double & E) {//Checked!
                            sqrt(4*(p1.Get_E()*p1.Get_E()-p1.Get_M2())*(E_free*E_free-free.Get_M2()))),
                            UNITS::CONSTANTS::pi+fixed.Get_P().Vect().Phi()
                            );
-
-    std::cout << "fixed phi "<< fixed.Get_P().Vect().X() <<std::endl;
-    std::cout << "free phi "<< free.Get_P().Vect().X() <<std::endl;
-    //UpdateVectors();
     CheckVectors();
+    UpdateVectors(true);
 }
 
 void ReactionReconstruction2body::Set_Ek(const long double & Ek) {//Checked
@@ -182,37 +169,42 @@ void ReactionReconstruction2body::Set_Ek(const long double & Ek) {//Checked
 
 //Returns Ex value
 long double ReactionReconstruction2body::Set_E_cm(const long double & E) {
-    long double Ex = 0;
-
-    if(p3.Is_Fixed() && p3.Is_ExFixed()) {//Compute Ex4 from E3
-        Ex = sqrtl(-2 * sqrtl(p1.Get_Invariant()) * E + p1.Get_Invariant() + p3.Get_M2()) - p4.Get_M_GS();
-        p4.Set_Ex(Ex);
-        UpdateVectors();
-        return Ex;
+    long double ex;
+    long double s = powl(p1.Get_E_cm() + p2.Get_E_cm(), 2);
+    long double sqrt_s = p1.Get_E_cm() + p2.Get_E_cm();
+    auto& fixed = GetFixedFragment();
+    auto& free = GetFreeFragment();
+    if(GetExFixedFragment() == fixed){//Ex4 from E3 -> works
+        ex = sqrtl(s+fixed.Get_M2()-2.*sqrt_s*E)-GetExFreeFragment().Get_M();
+    }else{//Ex3 from E3 ->does not work with Ek
+        ex = sqrtl(-s+free.Get_M2()+2.*sqrt_s*E)-GetExFreeFragment().Get_M();
     }
-    if(!p3.Is_Fixed() && p3.Is_ExFixed()) {//Compute Ex4 from E4
-        Ex = sqrtl(2 * sqrtl(p1.Get_Invariant()) * E - p1.Get_Invariant() + p3.Get_M2()) - p4.Get_M_GS();
-        p4.Set_Ex(Ex);
-        UpdateVectors();
-        return Ex;
-    }
-    if(p3.Is_Fixed() && !p3.Is_ExFixed()) {//Compute Ex3 from E3
-        Ex = sqrtl(2 * sqrtl(p1.Get_Invariant()) * E - p1.Get_Invariant() + p4.Get_M2()) - p3.Get_M_GS();
-        p4.Set_Ex(Ex);
-        UpdateVectors();
-        return Ex;
-    }
-    if(!p3.Is_Fixed() && !p3.Is_ExFixed()) {//Compute Ex3 from E4
-        Ex = sqrtl(-2 * sqrtl(p1.Get_Invariant()) * E + p1.Get_Invariant() + p4.Get_M2()) - p3.Get_M_GS();
-        p4.Set_Ex(Ex);
-        UpdateVectors();
-        return Ex;
-    }
-    throw
-        std::runtime_error("Something wrong in fixed and ex-fixed data\n");
+    GetExFreeFragment().Set_Ex(ex);
+    fixed.Set_E_cm(E);
+    free.Set_E_cm((s+free.Get_M2()-fixed.Get_M2())/(2.*sqrt_s));
+    UpdateVectors(true);
+    return ex;
 }
 
-void ReactionReconstruction2body::Set_Theta(const long double & Theta, const bool & chose_max_solution=true) {//Checked
+long double ReactionReconstruction2body::Set_Ek_cm(const long double &Ek) {
+    if(GetFixedFragment()==GetExFixedFragment())
+        return Set_E_cm(Ek+GetFixedFragment().Get_M());
+    else{
+        auto& fixed = GetFixedFragment();
+        auto& free = GetFreeFragment();
+        long double sqrt_s = p1.Get_E_cm() + p2.Get_E_cm();
+        long double s = powl(p1.Get_E_cm() + p2.Get_E_cm(), 2);
+        long double ex = sqrtl(free.Get_M2()+2.*Ek*sqrt_s) + sqrt_s - fixed.Get_M();
+        GetExFreeFragment().Set_Ex(ex);
+        fixed.Set_E_cm(Ek+fixed.Get_M());
+        free.Set_E_cm((s+free.Get_M2()-fixed.Get_M2())/(2.*sqrt_s));
+        UpdateVectors(true);
+        return ex;
+    }
+}
+
+void ReactionReconstruction2body::Set_Theta(const long double & Theta,
+                                            const bool & chose_max_solution=true) {//Checked
     auto & fixed    = GetFixedFragment();
     auto & free     = GetFreeFragment();
     long double m12 = p1.Get_M2();
@@ -225,7 +217,6 @@ void ReactionReconstruction2body::Set_Theta(const long double & Theta, const boo
 
     long double cosine = cos(Theta);
     long double p1_mag2 = p1.Get_P().Vect().Mag2();
-    //free.Set_Invariant(1);
     long double sqroot =  cosine*cosine*p1_mag2 *
                             (     m12*m12+m22*m22+m32*m32+m42*m42+
                              -2.*(m22*m32+m22*m42+m32*m42+m12*m42-m12*m22-m12*m32)
@@ -236,46 +227,56 @@ void ReactionReconstruction2body::Set_Theta(const long double & Theta, const boo
 
     if (sqroot<0)
         throw std::runtime_error("No solution exists: no angle possible\n");
-
     sqroot = sqrtl(sqroot);
 
     long double numerator = (E1+m2)*(m12+m22+m32-m42+2*m2*E1);
-    long double denominator = 2 * ( pow(E1+m2, 2)-p1_mag2*cosine*cosine);
+    long double denominator = 2. * ( powl(E1+m2, 2)-p1_mag2*cosine*cosine);
     long double e3 = 0;
 
     if (chose_max_solution)
         e3 = (numerator+sqroot)/denominator;
     else
         e3 = (numerator-sqroot)/denominator;
-
     Set_E(e3);
 }
 
-void ReactionReconstruction2body::Set_Theta_cm(const long double & Theta) {
-    GetFixedFragment().Set_Theta_cm(Theta);
-    UpdateVectors();
+void ReactionReconstruction2body::Set_Theta_cm(const long double & Theta) {//Not yet correct
+    auto &fixed = GetFixedFragment();
+    auto &free = GetFreeFragment();
+    long double s = powl(p1.Get_E_cm() + p2.Get_E_cm(), 2);
+    long double pf2 = 0.25/s *(s-powl(p3.Get_M()-p4.Get_M(), 2))*(s-powl(p3.Get_M()+p4.Get_M(), 2));
+    long double en_fix = sqrtl(pf2+fixed.Get_M2());
+    long double en_free = sqrtl(pf2+free.Get_M2());
+    //fixed.Set_E_Theta_cm(en_fix, Theta);
+    fixed.Set_E_Theta_cm(en_fix, Theta);
+    free.Set_E_Theta_cm(en_free, UNITS::CONSTANTS::pi+Theta);
+    UpdateVectors(false);
 }
 
-void ReactionReconstruction2body::Set_Theta_Phi(const long double & Theta, const long double & Phi, bool const & choose_max) {
+void ReactionReconstruction2body::Set_Theta_Phi(const long double & Theta,
+                                                const long double & Phi,
+                                                bool const & choose_max) {
     GetFixedFragment().Set_Theta_Phi(Theta, Phi);
     Set_Theta(Theta, choose_max);
 }
 
 void ReactionReconstruction2body::Set_Theta_Phi_cm(const long double & Theta, const long double & Phi) {
     GetFixedFragment().Set_Theta_Phi_cm(Theta, Phi);
-    UpdateVectors();
+    GetFixedFragment().Set_Theta_cm(Theta);
 }
 
 //Returns Ex value
-long double ReactionReconstruction2body::Set_E_Theta(const long double & E, const long double & Theta, bool chose_max = false, const bool& angle_from_fixed= true) {
+long double ReactionReconstruction2body::Set_E_Theta(const long double & E,
+                                                     const long double & Theta,
+                                                     const bool& angle_from_fixed= true) {
     auto & fixed    = GetFixedFragment();
     auto & free     = GetFreeFragment();
     long double Ex = 0;
+    bool chose_max = true;
 
-    ///SET FREE EX TO ZERO!!!!!!!
-    GetExFreeFragment().Set_Ex(0);
+    GetExFreeFragment().Set_Ex(0);//Should not be needed
     if(angle_from_fixed) {
-        if (fixed.Is_ExFixed()) {//Compute Ex4 from E3 and Theta3
+        if (fixed.Is_ExFixed()) {//Compute Ex4 from E3 and Theta3 -> correct
             long double costheta = cosl(Theta);
             long double p1mag = p1.Get_P().Vect().Mag();
             long double sqrt1 = E*E - fixed.Get_M2();
@@ -283,20 +284,21 @@ long double ReactionReconstruction2body::Set_E_Theta(const long double & E, cons
             long double arg1 = p1.Get_M2() + p2.Get_M2() + fixed.Get_M2()-2.*E*p2.Get_M()+2.*p1.Get_E()*(p2.Get_M()-E);
             long double sqrt2 = arg1 + 2.*costheta*p1mag* sqrtl(sqrt1);
             if (sqrt2 < 0) throw std::runtime_error("negative second square root in ex computation!\n");
-            long double p = sqrtl(E*E-fixed.Get_M2());
-            TLorentzVector a(p*sinl(Theta), 0., p*cosl(Theta), E);
-            std::cout << "should be : " << (p1.Get_P()+p2.Get_P()-a).Mag() - GetExFreeFragment().Get_M() << std::endl;
-            return sqrtl(sqrt2)-GetExFreeFragment().Get_M();
-
-        } else {//Compute Ex3 from E3 and Theta3
-            long double costheta2 = pow(cosl(Theta), 2);
+            long double ex = sqrtl(sqrt2)-GetExFreeFragment().Get_M();
+            GetExFreeFragment().Set_Ex(ex);
+            Set_E(E);
+            if (abs(Theta - fixed.Get_P().Theta())> precision)
+                throw std::runtime_error ("Mismatch between computed and provided thetas\n");
+            UpdateVectors(true);
+            return ex;
+        } else {//Compute Ex3 from E3 and Theta3 -> not correct with Ek
+            std::cout << "i'm here!!!!!\n";
+            long double costheta2 = powl(cosl(Theta), 2);
             long double p1_mag2 = p1.Get_P().Vect().Mag2();
             long double cos2_p12 = costheta2*p1_mag2;
             long double sqrt1 = cos2_p12*(p1.Get_M2()+(E-p2.Get_M())*(E-2.*p1.Get_E()-p2.Get_M())-free.Get_M2()+cos2_p12);
-            std::cout << "sqrt 1 " << sqrt1 << std::endl;
             if (sqrt1 < 0) throw std::runtime_error("negative first square root in ex computation!\n");
             long double arg1 = 2.*p1.Get_E()*(E-p2.Get_M())+2.*E*p2.Get_M()-p1.Get_M2()-p2.Get_M2()+free.Get_M2();
-            std::cout << "arg 1 " << arg1 << std::endl;
             if (!chose_max){
                 long double sqrt2 = arg1 - 2.*(cos2_p12+sqrtl(sqrt1));
                 std::cout << "sqrt 2 " << sqrt2 << std::endl;
@@ -304,75 +306,116 @@ long double ReactionReconstruction2body::Set_E_Theta(const long double & E, cons
                     std::cout << "switching to max solution\n";
                     chose_max = true;
                 }else {
-                    std::cout << "res sqrt 2 " << sqrtl(sqrt2) << std::endl;
-                    std::cout << "res ex " << sqrtl(sqrt2) -GetExFreeFragment().Get_M()<< std::endl;
-                    return sqrtl(sqrt2)-GetExFreeFragment().Get_M();
+                    long double ex = sqrtl(sqrt2)-GetExFreeFragment().Get_M();
+                    GetExFreeFragment().Set_Ex(ex);
+                    Set_E(E);
+                    if (abs(Theta - fixed.Get_P().Theta())> precision)
+                        throw std::runtime_error ("Mismatch between computed and provided thetas\n");
+                    UpdateVectors(true);
+                    return ex;
                 }
             }
             if (chose_max){
                 long double sqrt2 = arg1 - 2.*(cos2_p12-sqrtl(sqrt1));
                 if (sqrt2 < 0) throw std::runtime_error("negative second square root in ex computation!\n");
-                return sqrtl(sqrt2)-GetExFreeFragment().Get_M();
+                long double ex = sqrtl(sqrt2)-GetExFreeFragment().Get_M();
+                GetExFreeFragment().Set_Ex(ex);
+                Set_E(E);
+                if (abs(Theta - fixed.Get_P().Theta())> precision)
+                    throw std::runtime_error ("Mismatch between computed and provided thetas\n");
+                UpdateVectors(true);
+                return ex;
             }
         }
     }else{
-        if (fixed.Is_ExFixed()) {//Compute Ex4 from E3 and Theta4
-
-        }else{//Compute Ex3 from E3 and Theta4
+        if (fixed.Is_ExFixed()) {//Compute Ex4 from E3 and Theta4 -> correct
+            long double costheta2 = powl(cosl(Theta), 2);
+            long double p1_mag2 = p1.Get_P().Vect().Mag2();
+            long double cos2_p12 = costheta2*p1_mag2;
+            long double sqrt1 = cos2_p12*(p1.Get_M2()-fixed.Get_M2()-p1.Get_E()*p1.Get_E()+E*E+cos2_p12);
+            if (sqrt1 < 0) throw std::runtime_error("negative first square root in ex computation!\n");
+            long double arg1 = -p1.Get_M2()+p2.Get_M2()+p3.Get_M2()+2.*(p1.Get_E()-E)*(p1.Get_E()+p2.Get_M());
+            if (!chose_max){
+                long double sqrt2 = arg1 - 2.*(cos2_p12+sqrtl(sqrt1));
+                if (sqrt2<0) {
+                    std::cout << "switching to max solution\n";
+                    chose_max = true;
+                }else {
+                    long double ex = sqrtl(sqrt2)-GetExFreeFragment().Get_M();
+                    GetExFreeFragment().Set_Ex(ex);
+                    Set_E(E);
+                    if (abs(Theta - free.Get_P().Theta())> precision)
+                        throw std::runtime_error ("Mismatch between computed and provided thetas\n");
+                    UpdateVectors(true);
+                    return ex;
+                }
+            }
+            if (chose_max){
+                long double sqrt2 = arg1 - 2.*(cos2_p12-sqrtl(sqrt1));
+                if (sqrt2 < 0) throw std::runtime_error("negative second square root in ex computation!\n");
+                long double ex = sqrtl(sqrt2)-GetExFreeFragment().Get_M();
+                GetExFreeFragment().Set_Ex(ex);
+                Set_E(E);
+                if (abs(Theta - free.Get_P().Theta())> precision)
+                    throw std::runtime_error ("Mismatch between computed and provided thetas\n");
+                UpdateVectors(true);
+                return ex;
+            }
+        }else{//Compute Ex3 from E3 and Theta4 -> Not correct with Ek
+            long double costheta = cosl(Theta);
+            long double p1mag = p1.Get_P().Vect().Mag();
+            long double sqrt1 = powl(p1.Get_E()+p2.Get_M()-E, 2) - free.Get_M2();
+            if (sqrt1 < 0) throw std::runtime_error("negative first square root in ex computation!\n");
+            long double arg1 = p1.Get_M2() - p2.Get_M2() + free.Get_M2()-2.*powl(p1.Get_E(), 2)+2.*p1.Get_E()*(E-p2.Get_M());
+            long double sqrt2 = arg1 + 2.*costheta*p1mag* sqrtl(sqrt1);
+            if (sqrt2 < 0) throw std::runtime_error("negative second square root in ex computation!\n");
+            long double ex = sqrtl(sqrt2)-GetExFreeFragment().Get_M();
+            GetExFreeFragment().Set_Ex(ex);
+            Set_E(E);
+            if (abs(Theta - free.Get_P().Theta())> precision)
+                throw std::runtime_error ("Mismatch between computed and provided thetas\n");
+            UpdateVectors(true);
+            return ex;
 
         }
     }
+    return -1;
 }
 
-long double ReactionReconstruction2body::Set_Ek_Theta(const long double & Ek, const long double & Theta, bool chose_max = false, const bool& angle_from_fixed= true) {
-    return Set_E_Theta(Ek+GetFixedFragment().Get_M(), Theta, chose_max, angle_from_fixed);
+long double ReactionReconstruction2body::Set_Ek_Theta(const long double & Ek,
+                                                      const long double & Theta,
+                                                      const bool& angle_from_fixed= true) {
+    //Returns Ex value
+    if (GetExFixedFragment()==GetFixedFragment())
+        return Set_E_Theta(Ek+GetFixedFragment().Get_M(), Theta, angle_from_fixed);
+    else
+        throw
+            std::runtime_error("feature not implemented\n");
+            //è qui l'errore!!!!
 }
-//Returns Ex value
+
 long double ReactionReconstruction2body::Set_E_Theta_cm(const long double & E, const long double & Theta) {
     Set_Theta_cm(Theta);
     return Set_E_cm(E);
 }
 
-void ReactionReconstruction2body::Set_Dir(const TVector3 & Dir) {
-    GetFreeFragment().Set_Dir(Dir);
-    UpdateVectors();
+long double ReactionReconstruction2body::Set_Ek_Theta_cm(const long double & E, const long double & Theta) {
+    Set_Theta_cm(Theta);
+    return Set_Ek_cm(E);
 }
 
 void ReactionReconstruction2body::Set_Beta(const TVector3 & Beta) {
-    GetFreeFragment().Set_Beta(Beta);
-    UpdateVectors();
-}
-
-void ReactionReconstruction2body::Set_P(const TLorentzVector & P) {
-    GetFreeFragment().Set_P(P);
-    UpdateVectors();
+    GetFixedFragment().Set_Theta_Phi(Beta.Theta(), Beta.Phi());
+    Set_E(GetFixedFragment().Get_M()/sqrtl(1-Beta.Mag2()));
 }
 
 void ReactionReconstruction2body::Set_P(const long double & P) {
     Set_E(sqrtl(GetFixedFragment().Get_M2()+P*P));
 }
 
-void ReactionReconstruction2body::UpdateVectors() {
-    if (changed_initial_conditions) {
-        ReactionReconstruction::UpdateVectors();
-        p3.Set_betacm(P_TOT.BoostVector());
-        p4.Set_betacm(P_TOT.BoostVector());
-    }
-    GetFreeFragment().Set_P(p1.Get_P()+p2.Get_P()-GetFixedFragment().Get_P());
-}
-
 void ReactionReconstruction2body::CheckVectors(){
     TLorentzVector sum = p1.Get_P()+p2.Get_P();
     TLorentzVector discr = sum-p3.Get_P()-p4.Get_P();
-
-//    std::cout << "discr :" <<  abs(discr.E()) << std::endl;
-//    std::cout << "discr :" <<  abs(discr.Px()) << std::endl;
-//    std::cout << "discr :" <<  abs(discr.Py()) << std::endl;
-//    std::cout << "discr :" <<  abs(discr.Pz()) << std::endl;
-//    std::cout << "sum :" <<  abs(sum.E()) << std::endl;
-//    std::cout << "sum :" <<  abs(sum.Px()) << std::endl;
-//    std::cout << "sum :" <<  abs(sum.Py()) << std::endl;
-//    std::cout << "sum :" <<  abs(sum.Pz()) << std::endl;
 
     if (    abs(discr.E())  > precision ||
            (abs(discr.Px())> precision )||
@@ -391,6 +434,36 @@ bool ReactionReconstruction2body::CheckConsistency() const {
 
 void ReactionReconstruction2body::SetBeamEnergy(const long double &E) {
     ReactionReconstruction::SetBeamEnergy(E);
+}
+
+long double ReactionReconstruction2body::Set_E_Theta_Phi(const long double & E,
+                                                         const long double & Theta,
+                                                         const long double & Phi) {
+    GetFixedFragment().Set_Theta_Phi(Theta, Phi);
+    return Set_E_Theta(E, Theta);
+}
+
+long double ReactionReconstruction2body::Set_Ek_Theta_Phi(const long double & E,
+                                                          const long double & Theta,
+                                                          const long double & Phi) {
+    GetFixedFragment().Set_Theta_Phi(Theta, Phi);
+    return Set_Ek_Theta(E, Theta);
+}
+
+void ReactionReconstruction2body::UpdateVectors(const bool& lab) {
+    if (changed_initial_conditions) {
+        ReactionReconstruction::UpdateVectors();
+        p3.Set_betacm(p1.Get_betacm());
+        p4.Set_betacm(p1.Get_betacm());
+    }
+    if (lab){
+        p3.BoostToCm();
+        p4.BoostToCm();
+    }else{
+        p3.BoostToLab();
+        p4.BoostToLab();
+    }
+    changed_initial_conditions = false;
 }
 
 //3 body cass////////////////////////////////////////////////////////////////////////////////

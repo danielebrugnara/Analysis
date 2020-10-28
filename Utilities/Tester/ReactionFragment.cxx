@@ -12,7 +12,6 @@ ReactionFragment::ReactionFragment(FragmentSettings const & data):
         Parity      (""),
         Name        (""),
         Ex          (data.Ex),
-        Invariant   (-1),
         Lab         (),
         Cm          (),
         Fixed       (true),
@@ -21,7 +20,6 @@ ReactionFragment::ReactionFragment(FragmentSettings const & data):
 {
     GetFromData(A, Z);
     UpdateMass();
-    std::cout << "defined : " << Name << " : " << M << std::endl;
     long double energy = data.Ek + M;
     Lab.P = TLorentzVector( 0.,
                             0.,
@@ -175,7 +173,13 @@ void ReactionFragment::Set_E(const long double &E) {
 }
 
 void ReactionFragment::Set_E_cm(const long double &E) {
-    Cm.P.Vect().SetMag(sqrtl(E*E-M2));
+    TVector3 tmp_vec = Cm.P.Vect();
+    if (tmp_vec.Mag()==0){
+        tmp_vec = sqrtl(E * E - M2)*TVector3(0., 0., 1.);
+    }else {
+        tmp_vec *= sqrtl(E * E - M2) / tmp_vec.Mag();
+    }
+    Cm.P.SetVectM(tmp_vec, M);
     BoostToLab();
 }
 
@@ -264,9 +268,15 @@ void ReactionFragment::Set_Theta(const long double & Theta) {
 }
 
 void ReactionFragment::Set_Theta_cm(const long double & Theta) {
-    TVector3 tmp_vec = Cm.P.Vect();
-    tmp_vec.SetTheta(Theta);
-    Cm.P.SetVectM(tmp_vec, M);
+    if (Cm.P.Vect().Mag2() == 0){
+        TVector3 tmp_vec(0., 0., 1.);
+        tmp_vec.SetTheta(Theta);
+        Cm.P.SetVectM(tmp_vec, M);
+    }else {
+        TVector3 tmp_vec = Cm.P.Vect();
+        tmp_vec.SetTheta(Theta);
+        Cm.P.SetVectM(tmp_vec, M);
+    }
     BoostToLab();
 }
 

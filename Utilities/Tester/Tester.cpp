@@ -15,24 +15,26 @@ int main(){
     ReactionReconstruction2body reaction(data);
     reaction.SetBeamEnergy(800 * UNITS::MeV);
     //reaction.Set_Ek(6232.4*UNITS::MeV);
-    reaction.ChooseFixed(3);
+    reaction.ChooseFixed(4);
     reaction.ChooseExFixed(3);
-    //reaction.GetReactionFragment(4).Set_Ex(0*UNITS::MeV);
-    //reaction.GetReactionFragment(3).Set_Ex(25*UNITS::MeV);
-    //reaction.Set_Ek((long double)(569.5*UNITS::MeV));
-    //reaction.Set_Theta(0.15, true);//Works
-    //std::cout << "result : " << reaction.GetFixedFragment().Get_Ek() << std::endl;//Works
-    std::cout << "result : " << reaction.GetFixedFragment().Get_P().Theta() << std::endl;//Works
-    //std::cout << "result : " << reaction.Get_ThetaMax()*180./3.1415 << std::endl;//works
-    //reaction.Set_Theta(0.15, true);//Works
-//    reaction.Set_Ek(600);
-//    long double th = reaction.GetReactionFragment(3).Get_P().Vect().Theta();
-//    long double a =  reaction.Set_Ek_Theta(600, th, false, true);
-    //long double b =  reaction.Set_Ek_Theta(575.8 , 0.17554890526644,true, true);
 
-    //reaction.GetReactionFragment(3).Set_Ex(10*UNITS::MeV); //Understand why!!!
-//    std::cout << "result check " << a <<std::endl;
-    //std::cout << "result final " << b <<std::endl;
+
+    reaction.Set_Theta_cm(80*UNITS::deg);
+    std::cout << "deg cm: " << reaction.GetReactionFragment(4).Get_P_cm().Theta() << std::endl;
+    std::cout << "deg lab: " << reaction.GetReactionFragment(4).Get_P().Theta() << std::endl;
+    std::cout << "ener cm: " << reaction.GetReactionFragment(4).Get_Ek_cm() << std::endl;
+    std::cout << "ener cm1: " << reaction.GetReactionFragment(1).Get_Ek_cm() << std::endl;
+    std::cout << "ener cm2: " << reaction.GetReactionFragment(2).Get_Ek_cm() << std::endl;
+    std::cout << "ener cm3: " << reaction.GetReactionFragment(3).Get_Ek_cm() << std::endl;
+    std::cout << "ener lab: " << reaction.GetReactionFragment(4).Get_Ek() << std::endl;
+    std::cout << "ener lab1: " << reaction.GetReactionFragment(1).Get_Ek() << std::endl;
+    std::cout << "ener lab2: " << reaction.GetReactionFragment(2).Get_Ek() << std::endl;
+    std::cout << "ener lab3: " << reaction.GetReactionFragment(3).Get_Ek() << std::endl;
+    std::cout << "ener lab4: " << reaction.GetReactionFragment(4).Get_Ek() << std::endl;
+    std::cout << "ang lab3: " << reaction.GetReactionFragment(3).Get_P().Theta()/UNITS::deg << std::endl;
+    std::cout << "ang lab4: " << reaction.GetReactionFragment(4).Get_P().Theta()/UNITS::deg << std::endl;
+    std::cout << "ang cm3: " << reaction.GetReactionFragment(3).Get_P_cm().Theta()/UNITS::deg << std::endl;
+    std::cout << "ang cm4: " << reaction.GetReactionFragment(4).Get_P_cm().Theta()/UNITS::deg << std::endl;
 
     return 0;
 }

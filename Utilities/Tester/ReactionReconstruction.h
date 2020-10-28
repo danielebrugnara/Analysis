@@ -15,29 +15,24 @@ class ReactionReconstruction{
 protected:
     ReactionReconstruction( ReactionFragment::FragmentSettings const &,
                             ReactionFragment::FragmentSettings const &);
-    void UpdateVectors();
+
+    virtual void UpdateVectors();
     ReactionFragment p1;
     ReactionFragment p2;
     TLorentzVector P_TOT;
     bool changed_initial_conditions;
     ~ReactionReconstruction()=default;
     const double precision{1.E-8};
-
-private:
-
 public:
-    //Nothing public
     ReactionReconstruction()=delete;
-
     virtual void SetBeamEnergy(long double const &);
-    void Get_P_CM() const ;
 };
 
 //p1 + p2 -> p3 + p4 ## where p2 is at rest in lab
 class ReactionReconstruction2body : protected ReactionReconstruction{
 private:
-    void UpdateVectors();
     void CheckVectors();
+    virtual void UpdateVectors(const bool&);
 
 public:
     ReactionReconstruction2body()=delete;
@@ -60,39 +55,34 @@ public:
     void Set_E              (long double const &);
     void Set_Ek             (long double const &);
     long double Set_E_cm         (long double const &);
+    long double Set_Ek_cm         (long double const &);
     void Set_Theta          (long double const &, bool const &);
     void Set_Theta_cm       (long double const &);
     void Set_Theta_Phi      (long double const &, long double const &, bool const &);
     void Set_Theta_Phi_cm   (long double const &, long double const &);
-    long double Set_E_Theta      (long double const &, long double const &, bool, const bool&);
-    long double Set_Ek_Theta      (long double const &, long double const &, bool, const bool&);
+    long double Set_E_Theta      (long double const &, long double const &, const bool&);
+    long double Set_Ek_Theta      (long double const &, long double const &, const bool&);
     long double Set_E_Theta_cm   (long double const &, long double const &);
+    long double Set_Ek_Theta_cm   (long double const &, long double const &);
     long double Set_E_Theta_Phi      (long double const &, long double const &, long double const &);
+    long double Set_Ek_Theta_Phi      (long double const &, long double const &, long double const &);
     long double Set_E_Theta_Phi_cm   (long double const &, long double const &, long double const &);
-    void Set_Dir            (TVector3 const &);
+    long double Set_Ek_Theta_Phi_cm   (long double const &, long double const &, long double const &);
     void Set_Beta           (TVector3 const &);
-    void Set_P              (TLorentzVector const &);
     void Set_P              (long double const &);
 
     ReactionFragment & GetReactionFragment(const int & nr) {
         switch (nr) {
-            case 1:
-                return p1;
-            case 2:
-                return p2;
-            case 3:
-                return p3;
-            case 4:
-                return p4;
-            default:
-                throw std::runtime_error("Reaction fragment chosen not existent\n");
+            case 1: return p1;
+            case 2: return p2;
+            case 3: return p3;
+            case 4: return p4;
+            default: throw std::runtime_error("Reaction fragment chosen not existent\n");
         }
     };
 protected:
     ReactionFragment p3;
     ReactionFragment p4;
-    long double p_f_cm;     //Final impulse in COM
-    //long double p_i;   //Initial impulse in COM
     bool CheckConsistency() const;
 };
 

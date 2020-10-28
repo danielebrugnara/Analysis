@@ -268,8 +268,12 @@ static const double halfpi  = 3.141592653589793238462643383279502884197169399375
 
 namespace  PHYSICS
 {
-static const double emass_SI    = 9.1093837015E-31;
+static const double emass_SI    = 9.1093837015E-31 * kg;
 static const double emass_c2    = 0.51099895000 * MeV;
+static const double pmass_SI    = 1.67262192369E-27 * kg;
+static const double pmass_c2    = 938.27208816 * MeV;
+static const double nmass_SI    = 1.674927351E-27 * kg;
+static const double nmass_c2    = 939.565378 * MeV;
 static const double amu_c2      = 931.49432 * MeV;
 
 }

@@ -48,7 +48,6 @@ private:
     long double M;
     long double M2;
     long double Ex;
-    long double Invariant;
     struct Properties {
         TVector3 Pos;
         TLorentzVector P;
@@ -89,46 +88,52 @@ public:
     void Set_betacm         (TVector3 const &)          ;
     void Set_Fixed          (bool const &)              ;
     void Set_ExFixed        (bool const &)              ;
-    inline void Set_Invariant (long double const & Inv){
-        if(Inv < 0) throw std::runtime_error("Negative invariant\n");
-        Invariant = Inv;
-    };
     bool Check_Consistent   ()                          ;
 
     //Getter methods
-    inline unsigned int Get_A          () const {return A;}            ;
-    inline unsigned int Get_Z          () const {return Z;}            ;
-    inline unsigned int Get_Q          () const {return Q;}            ;
-    inline long double       Get_M          () const {return M;}            ;
-    inline long double       Get_M_GS       () const {return M-Ex;}         ;
-    inline long double       Get_M2         () const {return M2;}           ;
-    inline long double       Get_Ek         () const {return Lab.P.E()-M;}  ;
-    inline long double       Get_Ek_cm      () const {return Cm.P.E()-M;}   ;
-    inline long double       Get_E          () const {return Lab.P.E();}    ;
-    inline long double       Get_E_cm       () const {return Cm.P.E();}     ;
-    inline long double       Get_Ex         () const {return Ex;}           ;
-    inline long double       Get_Invariant  () const {return Invariant;}    ;
-    inline long double       Get_Spin       () const {return Spin;}         ;
-    inline long double       Get_LifeTime   () const {return LifeTime;}     ;
-    inline long double       Get_MassExcess () const {return MassExcess;}   ;
-    inline std::string  Get_Parity     () const {return Parity;}       ;
-    inline TVector3     Get_Pos        () const {return Lab.Pos;}      ;
-    inline TVector3     Get_Pos_cm     () const {return Cm.Pos;}       ;
-    inline std::string  Get_Name       () const {return Name;}         ;
-    inline TLorentzVector Get_P        () const {return Lab.P;}        ;
-    inline TLorentzVector Get_P_cm     () const {return Cm.P;}         ;
-    inline bool         Is_Fixed       () const {return Fixed;}        ;
-    inline bool         Is_ExFixed     () const {return ExFixed;}      ;
+    inline unsigned int      Get_A           () const {return A;}            ;
+    inline unsigned int      Get_Z           () const {return Z;}            ;
+    inline unsigned int      Get_Q           () const {return Q;}            ;
+    inline long double       Get_M           () const {return M;}            ;
+    inline long double       Get_M_GS        () const {return M-Ex;}         ;
+    inline long double       Get_M2          () const {return M2;}           ;
+    inline long double       Get_Ek          () const {return Lab.P.E()-M;}  ;
+    inline long double       Get_Ek_cm       () const {return Cm.P.E()-M;}   ;
+    inline long double       Get_E           () const {return Lab.P.E();}    ;
+    inline long double       Get_E_cm        () const {return Cm.P.E();}     ;
+    inline long double       Get_Ex          () const {return Ex;}           ;
+    inline long double       Get_Spin        () const {return Spin;}         ;
+    inline long double       Get_LifeTime    () const {return LifeTime;}     ;
+    inline long double       Get_MassExcess  () const {return MassExcess;}   ;
+    inline std::string       Get_Parity      () const {return Parity;}       ;
+    inline TVector3          Get_Pos         () const {return Lab.Pos;}      ;
+    inline TVector3          Get_Pos_cm      () const {return Cm.Pos;}       ;
+    inline std::string       Get_Name        () const {return Name;}         ;
+    inline TLorentzVector    Get_P           () const {return Lab.P;}        ;
+    inline TLorentzVector    Get_P_cm        () const {return Cm.P;}         ;
+    inline bool              Is_Fixed        () const {return Fixed;}        ;
+    inline bool              Is_ExFixed      () const {return ExFixed;}      ;
+    inline TVector3          Get_betacm      () const {
+        if(betacm.first) return betacm.second;
+        else throw std::runtime_error("Betacm was not set!\n");
+    }
 
     long double Get_BindingEnergy() const;
-
+    void BoostToLab()                           ;
+    void BoostToCm()                            ;
 private:
     void GetFromData(const int &, const int &)  ;
     void Extract(std::string const &)           ;
     void UpdateMass()                           ;
-    void BoostToLab()                           ;
-    void BoostToCm()                            ;
     const long double precision;
+
+public:
+    friend inline bool operator==(const ReactionFragment& lhs, const ReactionFragment& rhs){
+        return &lhs==&rhs;
+    }
+    friend inline bool operator!=(const ReactionFragment& lhs, const ReactionFragment& rhs){
+        return &lhs!=&rhs;
+    }
 };
 
 #endif
