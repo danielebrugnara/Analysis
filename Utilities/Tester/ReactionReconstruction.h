@@ -60,7 +60,7 @@ public:
     void Set_Theta_cm       (long double const &);
     void Set_Theta_Phi      (long double const &, long double const &, bool const &);
     void Set_Theta_Phi_cm   (long double const &, long double const &);
-    long double Set_E_Theta      (long double const &, long double const &, const bool&);
+    long double Set_E_Theta      (long double const &, long double const &, const bool& = true);
     long double Set_Ek_Theta      (long double const &, long double const &, const bool&);
     long double Set_E_Theta_cm   (long double const &, long double const &);
     long double Set_Ek_Theta_cm   (long double const &, long double const &);

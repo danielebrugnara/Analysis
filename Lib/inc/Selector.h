@@ -1,5 +1,4 @@
-#ifndef __SELECTOR_H__
-#define __SELECTOR_H__
+#pragma once
 
 //Cpp headers
 #include <map>
@@ -342,17 +341,3 @@ private:
     //ClassDef(Selector,0);
 };
 
-#endif
-
-#ifdef Selector_cxx
-void Selector::Init(TTree *tree)
-{
-    fReader.SetTree(tree);
-}
-
-Bool_t Selector::Notify()
-{
-    return kTRUE;
-}
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef __IDENTIFICATION_H__
-#define __IDENTIFICATION_H__
+#pragma once
 
 #include <unordered_map>
 #include <fstream>
@@ -23,5 +22,3 @@ protected:
     std::unordered_map<std::string, TCutG *> cuts;
     std::unordered_map<std::string, std::unordered_map<std::string, TCutG *>> cut_type;
 };
-
-#endif

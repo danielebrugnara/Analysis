@@ -1,5 +1,4 @@
-#ifndef EFFANALYSIS_LEVELSCHEME_H
-#define EFFANALYSIS_LEVELSCHEME_H
+#pragma once
 
 #include <fstream>
 #include <sstream>
@@ -89,6 +88,3 @@ private:
     DiaGraph<Gamma, Level>* scheme;
     std::vector<std::pair<const Gamma*, const Gamma*>> gamma_gamma;
 };
-
-
-#endif //EFFANALYSIS_LEVELSCHEME_H

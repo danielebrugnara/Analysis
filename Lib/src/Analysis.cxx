@@ -21,7 +21,7 @@ Analysis::Analysis(int n_threads) : n_threads(n_threads)
     }
 
     std::ifstream file_test("./Configs/Interpolations/TW_Ice_Thickness.root");
-    generate_TW_ice_interpolation = file_test ? false : true;
+    generate_TW_ice_interpolation = !file_test;
     
     threads_pid.resize(n_threads, 0);
 }
@@ -50,7 +50,7 @@ bool Analysis::RunAnalysis()
     for (int ii = 0; ii < n_threads; ++ii)
     {
         exit_status.push_back(0);
-        threads.push_back(std::thread(&Analysis::Job, this, ii, &exit_status.back()));
+        threads.emplace_back(&Analysis::Job, this, ii, &exit_status.back());
     }
 
     //Waiting for threads to finish

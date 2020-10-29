@@ -1,5 +1,4 @@
-#ifndef __REACTIONFRAGMENT_H__
-#define __REACTIONFRAGMENT_H__
+#pragma once
 
 #include <string>
 #include <fstream>
@@ -135,5 +134,3 @@ public:
         return &lhs!=&rhs;
     }
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef __MINIMIZER_H__
-#define __MINIMIZER_H__
+#pragma once
 
 #include <array>
 #include <functional>
@@ -31,4 +30,3 @@ private:
 public:
   double Minimize();
 };
-#endif

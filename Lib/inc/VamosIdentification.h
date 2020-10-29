@@ -1,6 +1,4 @@
-
-#ifndef __VAMOSIDENTIFICATION_H__
-#define __VAMOSIDENTIFICATION_H__
+#pragma once
 
 #include <TLorentzVector.h>
 #include <TTreeReaderArray.h>
@@ -144,5 +142,3 @@ private:
         return 540.5 * (**data->AGAVA_VAMOSTS < 104753375647998) + 537.9 * (**data->AGAVA_VAMOSTS >= 104753375647998) - 2. * **data->T_FPMW_CATS2_C + GetShift();
     }
 };
-
-#endif

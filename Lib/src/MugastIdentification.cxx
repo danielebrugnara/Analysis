@@ -132,8 +132,7 @@ bool MugastIdentification::Initialize(const double &beam_energy,
     return true;
 }
 
-bool MugastIdentification::InitializeCuts()
-{
+bool MugastIdentification::InitializeCuts(){
     std::unordered_map<std::string, TCutG *> *tmp = new std::unordered_map<std::string, TCutG *>();
 
     std::vector<std::string> tmp_cut_names;
@@ -176,8 +175,7 @@ bool MugastIdentification::InitializeCuts()
     return true;
 }
 
-bool MugastIdentification::InitializeCalibration()
-{
+bool MugastIdentification::InitializeCalibration(){
     for (const auto &MG : cuts_MG)
     {
         std::string file_name = "./Configs/Calibrations/TY_MG" + to_string(MG) + ".cal";
@@ -407,12 +405,10 @@ bool MugastIdentification::Identify()
 
     //Energy reconstruction
     std::unordered_map<std::string, EnergyLoss *> *ptr_tmp;
-    for (unsigned int ii = 0; ii < fragment->multiplicity; ++ii)
-    {
+    for (unsigned int ii = 0; ii < fragment->multiplicity; ++ii){
         //if (!fragment->Indentified[ii]) {
         fragment->EmissionDirection[ii] = fragment->Pos[ii] - target_pos;
-        if (!fragment->Indentified[ii] || fragment->M[ii] == 4)
-        { //TODO: fix to include alphas
+        if (!fragment->Indentified[ii] || fragment->M[ii] == 4){ //TODO: fix to include alphas
             fragment->E[ii] = fragment->SI_E[ii];
             fragment->Ex[ii] = 0;
             continue;
@@ -450,18 +446,11 @@ bool MugastIdentification::Identify()
         if ((reaction_it = reaction.find("M" + std::to_string(data->VAMOS_id_M) +
                                          "_Z" + std::to_string(data->VAMOS_id_Z) +
                                          "_" +
-                                         fragment->Particle[ii])) != reaction.end())
-        {
+                                         fragment->Particle[ii])) != reaction.end()){
             fragment->Ex[ii] = reaction_it->second->Set_E_Theta(fragment->E[ii], Get_ThetaLab(ii));
-//                                    ->ReconstructRelativistic(fragment->E[ii],
-//                                                             Get_ThetaLab(ii));
-            fragment->E_CM[ii] = 0;
-//                        reaction_it->second                //THIS IS WRONG
-//                                    ->EnergyLabToThetaCM(fragment->E[ii],
-//                                                        fragment->EmissionDirection[ii].Theta());
+            fragment->E_CM[ii] = reaction_it->second->GetReactionFragment(3).Get_Ek_cm();
         }
-        else
-        {
+        else{
             fragment->Ex[ii] = 0;
         }
     }
@@ -471,28 +460,19 @@ bool MugastIdentification::Identify()
     return true;
 }
 
-void MugastIdentification::IdentifyIceThickness()
-{
-
+void MugastIdentification::IdentifyIceThickness(){
     DEBUG("------------>Started: MugastIdentification::IdentifyIceThickness()", "");
-
-//    brho = TW_Brho_M46_Z18->Evaluate(**(data->TW));
-//    final_beam_energy = sqrt(pow(brho / 3.3356E-3 * charge_state_interpolation, 2) + pow(mass[46][18], 2)) - (mass[46][18]);
-//
-//    initial_beam_energy = InitialBeamEnergy(final_beam_energy, current_ice_thickness.first);
-
     DEBUG("Final beam energy : " , final_beam_energy);
     DEBUG("Computed initial beam energy : " , initial_beam_energy);
     DEBUG(" With thickness : " , current_ice_thickness.first);
     DEBUG(" With brho : " , brho);
     DEBUG(" and mass : " , beam_ref->Get_M2());
 
-    if (abs(beam_energy - initial_beam_energy) > beam_energy_match_threashold)
-    {
+    if (abs(beam_energy - initial_beam_energy) > beam_energy_match_threashold){
         DEBUG("Before minimizer call, ice_thickness.first = ", current_ice_thickness.first);
-
         double tmp_threashold{2E-4};
-        double tmp_precision{0.1}; //in MeV                                              //MeV
+        double tmp_precision{0.1}; //in MeV
+
         ice_thickness_minimizer = new Minimizer([this](const double &tck) { return pow(this->beam_energy - this->InitialBeamEnergy(this->final_beam_energy, tck), 2); },
                                                 current_ice_thickness.first,        //starting value
                                                 1E-6 * current_ice_thickness.first, //learning rate
@@ -511,12 +491,10 @@ void MugastIdentification::IdentifyIceThickness()
         DEBUG("After minimizer call, ice_thickness.first = ", current_ice_thickness.first);
         DEBUG(" energy difference : ", beam_energy - InitialBeamEnergy(final_beam_energy, current_ice_thickness.first));
     }
-
     DEBUG("------------>Finished: MugastIdentification::IdentifyIceThickness()", "");
 }
 
-double MugastIdentification::InitialBeamEnergy(double beam_energy_from_brho, double tck)
-{
+double MugastIdentification::InitialBeamEnergy(double beam_energy_from_brho, double tck){
     DEBUG("------------>Started: MugastIdentification::InitialBeamEnergy(), thickness : ", tck);
     beam_energy_from_brho =
         energy_loss["beam"]["ice_back"]
@@ -551,8 +529,7 @@ double MugastIdentification::InitialBeamEnergy(double beam_energy_from_brho, dou
     return beam_energy_from_brho;
 }
 
-double MugastIdentification::MiddleTargetBeamEnergy(double beam_energy_from_brho)
-{
+double MugastIdentification::MiddleTargetBeamEnergy(double beam_energy_from_brho){
     beam_energy_from_brho =
         energy_loss["beam"]["ice_back"]
             ->EvaluateInitialEnergy(beam_energy_from_brho,

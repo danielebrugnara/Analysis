@@ -6,6 +6,6 @@
 #pragma link C++ nestedclasses;
 
 #pragma link C++ defined_in "Analysis.h"; 
-#pragma link C++ class Analysis+; 
+//#pragma link C++ class Analysis+; //Uncommenting this requires the deleted copy constructor of std::thread!
 
 #endif // __CINT__

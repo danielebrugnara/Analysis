@@ -1,7 +1,8 @@
-#ifndef __MUGASTIDENTIFICATION_H__
-#define __MUGASTIDENTIFICATION_H__
+#pragma once
 
 #include <array>
+#include <unordered_map>
+#include <map>
 
 #include <TTreeReaderValue.h>
 #include <TVector3.h>
@@ -63,7 +64,9 @@ private:
     double brho;
     TVector3 target_pos;
 
-    std::unordered_map<std::string, ReactionReconstruction> reaction;
+    std::unordered_map<std::string, unique_ptr<ReactionReconstruction2body>> reaction;
+    std::unordered_map<std::string, unique_ptr<ReactionReconstruction2body>>::iterator reaction_it;
+    ReactionFragment* beam_ref;
     std::vector<std::string> layers;
 
     struct Fragment
@@ -130,8 +133,7 @@ private:
     std::unordered_map<int, Calibration *> calibrations_TY;
 
     //Physics
-    const double _TO_MEV{931.4936148};
-    std::unordered_map<int, std::unordered_map<int, double>> mass;
+    //const double _TO_MEV{931.4936148};
 
     //Energy Loss
     std::unordered_map<std::string, std::unordered_map<std::string, EnergyLoss *>> energy_loss;
@@ -193,5 +195,3 @@ public: //Functions called by selector
     inline double       Get_ThetaLab(const int &i)
         {return fragment->EmissionDirection[i].Angle(TVector3(0, 0, 1));};
 };
-
-#endif

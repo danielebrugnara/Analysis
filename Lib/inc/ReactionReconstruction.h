@@ -1,5 +1,4 @@
-#ifndef __REACTIONRECONSTRUCTION_H__
-#define __REACTIONRECONSTRUCTION_H__
+#pragma once
 
 //Temporary
 #include <iostream>
@@ -21,7 +20,7 @@ protected:
     ReactionFragment p2;
     TLorentzVector P_TOT;
     bool changed_initial_conditions;
-    ~ReactionReconstruction()=default;
+    virtual ~ReactionReconstruction()=default;
     const double precision{1.E-8};
 public:
     ReactionReconstruction()=delete;
@@ -38,7 +37,7 @@ public:
     ReactionReconstruction2body()=delete;
     typedef std::array<ReactionFragment::FragmentSettings, 4> ReactionInput2body;
     explicit ReactionReconstruction2body(ReactionInput2body const &);
-    ~ReactionReconstruction2body()=default;
+    virtual ~ReactionReconstruction2body()=default;
 
     virtual std::string Get_Name() const;
     void ChooseFixed(int const &);
@@ -95,7 +94,7 @@ public:
     ReactionReconstruction3body(ReactionInput2body const &,
                                 ReactionFragment::FragmentSettings const &,
                                 ReactionFragment::FragmentSettings const &);
-    ~ReactionReconstruction3body()=default;
+    virtual ~ReactionReconstruction3body()=default;
 
     std::string Get_Name() const override;
 protected:
@@ -103,5 +102,3 @@ protected:
     ReactionFragment p6;
     bool CheckConsistency() const;
 };
-
-#endif

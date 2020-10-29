@@ -1,5 +1,4 @@
-#ifndef __ANALYSIS_H__
-#define __ANALYSIS_H__
+#pragma once
 
 #include <sys/wait.h>
 
@@ -74,5 +73,3 @@ private:
     void UpdateData(Data_partial &);
     //ClassDef(Analysis, 1);
 };
-
-#endif

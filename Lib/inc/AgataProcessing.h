@@ -1,5 +1,4 @@
-#ifndef __AGATA_PROCESSING_H__
-#define __AGATA_PROCESSING_H__
+#pragma once
 
 #include <vector>
 
@@ -109,5 +108,3 @@ public:
     inline double Get_E(const int &i) { return gammaray->E[i]; };
     inline double Get_EDC(const int &i) { return gammaray->EDC[i]; };
 };
-
-#endif

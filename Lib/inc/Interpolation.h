@@ -1,5 +1,4 @@
-#ifndef __INTERPOLATION_H__
-#define __INTERPOLATION_H__
+#pragma once
 
 #include <fstream>
 #include <iostream>
@@ -24,5 +23,3 @@ private:
     TSpline *spline;
     //ClassDef(Interpolation, 1);
 };
-
-#endif

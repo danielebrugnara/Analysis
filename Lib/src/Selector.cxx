@@ -1,5 +1,3 @@
-#define Selector_cxx
-
 #include "Selector.h"
 
 #ifdef VERBOSE_DEBUG
@@ -7,6 +5,7 @@
 #else
 #  define DEBUG(x, y) 
 #endif
+
 //Constructor///////////////////////////////////////////////////////////////////////////
 Selector::Selector(TTree *) {}
 
@@ -700,4 +699,13 @@ inline bool Selector::Fill(TH3 *histo, const double &data1,
 #endif
     }
     return true;
+}
+void Selector::Init(TTree *tree)
+{
+    fReader.SetTree(tree);
+}
+
+Bool_t Selector::Notify()
+{
+    return kTRUE;
 }

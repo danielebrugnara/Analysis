@@ -1,5 +1,4 @@
-#ifndef EFFANALYSIS_DIAGRAPH_H
-#define EFFANALYSIS_DIAGRAPH_H
+#pragma once
 
 #include <iostream>
 #include <vector>
@@ -187,5 +186,3 @@ class DiaGraph{
 //                    Tw*                                 m_ptr;
 //            };
 };
-
-#endif //EFFANALYSIS_DIAGRAPH_H

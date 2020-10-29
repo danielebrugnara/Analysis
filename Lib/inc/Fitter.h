@@ -1,5 +1,4 @@
-#ifndef EFFANALYSIS_FITTER_H
-#define EFFANALYSIS_FITTER_H
+#pragma once
 
 #include "TH1.h"
 #include "TF1.h"
@@ -176,6 +175,3 @@ public:
     void ReadParsFromFile(const std::string&, const int&);
 private:
 };
-
-
-#endif //EFFANALYSIS_FITTER_H

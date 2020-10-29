@@ -1,5 +1,4 @@
-#ifndef __CALIBRATION_H__
-#define __CALIBRATION_H__
+#pragma once
 
 #include <string>
 #include <vector>
@@ -31,5 +30,3 @@ private:
     const unsigned int n_channels;
     std::vector<std::vector<double>> coefficients;
 };
-
-#endif

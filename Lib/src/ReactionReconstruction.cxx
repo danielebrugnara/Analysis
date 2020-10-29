@@ -158,12 +158,6 @@ void ReactionReconstruction2body::Set_E(const long double & E) {//Checked!
 void ReactionReconstruction2body::Set_Ek(const long double & Ek) {//Checked
     auto & fixed    = GetFixedFragment();
     auto & free     = GetFreeFragment();
-
-    long double debug = 0;
-    debug = p1.Get_M()/UNITS::MeV ;
-    debug = p2.Get_M()/UNITS::MeV ;
-    debug = p3.Get_M()/UNITS::MeV ;
-    debug = p4.Get_M()/UNITS::MeV ;
     Set_E(Ek+fixed.Get_M());
 }
 
@@ -187,14 +181,14 @@ long double ReactionReconstruction2body::Set_E_cm(const long double & E) {
 }
 
 long double ReactionReconstruction2body::Set_Ek_cm(const long double &Ek) {
-    if(GetFixedFragment()==GetExFixedFragment())
-        return Set_E_cm(Ek+GetFixedFragment().Get_M());
-    else{
+    if(GetFixedFragment()==GetExFixedFragment()) {
+        return Set_E_cm(Ek + GetFixedFragment().Get_M());
+    }else{
         auto& fixed = GetFixedFragment();
         auto& free = GetFreeFragment();
         long double sqrt_s = p1.Get_E_cm() + p2.Get_E_cm();
         long double s = powl(p1.Get_E_cm() + p2.Get_E_cm(), 2);
-        long double ex = sqrtl(free.Get_M2()+2.*Ek*sqrt_s) + sqrt_s - fixed.Get_M();
+        long double ex = -sqrtl(free.Get_M2()+2.*Ek*sqrt_s) + sqrt_s - fixed.Get_M();
         GetExFreeFragment().Set_Ex(ex);
         fixed.Set_E_cm(Ek+fixed.Get_M());
         free.Set_E_cm((s+free.Get_M2()-fixed.Get_M2())/(2.*sqrt_s));
@@ -247,7 +241,6 @@ void ReactionReconstruction2body::Set_Theta_cm(const long double & Theta) {//Not
     long double pf2 = 0.25/s *(s-powl(p3.Get_M()-p4.Get_M(), 2))*(s-powl(p3.Get_M()+p4.Get_M(), 2));
     long double en_fix = sqrtl(pf2+fixed.Get_M2());
     long double en_free = sqrtl(pf2+free.Get_M2());
-    //fixed.Set_E_Theta_cm(en_fix, Theta);
     fixed.Set_E_Theta_cm(en_fix, Theta);
     free.Set_E_Theta_cm(en_free, UNITS::CONSTANTS::pi+Theta);
     UpdateVectors(false);
@@ -268,10 +261,9 @@ void ReactionReconstruction2body::Set_Theta_Phi_cm(const long double & Theta, co
 //Returns Ex value
 long double ReactionReconstruction2body::Set_E_Theta(const long double & E,
                                                      const long double & Theta,
-                                                     const bool& angle_from_fixed= true) {
+                                                     const bool& angle_from_fixed) {
     auto & fixed    = GetFixedFragment();
     auto & free     = GetFreeFragment();
-    long double Ex = 0;
     bool chose_max = true;
 
     GetExFreeFragment().Set_Ex(0);//Should not be needed

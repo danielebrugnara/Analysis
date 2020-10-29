@@ -1,5 +1,4 @@
-#ifndef __UNITS_H__
-#define __UNITS_H__
+#pragma once
 
 namespace UNITS
 {
@@ -279,5 +278,3 @@ static const double amu_c2      = 931.49432 * MeV;
 }
 
 } // namespace UNITS
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef __ENERGYLOSS_H__
-#define __ENERGYLOSS_H__
+#pragma once
 
 //Eloss calculations from NPTOOL: https://gitlab.in2p3.fr/np/nptool
 
@@ -95,5 +94,3 @@ public: //   Usefull function
   //   Draw (CERN ROOT)
   void Draw(std::string option = "") const;
 };
-
-#endif
