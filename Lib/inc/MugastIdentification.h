@@ -24,16 +24,7 @@ public:
     ~MugastIdentification();
     bool Initialize(const double &, const TVector3 &); //Beam energy in MeV
 
-    static constexpr int n_detectors{6};
-    static constexpr int n_strips{128};
-
-    static constexpr double AMU_TO_MEV{931.49436};
-
-    static constexpr int charge_state_interpolation{16};
-    static constexpr double gradient_descent_normalization{1.E3};
-
-    static constexpr double ice_percentage_second {0.85};
-
+public: //Data exchange  types
     struct Data
     {
         TTreeReaderValue<TMugastPhysics> *Mugast;
@@ -49,26 +40,63 @@ public:
                                VAMOS_id_Z(VAMOS_id_Z){};
     };
 
+private: //Constants used internally
+    static constexpr int n_detectors{6};
+    static constexpr int n_strips{128};
+    const int charge_state_interpolation{16}; //Cannot be made static constexpr because it is passed as reference
+    static constexpr double gradient_descent_normalization{1.E3};
+    static constexpr double ice_percentage_second {0.85};
+    const double average_beam_thickness = 3.723*UNITS::mm; //500 Torr
+
+public:
+    std::array<std::string, 3> light_particles;
+    std::array<std::string, 2> strips;
     std::array<int, n_detectors> cuts_MG;
+
+private: //Variables used internally
+    //std::array<int, n_detectors> cuts_MG;
     std::array<int, 3> cuts_M;
     std::array<int, 2> cuts_Z;
-    std::array<std::string, 3> light_particles;
+    //std::array<std::string, 3> light_particles;
     std::array<std::string, 5> fragments;
-    std::array<std::string, 2> strips;
+    //std::array<std::string, 2> strips;
 
-private:
-    double beam_energy;
-    double initial_beam_energy;
-    double final_beam_energy;
-    double beam_energy_match_threashold;
-    double brho;
+    double beam_energy{};
+    double initial_beam_energy{};
+    double final_beam_energy{};
+    double beam_energy_match_threashold{};
+    double brho{};
     TVector3 target_pos;
 
     std::unordered_map<std::string, unique_ptr<ReactionReconstruction2body>> reaction;
     std::unordered_map<std::string, unique_ptr<ReactionReconstruction2body>>::iterator reaction_it;
-    ReactionFragment* beam_ref;
+    ReactionFragment* beam_ref{};
     std::vector<std::string> layers;
 
+    //Interpolations
+    Interpolation *gas_thickness{};
+    Interpolation *havar_angle{};
+    Interpolation *TW_Brho_M46_Z18{};
+    Interpolation *ice_thickness{};
+    Interpolation *TW_vs_ice_thickness{};
+    std::vector<std::pair<double, double>> TW_vs_ice;
+
+    //Minimizer for ice thickness estimation
+    Minimizer *ice_thickness_minimizer{};
+
+    //Calibrations
+    std::unordered_map<int, Calibration *> calibrations_TY;
+
+    //Energy Loss
+    std::unordered_map<std::string, std::unordered_map<std::string, EnergyLoss *>> energy_loss;
+    std::pair<double, double> current_ice_thickness;//first layer, second layer
+    bool use_constant_thickness;
+
+    bool with_cuts;
+    double havar_thickness;
+
+
+private: //Analyzed structure
     struct Fragment
     {
         const unsigned int multiplicity;            //Number of particles detected
@@ -115,68 +143,26 @@ private:
             Particle.resize(multiplicity);
         };
     };
+
+private: //Data input and output
     Data const *data;
     Fragment *fragment;
 
-    //Interpolations
-    Interpolation *gas_thickness;
-    Interpolation *havar_angle;
-    Interpolation *TW_Brho_M46_Z18;
-    Interpolation *ice_thickness;
-    Interpolation *TW_vs_ice_thickness;
-    std::vector<std::pair<double, double>> TW_vs_ice;
-
-    //Minimizer for ice thickness estimation
-    Minimizer *ice_thickness_minimizer;
-
-    //Calibrations
-    std::unordered_map<int, Calibration *> calibrations_TY;
-
-    //Physics
-    //const double _TO_MEV{931.4936148};
-
-    //Energy Loss
-    std::unordered_map<std::string, std::unordered_map<std::string, EnergyLoss *>> energy_loss;
-    std::pair<double, double> current_ice_thickness;//first layer, second layer
-    bool use_constant_thickness;
-
-    bool with_cuts;
-    double havar_thickness;
+private: //Internal initialization methods
     bool InitializeCuts();
     bool InitializeCalibration();
     bool InitializeELoss();
+    bool InitializeInterpolations();
 
-public:
-    std::vector<std::pair<double, double>> GetTWvsIce();
-    inline void StoreTWvsIce()
-    {
-        if (TW_vs_ice_thickness == nullptr)
-        {
-            TW_vs_ice.push_back(std::pair<double, double>(**(data->TW),
-                                                          current_ice_thickness.first));
-        }
-    };
-
-    inline void SetData(Data const *data)
-    {
-        if (this->data != nullptr)
-            delete this->data;
-        if (this->fragment != nullptr)
-            delete this->fragment;
-        this->data = data;
-        fragment = new Fragment((**(data->Mugast)).DSSD_E.size());
-    };
-
-    bool Identify();
-
-private:
-    static constexpr double average_beam_thickness = 3.723; //500 Torr
+private: //Functions used internally during analysis
     void    IdentifyIceThickness();
     double  InitialBeamEnergy(double, double);
     double  MiddleTargetBeamEnergy(double);
 
 public: //Functions called by selector
-    inline int          Get_Mult()              { return fragment->multiplicity; };
+    bool Identify();
+    //Getter methods
+    inline unsigned int Get_Mult()              { return fragment->multiplicity; };
     inline TVector3*    Get_Pos(const int &i)   { return &(fragment->Pos[i]); };
     inline int          Get_SI_X(const int &i)  { return fragment->SI_X[i]; };
     inline int          Get_SI_Y(const int &i)  { return fragment->SI_Y[i]; };
@@ -194,4 +180,21 @@ public: //Functions called by selector
         { return &(fragment->EmissionDirection[i]); };
     inline double       Get_ThetaLab(const int &i)
         {return fragment->EmissionDirection[i].Angle(TVector3(0, 0, 1));};
+
+    //Other methods
+    std::vector<std::pair<double, double>> GetTWvsIce();
+
+    inline void StoreTWvsIce(){
+        if (TW_vs_ice_thickness == nullptr){
+            TW_vs_ice.emplace_back(**(data->TW),
+                                   current_ice_thickness.first);
+        }
+    };
+
+    inline void SetData(Data const *data){
+        delete this->data;
+        delete this->fragment;
+        this->data = data;
+        fragment = new Fragment((**(data->Mugast)).DSSD_E.size());
+    };
 };

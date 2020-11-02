@@ -117,6 +117,13 @@ public:
         else throw std::runtime_error("Betacm was not set!\n");
     }
 
+    inline double             GetBrhoFromEk_Q(const long double& Ek, const int& Q) const{
+        return (double)sqrtl(Ek*Ek+2.*Ek*M)*UNITS::e_SI /(UNITS::PHYSICS::c_light/1E6) / (Q * UNITS::e_SI);
+    }
+    inline double             GetEkFromBrho_Q(const long double& Brho, const int& Q) const{
+        return (double)(sqrtl(pow(Brho * UNITS::PHYSICS::c_light/1E6*Q, 2)+M2)-M);
+    }
+
     long double Get_BindingEnergy() const;
     void BoostToLab()                           ;
     void BoostToCm()                            ;

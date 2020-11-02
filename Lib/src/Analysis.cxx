@@ -27,8 +27,7 @@ Analysis::Analysis(int n_threads) : n_threads(n_threads)
 }
 
 Analysis::~Analysis()
-{
-}
+= default;
 
 bool Analysis::RunAnalysis()
 {
@@ -72,7 +71,7 @@ bool Analysis::RunAnalysis()
     if (generate_TW_ice_interpolation)
     {
         std::sort(data.TW_vs_ice.begin(), data.TW_vs_ice.end());
-        TFile *root_file = new TFile("./Configs/Interpolations/TW_Ice_Thickness.root",
+        auto *root_file = new TFile("./Configs/Interpolations/TW_Ice_Thickness.root",
                                      "recreate");
 
         double X[data.TW_vs_ice.size()];
@@ -82,8 +81,8 @@ bool Analysis::RunAnalysis()
             X[ii] = data.TW_vs_ice[ii].first;
             Y[ii] = data.TW_vs_ice[ii].second;
         }
-        TGraph *gr = new TGraph(data.TW_vs_ice.size(), X, Y);
-        TSpline3 *spl = new TSpline3("TW_vs_ice_thickness", gr);
+        auto *gr = new TGraph(data.TW_vs_ice.size(), X, Y);
+        auto *spl = new TSpline3("TW_vs_ice_thickness", gr);
         spl->Write();
         root_file->Write();
         root_file->Close();
@@ -114,40 +113,45 @@ bool Analysis::Job(const int ind, int* exit_status)
             Data_partial *partial_data = nullptr;
 
             mtx_fork.lock();
-            switch (pid = fork())
-            {
+            bool fork_enabled = true;
+            if (n_threads ==1)
+                fork_enabled = false;
+
+            if (fork_enabled)
+                pid = fork();
+            else //no need to fork!
+                pid = 0;
+
+            switch (pid){
             case -1:
                 throw std::runtime_error("Fork error");
                 break;
             case 0: //Child process
                 close(p[0]);
-                if (generate_TW_ice_interpolation)
-                {
+                if (generate_TW_ice_interpolation){
                     partial_data = RunSelector(current_run);
                     FILE *out = fdopen(p[1], "w");
                     fwrite(partial_data, sizeof(*partial_data), 1, out);
                     fclose(out);
-                }
-                else
-                {
+                }else{
                     RunSelector(current_run);
                 }
-                exit(0);
-                break;
+                if (fork_enabled)
+                    exit(0);
+                //break;
             default:
-
                 threads_pid[ind] = pid;
                 mtx_fork.unlock();
-
                 close(p[1]);
-                if (generate_TW_ice_interpolation)
-                {
+
+                if (generate_TW_ice_interpolation){
                     partial_data = new Data_partial();
                     FILE *in = fdopen(p[0], "r");
                     fread(partial_data, sizeof(*partial_data), 1, in);
                     fclose(in);
                 }
-                wait(&status); //Wait child process to complete instructions
+                if (fork_enabled)
+                    wait(&status); //Wait child process to complete instructions
                 threads_pid[ind] = 0;
                 if (WEXITSTATUS(status) == 1){
                     *exit_status=1;
@@ -155,38 +159,37 @@ bool Analysis::Job(const int ind, int* exit_status)
                 }
                     
             }
-            if (generate_TW_ice_interpolation)
-            {
+            if (generate_TW_ice_interpolation){
                 UpdateData(*partial_data);
                 if (partial_data)
                     delete partial_data;
             }
         }
     }
-    catch (std::runtime_error &e)
-    {
+    catch (std::runtime_error &e){
         std::cout << e.what();
     }
-    catch (int &e)
-    {
+    catch (int &e){
         std::cout << "Exception : " << e << std::endl;
-
     }
     return false;
 }
 
-Analysis::Data_partial *Analysis::RunSelector(std::string run)
+Analysis::Data_partial *Analysis::RunSelector(const std::string& run) const
 {
-    TFile *file = new TFile(run.c_str());
-    if (!file)
+    auto *file = new TFile(run.c_str());
+    if (!file->IsOpen())
         throw std::runtime_error("Run : " + run + " Not opened\n");
-    TTree *tree = (TTree *)file->Get("PhysicsTree");
+    auto *tree = (TTree *)file->Get("PhysicsTree");
+    if (tree == nullptr)
+        throw std::runtime_error("Tree not found in file\n");
     std::cout << "---------->Starting selector for run : " << run << "<----------\n";
-    Selector *selector = new Selector();
-    tree->Process(selector, ("analyzed_" + run.substr(run.find_last_of("/") + 1)).c_str());
+    auto *selector = new Selector();
+
+    tree->Process(selector, ("analyzed_" + run.substr(run.find_last_of('/') + 1)).c_str());
     if (generate_TW_ice_interpolation)
     {
-        Data_partial *partial_data = new Data_partial(selector->GetTWvsIce());
+        auto *partial_data = new Data_partial(selector->GetTWvsIce());
         delete selector;
         return partial_data;
     }

@@ -13,7 +13,7 @@ ReactionReconstruction::ReactionReconstruction( ReactionFragment::FragmentSettin
 
 void ReactionReconstruction::SetBeamEnergy(const long double & Energy) {
     p1.Set_Ek(Energy);
-    changed_initial_conditions=true;
+    changed_initial_conditions = true;
     UpdateVectors();
 }
 

@@ -92,5 +92,5 @@ public: //   Usefull function
   //   Display parameter
   void Print() const;
   //   Draw (CERN ROOT)
-  void Draw(std::string option = "") const;
+  void Draw(const std::string& option = "") const;
 };

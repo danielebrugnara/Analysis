@@ -33,12 +33,11 @@
 
 
 
-class Selector : public TSelector
-{
+class Selector : public TSelector{
 public:
     TTreeReader fReader; //!the tree reader
-    TTree *fChain = 0;   //!pointer to the analyzed TTree or TChain
-    long long int total_entries;
+    TTree *fChain = nullptr;   //!pointer to the analyzed TTree or TChain
+    long long int total_entries{};
 
     // Readers to access the data (delete the ones you do not need).
     TTreeReaderValue<TCATSPhysics> CATS = {fReader, "CATS"};
@@ -170,7 +169,7 @@ public:
     const Double_t MEV_TO_J = 1.60217733e-13;
 
     //Jolly pointer to fill histogram
-    TH1 *general_histo_ptr;
+    std::unique_ptr<TH1> general_histo_ptr{};
 
     std::string file_name;
 
@@ -179,8 +178,7 @@ public:
     MugastIdentification mugast_fragment;
     AgataProcessing agata_gammas;
 
-    struct VamosConf
-    { //Configuration spectra
+    struct VamosConf{ //Configuration spectra
         TH2D *mdE_E;
         TH2D *mdE2_E;
         std::unordered_map<int, TH2D *> mQ_MQ; //map index over [Z]
@@ -188,23 +186,20 @@ public:
         //std::unordered_map<int, std::unordered_map<TH1D *>> hAmass;
     };
 
-    struct VamosData
-    { //Data spectra
+    struct VamosData{ //Data spectra
         std::unordered_map<int, std::unordered_map<int, TH2D *>> mTW_Brho; //[M][Z]
         std::unordered_map<int, std::unordered_map<int,std::unordered_map<std::string, TH2D *>>> mE_Theta; //[M][Z]
     };
 
     //AGATA////////////////////////////////////////////////////////////////////////////////////
-    struct AgataConf
-    { //
+    struct AgataConf{ //
         TH3D *mmAGATA3D;
         TH1D *hAddTS_LTS;
     };
 
     std::vector<std::string> AGATAconditions = {"NONE", "MUGASTtap", "MUGASTan"};
 
-    struct AgataData
-    {
+    struct AgataData{
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH1D *>>> hDC;            //[mass][nucleus][condition]
         std::unordered_map<int, std::unordered_map<int, TH2D *>> mDC;                                             //[mass][nucleus]
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mEx_DC;         //[mass][nucleus][particle]
@@ -212,14 +207,11 @@ public:
     };
 
     //Cats//////////////////////////////////////////////////////////////////////////////////////
-    struct CatsConf
-    { //
+    struct CatsConf{ //
         TH2D *mCATSpos;
     };
 
-    struct CatsData
-    { //
-    };
+    struct CatsData{};
 
     //Mugast////////////////////////////////////////////////////////////////////////////////////
     std::vector<std::string> alpha_correction = {"70", "80", "90", "100", "110", "120", "130", "140", "150", "160", "170"};
@@ -227,10 +219,7 @@ public:
     std::vector<std::string> gammas = {"360", "1319", "1660", "NOCONDITION"};
     double gamma_gate = 30.;
 
-
-
-    struct MGConf
-    {
+    struct MGConf{
         TH3D *hit;
         TH2D *hit_XY;
         TH2D *hit_XZ;
@@ -242,8 +231,7 @@ public:
         std::unordered_map<int, std::unordered_map<std::string, TH2D *>> mStrip_T2; //[M*#][X\Y]
     };
 
-    struct MGData
-    {
+    struct MGData{
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<int, TH2D *>>> mE_TOF;      //[M][Z][M*#]
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<int, TH2D *>>> mE_TOF2;     //[M][Z][M*#]
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH1D *>>> hEx; //[M][Z][Particle]
@@ -254,16 +242,14 @@ public:
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mEx_EDC;
     };
 
-    struct MMConf
-    {
+    struct MMConf{
         std::unordered_map<int, TH2D *> mE_TOF;                                    //[M*#]
         std::unordered_map<int, TH2D *> mdE_E_Si;                                  //[MM#]
         std::unordered_map<int, std::unordered_map<std::string, TH2D *>> mStrip_E; //[M*#][X\Y]
         std::unordered_map<int, std::unordered_map<std::string, TH2D *>> mStrip_T; //[M*#][X\Y]
     };
 
-    struct MMData
-    {                                                                                                       
+    struct MMData{
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mE_TOF;   //[Mass][Nucl][M*#]
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mdE_E_Si; //[Mass][Nucl][M*#]
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH1D *>>> hEx;      //[Mass][Nucl][Parcle]
@@ -273,8 +259,7 @@ public:
     };
 
     //Conf
-    struct Conf
-    { //All the conf plots
+    struct Conf{ //All the conf plots
         VamosConf VAMOS;
         CatsConf CATS;
         AgataConf AGATA;
@@ -282,8 +267,7 @@ public:
         MMConf MM;
     };
 
-    struct Data
-    { //All the data plots
+    struct Data{ //All the data plots
         VamosData VAMOS;
         CatsData CATS;
         AgataData AGATA;
@@ -306,10 +290,8 @@ private:
     bool GetSettings();
 
     template <class T>
-    bool Istantiate(T *&ptr, T *ptr_value)
-    {
-        if (enabled_histograms.find(ptr_value->GetName()) != enabled_histograms.end())
-        {
+    bool Istantiate(T *&ptr, T *ptr_value){
+        if (enabled_histograms.find(ptr_value->GetName()) != enabled_histograms.end()){
             ptr = ptr_value;
             fOutput->Add(ptr);
             //auto const *lims = &enabled_histograms[ptr_value->GetName()].lims;
@@ -318,25 +300,21 @@ private:
             //        //ptr->GetXaxis();
             //    }
             //}
-        }
-        else if (new_graph_file != nullptr)
-        {
+        }else if (new_graph_file != nullptr){
             *new_graph_file << ptr_value->GetName()
                             << "\t\t\t\t\t"
                             << "false"
                             << std::endl;
-        }
-        else
-        {
+        }else{
             delete ptr_value;
             ptr = nullptr;
         }
         return true;
     };
 
-    inline bool Fill(TH1 *, const Double_t &);
-    inline bool Fill(TH2 *, const Double_t &, const Double_t &);
-    inline bool Fill(TH3 *, const Double_t &, const Double_t &, const Double32_t &);
+    static inline bool Fill(TH1 *, const Double_t &);
+    static inline bool Fill(TH2 *, const Double_t &, const Double_t &);
+    static inline bool Fill(TH3 *, const Double_t &, const Double_t &, const Double32_t &);
 
     //ClassDef(Selector,0);
 };

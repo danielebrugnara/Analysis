@@ -53,11 +53,11 @@ public:
     ~Analysis();
 
     bool RunAnalysis();
-    Data_partial *RunSelector(std::string);
+    Data_partial *RunSelector(const std::string&) const;
 
 private:
 
-    bool NecessaryFilesPresent();
+    static bool NecessaryFilesPresent();
     int n_threads;
     std::stack<std::string> file_names;
     std::stack<std::string> processed_files;

@@ -104,4 +104,5 @@ protected:
     bool CheckConsistency() const;
 };
 
+<<<<<<< HEAD
 #endif
