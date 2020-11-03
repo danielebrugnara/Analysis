@@ -24,7 +24,9 @@ MugastIdentification::MugastIdentification() :
                            with_cuts(true),
                            havar_thickness(3.8E-3*UNITS::mm), //in mm
                            data(nullptr),
-                           fragment(nullptr){}
+                           fragment(nullptr){
+    system("rm -f Configs/Interpolations/TW_Ice_Thickness.root");//TODO: remove this.. it is temporary
+}
 
 MugastIdentification::~MugastIdentification()
 {
@@ -304,6 +306,7 @@ bool MugastIdentification::Identify(){
         it.second->SetBeamEnergy(MiddleTargetBeamEnergy(final_beam_energy));
     }
 
+    DEBUG("------------>starting: recalibrations", "");
     //Applying (time) re-calibrations
     for (unsigned int ii = 0; ii < fragment->multiplicity; ++ii){
         if (calibrations_TY[fragment->MG[ii]] == nullptr)
@@ -402,7 +405,7 @@ bool MugastIdentification::Identify(){
                                          "_Z" + std::to_string(data->VAMOS_id_Z) +
                                          "_" +
                                          fragment->Particle[ii])) != reaction.end()){
-            fragment->Ex[ii] = reaction_it->second->Set_E_Theta(fragment->E[ii], fragment->EmissionDirection[ii].Theta());//WARNING this could be wring
+            fragment->Ex[ii] = reaction_it->second->Set_Ek_Theta(fragment->E[ii], fragment->EmissionDirection[ii].Theta());//WARNING this could be wring
             fragment->E_CM[ii] = reaction_it->second->GetReactionFragment(3).Get_Ek_cm();
         }
         else{
@@ -425,18 +428,18 @@ void MugastIdentification::IdentifyIceThickness(){
 
     if (abs(beam_energy - initial_beam_energy) > beam_energy_match_threashold){
         DEBUG("Before minimizer call, ice_thickness.first = ", current_ice_thickness.first);
-        double tmp_threashold{2E-4};
-        double tmp_precision{0.1}; //in MeV
+        double tmp_threashold{2E-4*UNITS::mm};
+        double tmp_precision{0.1*UNITS::MeV};
 
-        ice_thickness_minimizer = new Minimizer([this](const double &tck) { return pow(this->beam_energy - this->InitialBeamEnergy(this->final_beam_energy, tck), 2); },
+        ice_thickness_minimizer = new Minimizer([this](const double &tck) { return pow(this->beam_energy - this->InitialBeamEnergy(this->final_beam_energy, tck), 2)/(this->beam_energy*this->beam_energy); },
                                                 current_ice_thickness.first,        //starting value
-                                                1E-6 * current_ice_thickness.first, //learning rate
+                                                3E-4 * current_ice_thickness.first, //learning rate
                                                 tmp_threashold,                     //threashold
                                                 100,                                //max_steps
                                                 1,                                  //quenching
-                                                1E-4);                              //h
-        while (fabs(beam_energy - InitialBeamEnergy(final_beam_energy, current_ice_thickness.first)) > tmp_precision)
-        {
+                                                1.E-4*current_ice_thickness.first);//h
+
+        while (fabs(beam_energy - InitialBeamEnergy(final_beam_energy, current_ice_thickness.first)) > tmp_precision){
             tmp_threashold/=2;
             ice_thickness_minimizer->SetThreashold(tmp_threashold);
             current_ice_thickness.first = ice_thickness_minimizer->Minimize();

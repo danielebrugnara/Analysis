@@ -198,7 +198,6 @@ double EnergyLoss::EvaluateInitialEnergy(double Energy,          // Energy of th
 const{
     if (TargetThickness == 0)
         return Energy;
-    std::cout << "initial energy :" << Energy << std::endl;
     //   Lise file are given in MeV/u
     //   For SRIM and geant4 file fNumberOfMass = 1 whatever is the nucleus, file are given in MeV
     Energy = Energy / (double)fNumberOfMass;

@@ -135,8 +135,6 @@ void ReactionReconstruction2body::Set_E(const long double & E) {//Checked!
     if (E< fixed.Get_M())
         throw std::runtime_error("Relativistic energy is less than mass!\n");
 
-    std::cout << "Mass before: " << fixed.Get_M() << std::endl;
-    std::cout << "Energy before: " << E << std::endl;
     long double E_free = p1.Get_E()+p2.Get_M()-E;
 
     fixed.Set_E_Theta(  E,
@@ -376,7 +374,7 @@ long double ReactionReconstruction2body::Set_E_Theta(const long double & E,
 
 long double ReactionReconstruction2body::Set_Ek_Theta(const long double & Ek,
                                                       const long double & Theta,
-                                                      const bool& angle_from_fixed= true) {
+                                                      const bool& angle_from_fixed) {
     //Returns Ex value
     if (GetExFixedFragment()==GetFixedFragment())
         return Set_E_Theta(Ek+GetFixedFragment().Get_M(), Theta, angle_from_fixed);
