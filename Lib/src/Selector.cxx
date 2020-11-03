@@ -571,7 +571,7 @@ std::vector<std::pair<double, double>> Selector::GetTWvsIce(){
     return mugast_fragment.GetTWvsIce();
 }
 
-inline bool Selector::Fill(TH1 *histo, const double &data1){
+inline bool Selector::Fill(std::unique_ptr<TH1D>& histo, const double &data1){
     if (histo == nullptr){
         return false;
     }else{
@@ -591,7 +591,7 @@ inline bool Selector::Fill(TH1 *histo, const double &data1){
     return true;
 }
 
-inline bool Selector::Fill(TH2 *histo,
+inline bool Selector::Fill(std::unique_ptr<TH2D>& histo,
                            const double &data1, const double &data2){
     if (histo == nullptr){
         return false;
@@ -612,7 +612,7 @@ inline bool Selector::Fill(TH2 *histo,
     return true;
 }
 
-inline bool Selector::Fill(TH3 *histo, const double &data1,
+inline bool Selector::Fill(std::unique_ptr<TH3D>& histo, const double &data1,
                            const double &data2, const double &data3){
     if (histo == nullptr){
         return false;

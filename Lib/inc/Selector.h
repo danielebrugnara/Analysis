@@ -164,9 +164,6 @@ public:
     //Constants
     const Long64_t TS_TO_S = 1E8;
     const Long64_t TS_TO_HR = 1E8 * 3600;
-    const Double_t AMU_TO_MEV = 931.4936148;
-    const Double_t c_speed = 299792458; //m/s
-    const Double_t MEV_TO_J = 1.60217733e-13;
 
     //Jolly pointer to fill histogram
     std::unique_ptr<TH1> general_histo_ptr{};
@@ -179,36 +176,36 @@ public:
     AgataProcessing agata_gammas;
 
     struct VamosConf{ //Configuration spectra
-        TH2D *mdE_E;
-        TH2D *mdE2_E;
-        std::unordered_map<int, TH2D *> mQ_MQ; //map index over [Z]
-        std::unordered_map<int, TH2D *> Xf_MQ; //map index over [Z]
+        std::unique_ptr<TH2D> mdE_E;
+        std::unique_ptr<TH2D> mdE2_E;
+        std::unordered_map<int, std::unique_ptr<TH2D>> mQ_MQ; //map index over [Z]
+        std::unordered_map<int, std::unique_ptr<TH2D>> Xf_MQ; //map index over [Z]
         //std::unordered_map<int, std::unordered_map<TH1D *>> hAmass;
     };
 
     struct VamosData{ //Data spectra
-        std::unordered_map<int, std::unordered_map<int, TH2D *>> mTW_Brho; //[M][Z]
-        std::unordered_map<int, std::unordered_map<int,std::unordered_map<std::string, TH2D *>>> mE_Theta; //[M][Z]
+        std::unordered_map<int, std::unordered_map<int, std::unique_ptr<TH2D>>> mTW_Brho; //[M][Z]
+        std::unordered_map<int, std::unordered_map<int,std::unordered_map<std::string, std::unique_ptr<TH2D>>>> mE_Theta; //[M][Z]
     };
 
     //AGATA////////////////////////////////////////////////////////////////////////////////////
     struct AgataConf{ //
-        TH3D *mmAGATA3D;
-        TH1D *hAddTS_LTS;
+        std::unique_ptr<TH3D> mmAGATA3D;
+        std::unique_ptr<TH1D> hAddTS_LTS;
     };
 
     std::vector<std::string> AGATAconditions = {"NONE", "MUGASTtap", "MUGASTan"};
 
     struct AgataData{
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH1D *>>> hDC;            //[mass][nucleus][condition]
-        std::unordered_map<int, std::unordered_map<int, TH2D *>> mDC;                                             //[mass][nucleus]
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mEx_DC;         //[mass][nucleus][particle]
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mELab_ThetaLab; //[mass][nucleus][particle]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH1D>>>> hDC;            //[mass][nucleus][condition]
+        std::unordered_map<int, std::unordered_map<int, std::unique_ptr<TH2D>>> mDC;                                             //[mass][nucleus]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH2D>>>> mEx_DC;         //[mass][nucleus][particle]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH2D>>>> mELab_ThetaLab; //[mass][nucleus][particle]
     };
 
     //Cats//////////////////////////////////////////////////////////////////////////////////////
     struct CatsConf{ //
-        TH2D *mCATSpos;
+        std::unique_ptr<TH2D> mCATSpos;
     };
 
     struct CatsData{};
@@ -220,42 +217,42 @@ public:
     double gamma_gate = 30.;
 
     struct MGConf{
-        TH3D *hit;
-        TH2D *hit_XY;
-        TH2D *hit_XZ;
-        TH2D *hit_YZ;
-        std::unordered_map<int, TH2D *> mE_TOF;                                     //[M*#]
-        std::unordered_map<int, TH2D *> mE_TOF2;                                    //[M*#]
-        std::unordered_map<int, std::unordered_map<std::string, TH2D *>> mStrip_E;  //[M*#][X\Y]
-        std::unordered_map<int, std::unordered_map<std::string, TH2D *>> mStrip_T;  //[M*#][X\Y]
-        std::unordered_map<int, std::unordered_map<std::string, TH2D *>> mStrip_T2; //[M*#][X\Y]
+        std::unique_ptr<TH3D> hit;
+        std::unique_ptr<TH2D> hit_XY;
+        std::unique_ptr<TH2D> hit_XZ;
+        std::unique_ptr<TH2D> hit_YZ;
+        std::unordered_map<int, std::unique_ptr<TH2D>> mE_TOF;                                     //[M*#]
+        std::unordered_map<int, std::unique_ptr<TH2D>> mE_TOF2;                                    //[M*#]
+        std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH2D>>> mStrip_E;  //[M*#][X\Y]
+        std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH2D>>> mStrip_T;  //[M*#][X\Y]
+        std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH2D>>> mStrip_T2; //[M*#][X\Y]
     };
 
     struct MGData{
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<int, TH2D *>>> mE_TOF;      //[M][Z][M*#]
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<int, TH2D *>>> mE_TOF2;     //[M][Z][M*#]
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH1D *>>> hEx; //[M][Z][Particle]
-        //std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mECM_ThetaCM;
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>>>> mELab_ThetaLab;
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>>>> mEx_ThetaLab;
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, TH1D *>>>> hThetaCM;
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mEx_EDC;
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<int, std::unique_ptr<TH2D>>>> mE_TOF;      //[M][Z][M*#]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<int, std::unique_ptr<TH2D>>>> mE_TOF2;     //[M][Z][M*#]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH1D>>>> hEx; //[M][Z][Particle]
+        //std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH2D>>>> mECM_ThetaCM;
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<TH2D>>>>> mELab_ThetaLab;
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<TH2D>>>>> mEx_ThetaLab;
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<TH1D>>>>> hThetaCM;
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH2D>>>> mEx_EDC;
     };
 
     struct MMConf{
-        std::unordered_map<int, TH2D *> mE_TOF;                                    //[M*#]
-        std::unordered_map<int, TH2D *> mdE_E_Si;                                  //[MM#]
-        std::unordered_map<int, std::unordered_map<std::string, TH2D *>> mStrip_E; //[M*#][X\Y]
-        std::unordered_map<int, std::unordered_map<std::string, TH2D *>> mStrip_T; //[M*#][X\Y]
+        std::unordered_map<int, std::unique_ptr<TH2D>> mE_TOF;                                    //[M*#]
+        std::unordered_map<int, std::unique_ptr<TH2D>> mdE_E_Si;                                  //[MM#]
+        std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH2D>>> mStrip_E; //[M*#][X\Y]
+        std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH2D>>> mStrip_T; //[M*#][X\Y]
     };
 
     struct MMData{
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mE_TOF;   //[Mass][Nucl][M*#]
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mdE_E_Si; //[Mass][Nucl][M*#]
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH1D *>>> hEx;      //[Mass][Nucl][Parcle]
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mEx_TW;   //[Mass][Nucl][Parcle]
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, TH2D *>>> mECM_ThetaCM;
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, TH2D *>>>> mELab_ThetaLab;
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH2D>>>> mE_TOF;   //[Mass][Nucl][M*#]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH2D>>>> mdE_E_Si; //[Mass][Nucl][M*#]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH1D>>>> hEx;      //[Mass][Nucl][Parcle]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH2D>>>> mEx_TW;   //[Mass][Nucl][Parcle]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH2D>>>> mECM_ThetaCM;
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<TH2D>>>>> mELab_ThetaLab;
     };
 
     //Conf
@@ -290,10 +287,10 @@ private:
     bool GetSettings();
 
     template <class T>
-    bool Istantiate(T *&ptr, T *ptr_value){
+    bool Istantiate(std::unique_ptr<T>& ptr, T *ptr_value){
         if (enabled_histograms.find(ptr_value->GetName()) != enabled_histograms.end()){
-            ptr = ptr_value;
-            fOutput->Add(ptr);
+            ptr.reset(ptr_value);
+            fOutput->Add(ptr.get());
             //auto const *lims = &enabled_histograms[ptr_value->GetName()].lims;
             //if (lims->size()%3){
             //    for (int ii=0; ii<lims->size(); ii+=3){
@@ -307,15 +304,14 @@ private:
                             << std::endl;
         }else{
             delete ptr_value;
-            ptr = nullptr;
+            ptr.reset();
         }
         return true;
     };
 
-    static inline bool Fill(TH1 *, const Double_t &);
-    static inline bool Fill(TH2 *, const Double_t &, const Double_t &);
-    static inline bool Fill(TH3 *, const Double_t &, const Double_t &, const Double32_t &);
+    static inline bool Fill(std::unique_ptr<TH1D> &, const Double_t &);
+    static inline bool Fill(std::unique_ptr<TH2D> &, const Double_t &, const Double_t &);
+    static inline bool Fill(std::unique_ptr<TH3D> &, const Double_t &, const Double_t &, const Double32_t &);
 
     //ClassDef(Selector,0);
 };
-
