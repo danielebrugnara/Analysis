@@ -151,6 +151,7 @@ public:
     virtual void Terminate();
 
     std::vector<std::pair<double, double>> GetTWvsIce();
+    std::vector<TObject*> Output;
 
     //My methods
     inline void LoadVamosData();
@@ -290,7 +291,7 @@ private:
     bool Istantiate(std::unique_ptr<T>& ptr, T *ptr_value){
         if (enabled_histograms.find(ptr_value->GetName()) != enabled_histograms.end()){
             ptr.reset(ptr_value);
-            fOutput->Add(ptr.get());
+            Output.push_back(ptr.get());
             //auto const *lims = &enabled_histograms[ptr_value->GetName()].lims;
             //if (lims->size()%3){
             //    for (int ii=0; ii<lims->size(); ii+=3){
@@ -309,9 +310,9 @@ private:
         return true;
     };
 
-    static inline bool Fill(std::unique_ptr<TH1D> &, const Double_t &);
-    static inline bool Fill(std::unique_ptr<TH2D> &, const Double_t &, const Double_t &);
-    static inline bool Fill(std::unique_ptr<TH3D> &, const Double_t &, const Double_t &, const Double32_t &);
+    static inline bool Fill(TH1D* , const Double_t &);
+    static inline bool Fill(TH2D* , const Double_t &, const Double_t &);
+    static inline bool Fill(TH3D* , const Double_t &, const Double_t &, const Double32_t &);
 
     //ClassDef(Selector,0);
 };

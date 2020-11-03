@@ -11,12 +11,13 @@ Selector::Selector(TTree *) {}
 
 //Distructor////////////////////////////////////////////////////////////////////////////
 Selector::~Selector(){
-    TIter iter(fOutput);
-    TObject *obj;
-    while (iter != iter.End()){
-        obj = iter();
-        delete obj;
-    }
+//    fOutput->Clear();
+//    TIter iter(fOutput);
+//    TObject *obj;
+//    while (iter != iter.End()){
+//        obj = iter();
+//        delete obj; //No need as we are using smart pointers
+//    }
 }
 
 //Begn//////////////////////////////////////////////////////////////////////////////////
@@ -260,7 +261,8 @@ void Selector::SlaveBegin(TTree * /*tree*/){
 
     ///Temporary histogram///////////////////////////////////////////////////////////////////////////
     general_histo_ptr.reset(new TH2D("test", "Ex vs theta Lab", 1000, TMath::Pi()/2., TMath::Pi(), 1000, -10, 10));
-    fOutput->Add(general_histo_ptr.get());
+    //fOutput->Add(general_histo_ptr.get());
+    Output.push_back(general_histo_ptr.get());
 
     DEBUG("------------>finished: Selector::SlaveBegin()", "");
 }
@@ -307,10 +309,8 @@ void Selector::SlaveTerminate(){
     DEBUG("------------>Selector::SlaveTerminate()", "");
     auto *top = new TFile(file_name.c_str(), "recreate");
     std::cout << "Output file : " << file_name << "\n";
-    TIter iter(fOutput);
-    TObject *obj;
-    while ((obj = iter())){
-        obj->Write();
+    for(const auto& it: Output){
+        it->Write();
     }
     top->Close();
 }
@@ -347,24 +347,24 @@ inline void Selector::LoadAgataData(){
 inline void Selector::PlotVamosGraphs(){
     DEBUG("------------>Selector::PlotVamosGraphs()", "");
     //dE-E plot, no conditions
-    Fill(pConf.VAMOS.mdE_E,vamos_fragment.Get_En(), vamos_fragment.Get_D_En());
-    Fill(pConf.VAMOS.mdE2_E,vamos_fragment.Get_En(), vamos_fragment.Get_D_En2());
+    Fill(pConf.VAMOS.mdE_E.get(),vamos_fragment.Get_En(), vamos_fragment.Get_D_En());
+    Fill(pConf.VAMOS.mdE2_E.get(),vamos_fragment.Get_En(), vamos_fragment.Get_D_En2());
 
     if (vamos_fragment.Get_id_Z() == 0)
         return;
-    Fill(pConf.VAMOS.mQ_MQ[vamos_fragment.Get_id_Z()],
+    Fill(pConf.VAMOS.mQ_MQ[vamos_fragment.Get_id_Z()].get(),
          vamos_fragment.Get_M_Q(),
          vamos_fragment.Get_Charge());
-    Fill(pConf.VAMOS.Xf_MQ[vamos_fragment.Get_id_Z()],
+    Fill(pConf.VAMOS.Xf_MQ[vamos_fragment.Get_id_Z()].get(),
          vamos_fragment.Get_M_Q(),
          *Xf);
     if (!vamos_fragment.Identified())
         return;
-    Fill(pData.VAMOS.mTW_Brho[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()],
+    Fill(pData.VAMOS.mTW_Brho[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()].get(),
          *TW, *Brho);
 
     for (unsigned int ii = 0; ii < mugast_fragment.Get_Mult(); ++ii){
-        Fill(pData.VAMOS.mE_Theta[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][mugast_fragment.Get_Particle(ii)],
+        Fill(pData.VAMOS.mE_Theta[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][mugast_fragment.Get_Particle(ii)].get(),
              vamos_fragment.Get_p4()->Angle(TVector3(0, 0, 1)),
             vamos_fragment.Get_EnFromBrho());
     }
@@ -375,20 +375,20 @@ inline void Selector::PlotMugastGraphs(){
     for (unsigned int ii = 0; ii < mugast_fragment.Get_Mult(); ++ii){
         if (mugast_fragment.Get_T(ii)>260 && mugast_fragment.Get_T(ii)<380){
             //Only events with tof
-            Fill(pConf.MG.hit,
+            Fill(pConf.MG.hit.get(),
                     mugast_fragment.Get_Pos(ii)->X(),
                     mugast_fragment.Get_Pos(ii)->Y(),
                     mugast_fragment.Get_Pos(ii)->Z());
 
-            Fill(pConf.MG.hit_XY,
+            Fill(pConf.MG.hit_XY.get(),
                     mugast_fragment.Get_Pos(ii)->X(),
                     mugast_fragment.Get_Pos(ii)->Y());
 
-            Fill(pConf.MG.hit_XZ,
+            Fill(pConf.MG.hit_XZ.get(),
                     mugast_fragment.Get_Pos(ii)->X(),
                     mugast_fragment.Get_Pos(ii)->Z());
 
-            Fill(pConf.MG.hit_YZ,
+            Fill(pConf.MG.hit_YZ.get(),
                     mugast_fragment.Get_Pos(ii)->Y(),
                     mugast_fragment.Get_Pos(ii)->Z());
 
@@ -396,27 +396,27 @@ inline void Selector::PlotMugastGraphs(){
         //Ex
         Fill(pData.MG.hEx[vamos_fragment.Get_id_M()]
                          [vamos_fragment.Get_id_Z()]
-                         [mugast_fragment.Get_Particle(ii)],
+                         [mugast_fragment.Get_Particle(ii)].get(),
              mugast_fragment.Get_Ex(ii));
 
         Fill(pData.MG.mELab_ThetaLab[vamos_fragment.Get_id_M()]
                                     [vamos_fragment.Get_id_Z()]
                                     [mugast_fragment.Get_Particle(ii)]
-                                    ["NOCONDITION"],
+                                    ["NOCONDITION"].get(),
              mugast_fragment.Get_ThetaLab(ii),
              mugast_fragment.Get_E(ii));
 
         Fill(pData.MG.mEx_ThetaLab[vamos_fragment.Get_id_M()]
                                     [vamos_fragment.Get_id_Z()]
                                     [mugast_fragment.Get_Particle(ii)]
-                                    ["NOCONDITION"],
+                                    ["NOCONDITION"].get(),
              mugast_fragment.Get_ThetaLab(ii),
              mugast_fragment.Get_Ex(ii));
 
         Fill(pData.MG.hThetaCM[vamos_fragment.Get_id_M()]
                                     [vamos_fragment.Get_id_Z()]
                                     [mugast_fragment.Get_Particle(ii)]
-                                    ["NOCONDITION"],
+                                    ["NOCONDITION"].get(),
              mugast_fragment.Get_ThetaCM(ii));
 
         if (vamos_fragment.Get_id_M()==47 && vamos_fragment.Get_id_Z()==19 && mugast_fragment.Get_Particle(ii)=="m2_z1"){
@@ -429,7 +429,7 @@ inline void Selector::PlotMugastGraphs(){
             for (long unsigned int jj = 0; jj < agata_gammas.Get_Mult(); ++jj){
                 Fill(pData.MG.mEx_EDC[vamos_fragment.Get_id_M()]
                                      [vamos_fragment.Get_id_Z()]
-                                     [mugast_fragment.Get_Particle(ii)],
+                                     [mugast_fragment.Get_Particle(ii)].get(),
                      mugast_fragment.Get_Ex(ii),
                      agata_gammas.Get_EDC(jj));
 
@@ -441,21 +441,21 @@ inline void Selector::PlotMugastGraphs(){
                         Fill(pData.MG.mELab_ThetaLab[vamos_fragment.Get_id_M()]
                                                     [vamos_fragment.Get_id_Z()]
                                                     [mugast_fragment.Get_Particle(ii)]
-                                                    [it_gamma],
+                                                    [it_gamma].get(),
                              mugast_fragment.Get_ThetaLab(ii),
                              mugast_fragment.Get_E(ii));
 
                         Fill(pData.MG.mEx_ThetaLab[vamos_fragment.Get_id_M()]
                                                     [vamos_fragment.Get_id_Z()]
                                                     [mugast_fragment.Get_Particle(ii)]
-                                                    [it_gamma],
+                                                    [it_gamma].get(),
                              mugast_fragment.Get_ThetaLab(ii),
                              mugast_fragment.Get_Ex(ii));
 
                         Fill(pData.MG.hThetaCM[vamos_fragment.Get_id_M()]
                                                     [vamos_fragment.Get_id_Z()]
                                                     [mugast_fragment.Get_Particle(ii)]
-                                                    [it_gamma],
+                                                    [it_gamma].get(),
                              mugast_fragment.Get_ThetaCM(ii));
                     }
                 }
@@ -463,45 +463,45 @@ inline void Selector::PlotMugastGraphs(){
         }
 
         //E TOF
-        Fill(pConf.MG.mE_TOF[mugast_fragment.Get_MG(ii)],
+        Fill(pConf.MG.mE_TOF[mugast_fragment.Get_MG(ii)].get(),
              mugast_fragment.Get_SI_E(ii),
              mugast_fragment.Get_T(ii));
 
-        Fill(pConf.MG.mE_TOF2[mugast_fragment.Get_MG(ii)],
+        Fill(pConf.MG.mE_TOF2[mugast_fragment.Get_MG(ii)].get(),
              mugast_fragment.Get_SI_E(ii),
              mugast_fragment.Get_T2(ii));
 
-            Fill(pConf.MG.mStrip_E[mugast_fragment.Get_MG(ii)]["X"],
+            Fill(pConf.MG.mStrip_E[mugast_fragment.Get_MG(ii)]["X"].get(),
                  mugast_fragment.Get_SI_X(ii),
                  mugast_fragment.Get_SI_E(ii));
 
-            Fill(pConf.MG.mStrip_T[mugast_fragment.Get_MG(ii)]["X"],
+            Fill(pConf.MG.mStrip_T[mugast_fragment.Get_MG(ii)]["X"].get(),
                  mugast_fragment.Get_SI_X(ii),
                  mugast_fragment.Get_T(ii));
 
-            Fill(pConf.MG.mStrip_T2[mugast_fragment.Get_MG(ii)]["X"],
+            Fill(pConf.MG.mStrip_T2[mugast_fragment.Get_MG(ii)]["X"].get(),
                  mugast_fragment.Get_SI_X(ii),
                  mugast_fragment.Get_T2(ii));
 
-            Fill(pConf.MG.mStrip_E[mugast_fragment.Get_MG(ii)]["Y"],
+            Fill(pConf.MG.mStrip_E[mugast_fragment.Get_MG(ii)]["Y"].get(),
                  mugast_fragment.Get_SI_Y(ii),
                  mugast_fragment.Get_SI_E(ii));
 
-            Fill(pConf.MG.mStrip_T[mugast_fragment.Get_MG(ii)]["Y"],
+            Fill(pConf.MG.mStrip_T[mugast_fragment.Get_MG(ii)]["Y"].get(),
                  mugast_fragment.Get_SI_Y(ii),
                  mugast_fragment.Get_T(ii));
 
-            Fill(pConf.MG.mStrip_T2[mugast_fragment.Get_MG(ii)]["Y"],
+            Fill(pConf.MG.mStrip_T2[mugast_fragment.Get_MG(ii)]["Y"].get(),
                  mugast_fragment.Get_SI_Y(ii),
                  mugast_fragment.Get_T2(ii));
 
         if (vamos_fragment.Identified())
         {
-            Fill(pData.MG.mE_TOF[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][mugast_fragment.Get_MG(ii)],
+            Fill(pData.MG.mE_TOF[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][mugast_fragment.Get_MG(ii)].get(),
                  mugast_fragment.Get_SI_E(ii),
                  mugast_fragment.Get_T(ii));
 
-            Fill(pData.MG.mE_TOF2[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][mugast_fragment.Get_MG(ii)],
+            Fill(pData.MG.mE_TOF2[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][mugast_fragment.Get_MG(ii)].get(),
                  mugast_fragment.Get_SI_E(ii),
                  mugast_fragment.Get_T2(ii));
         }
@@ -510,18 +510,18 @@ inline void Selector::PlotMugastGraphs(){
 
 inline void Selector::PlotAgataGraphs(){
     for (int ii = 0; ii < *nbAdd; ii++){
-        Fill(pConf.AGATA.mmAGATA3D, AddX[ii], AddY[ii], AddZ[ii]);
+        Fill(pConf.AGATA.mmAGATA3D.get(), AddX[ii], AddY[ii], AddZ[ii]);
     }
     if (agata_gammas.In_Coincidence()){
         for (unsigned int ii = 0; ii < agata_gammas.Get_Mult(); ++ii)
         {
-            Fill(pData.AGATA.hDC[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["NONE"],
+            Fill(pData.AGATA.hDC[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["NONE"].get(),
                  agata_gammas.Get_EDC(ii));
             for (unsigned int jj = 0; jj < agata_gammas.Get_Mult(); ++jj){
                 if (ii == jj)
                     continue;
 
-                Fill(pData.AGATA.mDC[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()],
+                Fill(pData.AGATA.mDC[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()].get(),
                      agata_gammas.Get_EDC(ii),
                      agata_gammas.Get_EDC(jj));
             }
@@ -571,7 +571,7 @@ std::vector<std::pair<double, double>> Selector::GetTWvsIce(){
     return mugast_fragment.GetTWvsIce();
 }
 
-inline bool Selector::Fill(std::unique_ptr<TH1D>& histo, const double &data1){
+inline bool Selector::Fill(TH1D* histo, const double &data1){
     if (histo == nullptr){
         return false;
     }else{
@@ -591,7 +591,7 @@ inline bool Selector::Fill(std::unique_ptr<TH1D>& histo, const double &data1){
     return true;
 }
 
-inline bool Selector::Fill(std::unique_ptr<TH2D>& histo,
+inline bool Selector::Fill(TH2D* histo,
                            const double &data1, const double &data2){
     if (histo == nullptr){
         return false;
@@ -612,7 +612,7 @@ inline bool Selector::Fill(std::unique_ptr<TH2D>& histo,
     return true;
 }
 
-inline bool Selector::Fill(std::unique_ptr<TH3D>& histo, const double &data1,
+inline bool Selector::Fill(TH3D* histo, const double &data1,
                            const double &data2, const double &data3){
     if (histo == nullptr){
         return false;
