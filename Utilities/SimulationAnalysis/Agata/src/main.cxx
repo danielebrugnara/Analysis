@@ -21,6 +21,16 @@ int main(int argc, char* argv[]){
     std::vector<double> fit_energies;
     std::string fit_histogram_name;
     for (unsigned int ii=1; ii<(unsigned int)argc;++ii) {
+        if (std::string(argv[ii]) == "-h" || std::string(argv[ii]) == "--help") {
+            std::cout << "Usage:\n";
+            std::cout << "simulationanalysis [options, ...] [files, ...]\n";
+            std::cout << "\t\t--sum-all\t\t\t\t\t\t\tSumming all spectra in output: spetra_simu.root \n";
+            std::cout << "\t\t--gun\t\t\t\t\t\t\t\tAssumes simulation is performed with gun option \n";
+            std::cout << "\t\t--infinite-resolution\t\t\t\t\t\tGives infinite resolution to peaks \n";
+            std::cout << "\t\t--fit-efficiency [histogram_name] [nr_energies] [energy1, energy2, ...]\tFits energies to find efficiency \n";
+            return 0;
+        }
+
         if (std::string(argv[ii]) == "--sum-all") {
             std::cout << "Summing all spectra in output : spectra_simu.root\n";
             sum_all = true;

@@ -126,13 +126,6 @@ void Selector::SlaveBegin(TTree * /*tree*/){
             Istantiate(pData.AGATA.mDC[it_M][it_Z],
                        new TH2D(Form("pData_AGATA_mDC_M%i_Z%i", it_M, it_Z), Form("DC gamma gamma of M%i Z%i", it_M, it_Z),
                                 4000, 0, 4000, 4000, 0, 4000));
-
-            for (const auto &particle : particles){
-                Istantiate(pData.AGATA.mEx_DC[it_M][it_Z][particle],
-                           new TH2D(Form("pData_AGATA_mEx_DC_M%i_Z%i_%s", it_M, it_Z, particle.c_str()),
-                                    Form("Excitation energy AGATA vs MUGAST M%i Z%i and %s", it_M, it_Z, particle.c_str()),
-                                    1000, -10, 10, 4000, 0, 4));
-            }
         }
     }
 
@@ -515,6 +508,7 @@ inline void Selector::PlotAgataGraphs(){
     if (agata_gammas.In_Coincidence()){
         for (unsigned int ii = 0; ii < agata_gammas.Get_Mult(); ++ii)
         {
+            //Only agata
             Fill(pData.AGATA.hDC[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["NONE"].get(),
                  agata_gammas.Get_EDC(ii));
             for (unsigned int jj = 0; jj < agata_gammas.Get_Mult(); ++jj){

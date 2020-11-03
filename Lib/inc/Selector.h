@@ -200,7 +200,6 @@ public:
     struct AgataData{
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH1D>>>> hDC;            //[mass][nucleus][condition]
         std::unordered_map<int, std::unordered_map<int, std::unique_ptr<TH2D>>> mDC;                                             //[mass][nucleus]
-        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH2D>>>> mEx_DC;         //[mass][nucleus][particle]
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH2D>>>> mELab_ThetaLab; //[mass][nucleus][particle]
     };
 
