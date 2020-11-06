@@ -285,6 +285,7 @@ Bool_t Selector::Process(Long64_t entry){
     mugast_fragment.Identify();
     DEBUG("------------>Finished: Mugast identification, negative exit", "");
 
+    //Plotting histograms///////////////////////////////
     PlotVamosGraphs();
     DEBUG("------------>Finished: Plotting VAMOS graphs", "");
     PlotAgataGraphs();
@@ -320,6 +321,7 @@ inline void Selector::LoadVamosData(){
 
 inline void Selector::LoadMugastData(){
     mugast_fragment.SetData(new MugastIdentification::Data(&Mugast,
+                                                           &CATS,
                                                            &TW,
                                                            vamos_fragment.Get_id_M(),
                                                            vamos_fragment.Get_id_Z()));
@@ -521,6 +523,12 @@ inline void Selector::PlotAgataGraphs(){
             }
         }
     }
+}
+
+inline void Selector::PlotCatsGraphs() {
+    Fill(pConf.CATS.mCATSpos.get(),
+         CATS->PositionOnTargetX,
+         CATS->PositionOnTargetY);
 }
 
 bool Selector::GetSettings(){

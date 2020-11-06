@@ -57,7 +57,6 @@ MugastIdentification::~MugastIdentification()
 bool MugastIdentification::Initialize(const double &beam_energy,
                                       const TVector3 &target_pos){
     DEBUG("------------>MugastIdentification::Initialize()", "");
-
     this->beam_energy = beam_energy;
     this->target_pos = target_pos;
 
@@ -235,7 +234,14 @@ bool MugastIdentification::InitializeELoss(){
 }
 
 bool MugastIdentification::InitializeInterpolations() {
+    //angle vs he thickness
     gas_thickness = new Interpolation("./Configs/Interpolations/He_thickness_500Torr.txt");
+
+    //cartesian position vs thickness
+    gas_thickness_cartesian = new Interpolation("./Configs/Interpolations/He_thickness_500Torr_cartesian.txt");
+    gas_thickness_cartesian->SetUnits(UNITS::mm, UNITS::mm);
+
+    //Entrance angle in havar
     havar_angle = new Interpolation("./Configs/Interpolations/Entrance_angle_500Torr.txt");
 
     auto* tmp_file = new TFile("./Configs/Interpolations/TW_Brho_M46_Z18.root");
@@ -398,6 +404,8 @@ bool MugastIdentification::Identify(){
                      ->EvaluateInitialEnergy(tmp_en,
                                              gas_thickness->Evaluate(theta)*UNITS::mm,
                                              0.);
+        std::cout <<  "Found thickness: " << ComputeDistanceInGas(fragment->Pos[ii], target_pos) << std::endl;
+        std::cout <<  "Original thickness: " << gas_thickness->Evaluate(theta)*UNITS::mm << std::endl;
 
         fragment->E[ii] = tmp_en;
 
@@ -431,13 +439,18 @@ void MugastIdentification::IdentifyIceThickness(){
         double tmp_threashold{2E-4*UNITS::mm};
         double tmp_precision{0.1*UNITS::MeV};
 
-        ice_thickness_minimizer = new Minimizer([this](const double &tck) { return pow(this->beam_energy - this->InitialBeamEnergy(this->final_beam_energy, tck), 2)/(this->beam_energy*this->beam_energy); },
+        ice_thickness_minimizer.reset(  new Minimizer([this](const double &tck) {
+                                                        return pow(this->beam_energy
+                                                                - this->InitialBeamEnergy(this->final_beam_energy, tck), 2)
+                                                                /(this->beam_energy*this->beam_energy);
+                                                        },
                                                 current_ice_thickness.first,        //starting value
                                                 3E-4 * current_ice_thickness.first, //learning rate
                                                 tmp_threashold,                     //threashold
                                                 100,                                //max_steps
                                                 1,                                  //quenching
-                                                1.E-4*current_ice_thickness.first);//h
+                                                1.E-4*current_ice_thickness.first)  //h
+                                        );
 
         while (fabs(beam_energy - InitialBeamEnergy(final_beam_energy, current_ice_thickness.first)) > tmp_precision){
             tmp_threashold/=2;
@@ -507,4 +520,58 @@ double MugastIdentification::MiddleTargetBeamEnergy(double beam_energy_from_brho
                                     0);
 
     return beam_energy_from_brho;
+}
+
+double MugastIdentification::ComputeDistanceInGas(const TVector3& vect_det, const TVector3& vect_target) {
+    double x_d = vect_det.X()-vect_target.X();
+    double y_d = vect_det.Y()-vect_target.Y();
+    double z_d = vect_det.Z()-vect_target.Z();
+
+    double x_p = data->Cats->Get()->PositionOnTargetX;
+    double y_p = data->Cats->Get()->PositionOnTargetY;
+
+    if (x_p==-1000)
+        x_p=0;
+    if (y_p==-1000)
+        y_p=0;
+
+    double z_p = 0;
+    double xx{x_d-x_p};
+    double yy{y_d-y_p};
+    double zz{z_d-z_p};
+
+    double x{0};
+    double y{0};
+    double z{0};
+
+    double tmp_threashold{1E4*UNITS::mm};
+    double tmp_precision{0.01*UNITS::mm};
+
+    //Computes the intersection point between the interpolation and the trajectory of the particle starting
+    //from the middle of the target
+    std::cout << "Thickness : " << this->gas_thickness_cartesian->Evaluate(sqrt(x_p*x_p+y_p*y_p)) << std::endl;
+    std::cout << "at X: " << x_p << std::endl;
+    std::cout << "at Y: " << y_p << std::endl;
+    distance_minimizer.reset(new Minimizer([&,this](const double &x) {
+                                                return pow(zz/xx*(x-x_p)+z_p-this->gas_thickness_cartesian->Evaluate(sqrt(x*x+pow(yy/xx*(x-x_p)+y_p, 2))),
+                                                           2);
+                                                },
+                                         x,        //starting value
+                                         1E4*UNITS::mm, //learning rate
+                                         tmp_threashold,                     //threashold
+                                         100,                                //max_steps
+                                         1,                                  //quenching
+                                         1E-2*UNITS::mm)                     //h
+                               );
+
+    while (fabs(zz/xx*(x-x_p)+z_p-this->gas_thickness_cartesian->Evaluate(sqrt(x*x+pow(yy/xx*(x-x_p)+y_p, 2)))) > tmp_precision){
+        tmp_threashold/=2;
+        distance_minimizer->SetThreashold(tmp_threashold);
+        x = distance_minimizer->Minimize();
+    }
+
+    y = yy/xx * (x-x_p) + y_p;
+    z = zz/xx * (x-x_p) + z_p;
+    std::cout << "------------------->Result : "  << sqrt(pow(x-x_p,2)+pow(y-y_p,2)+pow(z-z_p,2)) << std::endl;
+    return sqrt(pow(x-x_p,2)+pow(y-y_p,2)+pow(z-z_p,2));
 }

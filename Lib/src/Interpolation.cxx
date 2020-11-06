@@ -1,6 +1,3 @@
-#ifndef INTERPOLATION_H
-#define INTERPOLATION_H
-
 #include "Interpolation.h"
 
 //ClassImp(Interpolation);
@@ -72,4 +69,8 @@ TSpline *Interpolation::GetSpline(){
     return spline;
 }
 
-#endif
+void Interpolation::SetUnits(const double &x_unit, const double &y_unit) {
+    this->x_unit = x_unit;
+    this->y_unit = y_unit;
+}
+

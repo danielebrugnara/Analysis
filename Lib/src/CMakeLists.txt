@@ -60,7 +60,7 @@ target_link_libraries(VamosIdentification ${ROOT_LIBRARIES} Interpolation)
 ROOT_GENERATE_DICTIONARY(G__MugastIdentification MugastIdentification.h LINKDEF ${analysis_SOURCE_DIR}/Lib/inc/MugastIdentificationLinkDef.h)
 add_library(MugastIdentification SHARED MugastIdentification.cxx Identification.cxx G__MugastIdentification.cxx G__Identification.cxx)
 set_target_properties(MugastIdentification PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
-target_link_libraries(MugastIdentification ${ROOT_LIBRARIES} Interpolation Minimizer NPMugast Calibration EnergyLoss NPPhysics NPReactionConditions)
+target_link_libraries(MugastIdentification ${ROOT_LIBRARIES} Interpolation Minimizer NPMugast NPCATS Calibration EnergyLoss NPPhysics NPReactionConditions)
 
 ROOT_GENERATE_DICTIONARY(G__AgataProcessing AgataProcessing.h LINKDEF ${analysis_SOURCE_DIR}/Lib/inc/AgataProcessingLinkDef.h)
 add_library(AgataProcessing SHARED AgataProcessing.cxx G__AgataProcessing.cxx)

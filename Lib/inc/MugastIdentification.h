@@ -16,6 +16,7 @@
 #include "ReactionFragment.h"
 
 #include "TMugastPhysics.h"
+#include "TCATSPhysics.h"
 
 class MugastIdentification : public Identification
 {
@@ -28,13 +29,16 @@ public: //Data exchange  types
     struct Data
     {
         TTreeReaderValue<TMugastPhysics> *Mugast;
+        TTreeReaderValue<TCATSPhysics> *Cats;
         TTreeReaderValue<float> *TW;
         int VAMOS_id_M;
         int VAMOS_id_Z;
         Data(TTreeReaderValue<TMugastPhysics> *Mugast,
+             TTreeReaderValue<TCATSPhysics> *Cats,
              TTreeReaderValue<float> *TW,
              int VAMOS_id_M,
              int VAMOS_id_Z) : Mugast(Mugast),
+                               Cats(Cats),
                                TW(TW),
                                VAMOS_id_M(VAMOS_id_M),
                                VAMOS_id_Z(VAMOS_id_Z){};
@@ -75,6 +79,7 @@ private: //Variables used internally
 
     //Interpolations
     Interpolation *gas_thickness{};
+    Interpolation *gas_thickness_cartesian{};
     Interpolation *havar_angle{};
     Interpolation *TW_Brho_M46_Z18{};
     Interpolation *ice_thickness{};
@@ -82,7 +87,8 @@ private: //Variables used internally
     std::vector<std::pair<double, double>> TW_vs_ice;
 
     //Minimizer for ice thickness estimation
-    Minimizer *ice_thickness_minimizer{};
+    std::unique_ptr<Minimizer> ice_thickness_minimizer;
+    std::unique_ptr<Minimizer> distance_minimizer;
 
     //Calibrations
     std::unordered_map<int, Calibration *> calibrations_TY;
@@ -156,6 +162,7 @@ private: //Internal initialization methods
 
 private: //Functions used internally during analysis
     void    IdentifyIceThickness();
+    double  ComputeDistanceInGas(const TVector3&, const TVector3&);
     double  InitialBeamEnergy(double, double);
     double  MiddleTargetBeamEnergy(double);
 

@@ -161,6 +161,7 @@ public:
     inline void PlotVamosGraphs();
     inline void PlotMugastGraphs();
     inline void PlotAgataGraphs();
+    inline void PlotCatsGraphs();
 
     //Constants
     const Long64_t TS_TO_S = 1E8;
