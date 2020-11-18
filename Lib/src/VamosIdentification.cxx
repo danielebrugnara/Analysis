@@ -121,7 +121,7 @@ void VamosIdentification::ReadFPTimeShifts()
         std::stringstream str;
         str << line;
         str >> min >> max >> shift;
-        TimeShifts.push_back(std::pair<double, double>(std::stod(max), std::stod(shift)));
+        TimeShifts.emplace_back(std::stod(max), std::stod(shift));
     }
     double tmp = -1E6;
     DEBUG("Dumping FP shift calibration", "");
@@ -137,6 +137,10 @@ void VamosIdentification::ReadFPTimeShifts()
 
 bool VamosIdentification::Identify()
 {
+    fragment.PTPosition.Set(**data->Pf,**data->Tf);
+    fragment.FocalPlanePosition.Set(**data->Xf,**data->Yf);
+    fragment.EmissionVersor.SetMagThetaPhi(1, **data->ThetaL, **data->PhiL);
+
     fragment.En = ((*data->IC)[0] > IC_threashold) * ((*data->IC)[0] +
                                                        ((*data->IC)[1] > IC_threashold) * (((*data->IC)[1] * (**data->Xf <= 45)) + (((*data->IC)[1] + 1.) * (**data->Xf > 45)) + //Correction for mis aligment IC1:Xf
                                                                                            ((*data->IC)[2] > IC_threashold) * ((*data->IC)[2] +

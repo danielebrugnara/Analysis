@@ -3,6 +3,8 @@
 #include <vector>
 
 #include <TLorentzVector.h>
+#include <TVector2.h>
+#include <TVector3.h>
 
 class VamosData: public TObject{
     public:
@@ -10,6 +12,9 @@ class VamosData: public TObject{
     double D_En;       //DE 1+2
     double D_En2;      //DE 1
     double Path;       //Reconstructed path
+    TVector2 FocalPlanePosition;
+    TVector2 PTPosition;
+    TVector3 EmissionVersor;
     double T;          //Time
     double V;          //Velocity
     double Beta;       //Beta
@@ -26,6 +31,9 @@ class VamosData: public TObject{
                  D_En(0),
                  D_En2(0),
                  Path(0),
+                 FocalPlanePosition(),
+                 PTPosition(),
+                 EmissionVersor(),
                  T(0),
                  V(0),
                  Beta(0),

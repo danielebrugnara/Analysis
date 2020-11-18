@@ -20,6 +20,12 @@ int main(int argc, char* argv[]){
     std::vector<std::string> files;
     for (int ii=1; ii<argc;++ii){
         std::string val(argv[ii]);
+        if (val.find("-h") != std::string::npos) {
+            std::cout << "--run-selector\t\t\t\truns selector starting from tree\n";
+            std::cout << "--debug-canvas\t\t\t\tshows canvas with fits\n";
+            std::cout << "--use-cores\t\t\t\tuses core graphs instead of addback\n";
+            return 0;
+        }
         if (val.find("--run-selector") != std::string::npos) {
             run_selector = true;
             //skip_argc[ii] = true;

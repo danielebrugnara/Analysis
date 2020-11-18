@@ -349,7 +349,7 @@ void Selector::Terminate(){
 }
 
 inline void Selector::LoadVamosData(){
-    vamos_fragment.SetData(new VamosIdentification::Data(&IC, &Path, &Brho, &Xf,
+    vamos_fragment.SetData(new VamosIdentification::Data(&IC, &Path, &Brho, &Xf, &Yf, &Pf, &Tf,
                                                          &ThetaL, &PhiL, &AGAVA_VAMOSTS,
                                                          &T_FPMW_CATS2_C));
 }

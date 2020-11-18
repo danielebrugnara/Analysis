@@ -101,7 +101,9 @@ public:
     TTreeReaderValue<Float_t> DC3_X = {fReader, "DC3_X"};
     TTreeReaderValue<Float_t> DC3_Y = {fReader, "DC3_Y"};
     TTreeReaderValue<Float_t> Xf = {fReader, "Xf"};
+    TTreeReaderValue<Float_t> Yf = {fReader, "Yf"};
     TTreeReaderValue<Float_t> Tf = {fReader, "Tf"};
+    TTreeReaderValue<Float_t> Pf = {fReader, "Pf"};
     TTreeReaderValue<Float_t> PhiL = {fReader, "PhiL"};
     TTreeReaderValue<Float_t> ThetaL = {fReader, "ThetaL"};
     TTreeReaderValue<Float_t> Brho = {fReader, "Brho"};

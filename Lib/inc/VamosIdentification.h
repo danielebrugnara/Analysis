@@ -25,6 +25,9 @@ public:
         TTreeReaderValue<float> *Path;
         TTreeReaderValue<float> *Brho;
         TTreeReaderValue<float> *Xf;
+        TTreeReaderValue<float> *Yf;
+        TTreeReaderValue<float> *Pf;
+        TTreeReaderValue<float> *Tf;
         TTreeReaderValue<float> *ThetaL;
         TTreeReaderValue<float> *PhiL;
         TTreeReaderValue<long long unsigned int> *AGAVA_VAMOSTS;
@@ -33,6 +36,9 @@ public:
              TTreeReaderValue<float> *Path,
              TTreeReaderValue<float> *Brho,
              TTreeReaderValue<float> *Xf,
+             TTreeReaderValue<float> *Yf,
+             TTreeReaderValue<float> *Pf,
+             TTreeReaderValue<float> *Tf,
              TTreeReaderValue<float> *ThetaL,
              TTreeReaderValue<float> *PhiL,
              TTreeReaderValue<long long unsigned int> *AGAVA_VAMOSTS,
@@ -40,6 +46,9 @@ public:
                                                         Path(Path),
                                                         Brho(Brho),
                                                         Xf(Xf),
+                                                        Yf(Yf),
+                                                        Pf(Pf),
+                                                        Tf(Tf),
                                                         ThetaL(ThetaL),
                                                         PhiL(PhiL),
                                                         AGAVA_VAMOSTS(AGAVA_VAMOSTS),
