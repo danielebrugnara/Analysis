@@ -168,7 +168,7 @@ public:
     const Long64_t TS_TO_HR = 1E8 * 3600;
 
     //Jolly pointer to fill histogram
-    std::unique_ptr<TH1> general_histo_ptr{};
+    std::unique_ptr<TH3D> general_histo_ptr{};
 
     std::string file_name;
 
@@ -222,11 +222,14 @@ public:
         std::unique_ptr<TH2D> hit_XY;
         std::unique_ptr<TH2D> hit_XZ;
         std::unique_ptr<TH2D> hit_YZ;
+        std::unique_ptr<TH2D> hit_ThetaPhi;
         std::unordered_map<int, std::unique_ptr<TH2D>> mE_TOF;                                     //[M*#]
         std::unordered_map<int, std::unique_ptr<TH2D>> mE_TOF2;                                    //[M*#]
         std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH2D>>> mStrip_E;  //[M*#][X\Y]
         std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH2D>>> mStrip_T;  //[M*#][X\Y]
         std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH2D>>> mStrip_T2; //[M*#][X\Y]
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<TH2D>>>>> mELab_ESI;
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<TH2D>>>>> mThetaLab_ELost;
     };
 
     struct MGData{
@@ -236,6 +239,7 @@ public:
         //std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH2D>>>> mECM_ThetaCM;
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<TH2D>>>>> mELab_ThetaLab;
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<TH2D>>>>> mEx_ThetaLab;
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<TH2D>>>>> mEx_Phi;
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<TH1D>>>>> hThetaCM;
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<std::string, std::unique_ptr<TH2D>>>> mEx_EDC;
     };
@@ -275,6 +279,7 @@ public:
 
     Conf pConf;
     Data pData;
+    std::unique_ptr<TTree> tree;
 
 private:
     //struct HistogramSettings{
@@ -313,6 +318,7 @@ private:
     static inline bool Fill(TH1D* , const Double_t &);
     static inline bool Fill(TH2D* , const Double_t &, const Double_t &);
     static inline bool Fill(TH3D* , const Double_t &, const Double_t &, const Double32_t &);
+    static inline bool Fill(TTree*);
 
     //ClassDef(Selector,0);
 };

@@ -11,8 +11,7 @@ VamosIdentification::VamosIdentification() : cuts_Z({18, 19, -1}),
                                              //cuts_Q({13, 14, 15, 16, 17, 18, 19, -1, -2}),
                                              cuts_M({45, 46, 47, -2}),
                                              cuts_Q({13, 14, 15, 16, 17, 18, 19, -2}),
-                                             data(nullptr),
-                                             fragment(nullptr)
+                                             data(nullptr)
 {
 }
 
@@ -22,7 +21,7 @@ bool VamosIdentification::Initialize()
 
     //Focal plane aligments
     ReadFPTimeShifts();
-    TFile *tmp_file = new TFile("./Configs/Interpolations/InterpolationTimeFP.root");
+    auto *tmp_file = new TFile("./Configs/Interpolations/InterpolationTimeFP.root");
     FP_time_interpolation = new Interpolation(tmp_file);
     tmp_file->Close();
 
@@ -31,11 +30,15 @@ bool VamosIdentification::Initialize()
     {
         for (const auto &it_Z : cuts_Z)
         {
-            mass[it_M][it_Z] = NPL::Nucleus(it_Z, it_M).Mass();
+            //mass[it_M][it_Z] = NPL::Nucleus(it_Z, it_M).Mass();
+            if (it_Z > 0 && it_M > 0)
+                mass[it_M][it_Z] = ReactionFragment(ReactionFragment::FragmentSettings(it_M, it_Z, it_Z, 0, 0)).Get_M();
+            else
+                mass[it_M][it_Z] = 0;
         }
     }
 
-    std::unordered_map<std::string, TCutG *> *tmp = new std::unordered_map<std::string, TCutG *>();
+    auto *tmp = new std::unordered_map<std::string, TCutG *>();
 
     //It would be possible to parse the string to make automatic
     //what follows, however this gives possibility for better fine
@@ -101,7 +104,6 @@ bool VamosIdentification::Initialize()
 VamosIdentification::~VamosIdentification()
 {
     delete data;
-    delete fragment;
     delete FP_time_interpolation;
 }
 
@@ -135,68 +137,68 @@ void VamosIdentification::ReadFPTimeShifts()
 
 bool VamosIdentification::Identify()
 {
-    fragment->En = ((*data->IC)[0] > IC_threashold) * ((*data->IC)[0] +
+    fragment.En = ((*data->IC)[0] > IC_threashold) * ((*data->IC)[0] +
                                                        ((*data->IC)[1] > IC_threashold) * (((*data->IC)[1] * (**data->Xf <= 45)) + (((*data->IC)[1] + 1.) * (**data->Xf > 45)) + //Correction for mis aligment IC1:Xf
                                                                                            ((*data->IC)[2] > IC_threashold) * ((*data->IC)[2] +
-                                                                                                                               ((*data->IC)[3] > IC_threashold) * ((*data->IC)[3] +
-                                                                                                                                                                   ((*data->IC)[4] > IC_threashold) * ((*data->IC)[4] +
-                                                                                                                                                                                                       ((*data->IC)[5] > IC_threashold) * ((*data->IC)[5]))))));
-    fragment->D_En = ((*data->IC)[0] > IC_threashold) * ((*data->IC)[0] + ((*data->IC)[1] > IC_threashold) * ((*data->IC)[1]));
-    fragment->D_En2 = (*data->IC)[0] * ((*data->IC)[1] > IC_threashold);
+                                                                                           ((*data->IC)[3] > IC_threashold) * ((*data->IC)[3] +
+                                                                                           ((*data->IC)[4] > IC_threashold) * ((*data->IC)[4] +
+                                                                                           ((*data->IC)[5] > IC_threashold) * ((*data->IC)[5]))))));
+    fragment.D_En = ((*data->IC)[0] > IC_threashold) * ((*data->IC)[0] + ((*data->IC)[1] > IC_threashold) * ((*data->IC)[1]));
+    fragment.D_En2 = (*data->IC)[0] * ((*data->IC)[1] > IC_threashold);
 
     //Computing the basic identifiaction
-    fragment->T = GetFPTime();
-    fragment->Path = **data->Path + 5;
-    fragment->V = fragment->Path / fragment->T;
-    fragment->Beta = fragment->V / 29.9792;
-    fragment->Gamma = 1. / sqrt(1.0 - fragment->Beta * fragment->Beta);
-    fragment->M = (fragment->En) / 931.5016 / (fragment->Gamma - 1.);
+    fragment.T = GetFPTime();
+    fragment.Path = **data->Path + 5;
+    fragment.V = fragment.Path / fragment.T;
+    fragment.Beta = fragment.V / 29.9792;
+    fragment.Gamma = 1. / sqrt(1.0 - fragment.Beta * fragment.Beta);
+    fragment.M = (fragment.En) / 931.5016 / (fragment.Gamma - 1.);
     //mM2               = 18./20.8*(mE2)/931.5016/(mGamma2-1.);
-    fragment->M_Q = **data->Brho / 3.105 / fragment->Beta / fragment->Gamma;
-    fragment->Charge = fragment->M / fragment->M_Q;
+    fragment.M_Q = **data->Brho / 3.105 / fragment.Beta / fragment.Gamma;
+    fragment.Charge = fragment.M / fragment.M_Q;
 
     //dE - E identification
     for (const auto &z_search : cut_type.at("dE2_E"))
     {
-        if (z_search.second->IsInside(fragment->En, fragment->D_En2))
+        if (z_search.second->IsInside(fragment.En, fragment.D_En2))
         {
             //Z format dE2_E_Z18
-            if (fragment->id_Z == 0)
-                fragment->id_Z = std::stoi(
+            if (fragment.id_Z == 0)
+                fragment.id_Z = std::stoi(
                     z_search.first.substr(z_search.first.find_last_of("_Z") + 1));
             else
                 throw std::runtime_error("Overlapping Z gates\n");
         }
     }
-    if (fragment->id_Z == 0)
+    if (fragment.id_Z == 0)
         return false;
 
     //MQ - Q identification
     for (const auto &mq_search : cut_type.at("MQ_Q"))
     {
-        if (mq_search.second->IsInside(fragment->M_Q, fragment->Charge))
+        if (mq_search.second->IsInside(fragment.M_Q, fragment.Charge))
         {
-            if (fragment->id_M == 0 && fragment->id_Q == 0)
+            if (fragment.id_M == 0 && fragment.id_Q == 0)
             {
-                fragment->id_M = std::stoi(mq_search.first.substr(mq_search.first.find_last_of("M") + 1, 2));
-                fragment->id_Q = std::stoi(mq_search.first.substr(mq_search.first.find_last_of("_") + 2));
+                fragment.id_M = std::stoi(mq_search.first.substr(mq_search.first.find_last_of("M") + 1, 2));
+                fragment.id_Q = std::stoi(mq_search.first.substr(mq_search.first.find_last_of("_") + 2));
             }
             else
                 throw std::runtime_error("Overlapping M_Q gates :  " + mq_search.first +
-                                         "  and  M" + std::to_string(fragment->id_M) +
-                                         "  Q" + std::to_string(fragment->id_Q) + "\n");
+                                         "  and  M" + std::to_string(fragment.id_M) +
+                                         "  Q" + std::to_string(fragment.id_Q) + "\n");
         }
     }
-    if (fragment->id_M == 0 || fragment->id_Q == 0)
+    if (fragment.id_M == 0 || fragment.id_Q == 0)
         return false;
 
     //Lorentzvector computation
-    fragment->p4.SetT(mass[fragment->id_M][fragment->id_Z]);
-    TVector3 v4(0, 0, fragment->Beta);
-    v4.SetMagThetaPhi(fragment->Beta, **data->ThetaL, **data->PhiL);
-    fragment->p4.Boost(v4);
+    fragment.p4.SetT(mass[fragment.id_M][fragment.id_Z]);
+    TVector3 v4(0, 0, fragment.Beta);
+    v4.SetMagThetaPhi(fragment.Beta, **data->ThetaL, **data->PhiL);
+    fragment.p4.Boost(v4);
 
-    return fragment->Identified = true;
+    return fragment.Identified = true;
 }
 
 double VamosIdentification::GetShift()
@@ -218,7 +220,7 @@ double VamosIdentification::GetShift()
 }
 
 double VamosIdentification::Get_EnFromBrho(){
-    if(fragment->id_Z == 0 || fragment->id_M == 0 || fragment->id_Q == 0) 
+    if(fragment.id_Z == 0 || fragment.id_M == 0 || fragment.id_Q == 0)
         return 0;
-    return sqrt(pow(**data->Brho / 3.3356E-3 * fragment->id_Q, 2) + pow(mass[fragment->id_M][fragment->id_Z], 2)) - (mass[fragment->id_M][fragment->id_Q]);
+    return sqrt(pow(**data->Brho / 3.3356E-3 * fragment.id_Q, 2) + pow(mass[fragment.id_M][fragment.id_Z], 2)) - (mass[fragment.id_M][fragment.id_Q]);
 }

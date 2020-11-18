@@ -14,6 +14,7 @@
 #include "EnergyLoss.h"
 #include "ReactionReconstruction.h"
 #include "ReactionFragment.h"
+#include "MugastData.h"
 
 #include "TMugastPhysics.h"
 #include "TCATSPhysics.h"
@@ -102,57 +103,9 @@ private: //Variables used internally
     double havar_thickness;
 
 
-private: //Analyzed structure
-    struct Fragment
-    {
-        const unsigned int multiplicity;            //Number of particles detected
-        std::vector<TVector3> Pos;                  //3D positions
-        std::vector<TVector3> EmissionDirection;    //Depends on the target position
-        std::vector<TVector3> TelescopeNormal;      //
-        std::vector<int> SI_X;                      //Intrinsic X
-        std::vector<int> SI_Y;                      //Intrinsic Y
-        std::vector<double> SI_E;                   //Energy deposition measured
-        std::vector<double> SI_E2;                  //Second layer energy deposition
-        std::vector<double> E;                      //After E-Loss corrections
-        std::vector<double> E_CM;                   //After E-Loss corrections
-        std::vector<double> Ex;                     //Ex computed with reaction
-        std::vector<double> E2;                     //Second layer 
-        std::vector<double> SI_T;                   //Un calibrated time
-        std::vector<double> T;                      //Calibrated time
-        std::vector<double> T2;                     //
-        std::vector<double> MG;                     //
-        std::vector<int> M;                         //Mass number
-        std::vector<int> Z;                         //Z number
-        std::vector<bool> Indentified;              //
-        std::vector<std::string> Particle;          //
-        Fragment(const unsigned int multiplicity)
-            : multiplicity(multiplicity)
-        {
-            Pos.resize(multiplicity);
-            EmissionDirection.resize(multiplicity);
-            TelescopeNormal.resize(multiplicity);
-            SI_X.resize(multiplicity);
-            SI_Y.resize(multiplicity);
-            SI_E.resize(multiplicity);
-            SI_E2.resize(multiplicity);
-            E.resize(multiplicity);
-            E_CM.resize(multiplicity);
-            Ex.resize(multiplicity);
-            E2.resize(multiplicity);
-            SI_T.resize(multiplicity);
-            T.resize(multiplicity);
-            T2.resize(multiplicity);
-            MG.resize(multiplicity);
-            M.resize(multiplicity);
-            Z.resize(multiplicity);
-            Indentified.resize(multiplicity);
-            Particle.resize(multiplicity);
-        };
-    };
-
 private: //Data input and output
     Data const *data;
-    Fragment *fragment;
+    MugastData fragment;
 
 private: //Internal initialization methods
     bool InitializeCuts();
@@ -169,24 +122,27 @@ private: //Functions used internally during analysis
 public: //Functions called by selector
     bool Identify();
     //Getter methods
-    inline unsigned int Get_Mult()              { return fragment->multiplicity; };
-    inline TVector3*    Get_Pos(const int &i)   { return &(fragment->Pos[i]); };
-    inline int          Get_SI_X(const int &i)  { return fragment->SI_X[i]; };
-    inline int          Get_SI_Y(const int &i)  { return fragment->SI_Y[i]; };
-    inline double       Get_SI_E(const int &i)  { return fragment->SI_E[i]; };
-    inline double       Get_T2(const int &i)    { return fragment->T2[i]; };
-    inline double       Get_MG(const int &i)    { return fragment->MG[i]; };
-    inline double       Get_M(const int &i)     { return fragment->M[i]; };
-    inline double       Get_Z(const int &i)     { return fragment->Z[i]; };
-    inline double       Get_E(const int &i)     { return fragment->E[i]; };
-    inline double       Get_Ex(const int &i)    { return fragment->Ex[i]; };
-    inline double       Get_T(const int &i)     { return fragment->T[i]; }
-    inline std::string  Get_Particle(const int &i)  { return fragment->Particle[i]; }
-    inline double       Get_ThetaCM(const int &i)   {return fragment->E_CM[i];};
+    inline unsigned int Get_Mult()             const { return fragment.multiplicity; };
+    inline TVector3*    Get_Pos(const int &i)        { return &(fragment.Pos[i]); };
+    inline int          Get_SI_X(const int &i) const { return fragment.SI_X[i]; };
+    inline int          Get_SI_Y(const int &i) const { return fragment.SI_Y[i]; };
+    inline double       Get_SI_E(const int &i) const { return fragment.SI_E[i]; };
+    inline double       Get_T2(const int &i)   const { return fragment.T2[i]; };
+    inline double       Get_MG(const int &i)   const { return fragment.MG[i]; };
+    inline double       Get_M(const int &i)    const { return fragment.M[i]; };
+    inline double       Get_Z(const int &i)    const { return fragment.Z[i]; };
+    inline double       Get_E(const int &i)    const { return fragment.E[i]; };
+    inline double       Get_Ex(const int &i)   const { return fragment.Ex[i]; };
+    inline double       Get_T(const int &i)    const { return fragment.T[i]; }
+    inline std::string  Get_Particle(const int &i) const { return fragment.Particle[i]; }
+    inline double       Get_ThetaCM(const int &i)  const {return fragment.E_CM[i];};
     inline TVector3*    Get_EmissionDirection(const int &i)
-        { return &(fragment->EmissionDirection[i]); };
-    inline double       Get_ThetaLab(const int &i)
-        {return fragment->EmissionDirection[i].Angle(TVector3(0, 0, 1));};
+        { return &(fragment.EmissionDirection[i]); };
+    inline double       Get_ThetaLab(const int &i) const
+        {return fragment.EmissionDirection[i].Angle(TVector3(0, 0, 1));};
+    inline double       Get_Phi(const int &i) const
+        {return fragment.EmissionDirection[i].Phi();};
+    inline MugastData&  Get_Data()                  {return  fragment;}
 
     //Other methods
     std::vector<std::pair<double, double>> GetTWvsIce();
@@ -200,8 +156,10 @@ public: //Functions called by selector
 
     inline void SetData(Data const *data){
         delete this->data;
-        delete this->fragment;
         this->data = data;
-        fragment = new Fragment((**(data->Mugast)).DSSD_E.size());
+
+        //The following constructs at the same address
+        fragment.~MugastData();
+        new(&fragment) MugastData((**(data->Mugast)).DSSD_E.size());
     };
 };

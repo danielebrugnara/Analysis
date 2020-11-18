@@ -6,8 +6,8 @@
 
 #include "Identification.h"
 #include "Interpolation.h"
-
-#include "NPNucleus.h"
+#include "VamosData.h"
+#include "ReactionFragment.h"
 
 #include <array>
 #include <sstream>
@@ -56,43 +56,8 @@ private:
     const Double_t AMU_TO_MEV{931.4936148};
     void ReadFPTimeShifts();
     std::vector<std::pair<double, double>> TimeShifts; //Xf-max, shift
-    struct Fragment
-    {
-        double En;         //Energy IC
-        double D_En;       //DE 1+2
-        double D_En2;      //DE 1
-        double Path;       //Reconstructed path
-        double T;          //Time
-        double V;          //Velocity
-        double Beta;       //Beta
-        double Gamma;      //Gamma
-        double M_Q;        //Mass over charge
-        double M;          //Mass
-        double Charge;     //Charge state
-        bool Identified;   //Positive identification
-        TLorentzVector p4; //4 momentum of recoil
-        int id_M;
-        int id_Z;
-        int id_Q;
-        Fragment() : En(0),
-                     D_En(0),
-                     D_En2(0),
-                     Path(0),
-                     T(0),
-                     V(0),
-                     Beta(0),
-                     Gamma(0),
-                     M_Q(0),
-                     M(0),
-                     Charge(0),
-                     Identified(false),
-                     p4(),
-                     id_M(0),
-                     id_Z(0),
-                     id_Q(0){};
-    };
     Data const *data;
-    Fragment *fragment;
+    VamosData fragment;
 
     Interpolation *FP_time_interpolation;
 
@@ -101,22 +66,24 @@ private:
 public:
     //Various computed fragment properties
 
-    inline double Get_En() { return fragment->En; };
-    inline double Get_D_En() { return fragment->D_En; };
-    inline double Get_D_En2() { return fragment->D_En2; };
-    inline double Get_Path() { return fragment->Path; };
-    inline double Get_T() { return fragment->T; };
-    inline double Get_V() { return fragment->V; };
-    inline double Get_Beta() { return fragment->Beta; };
-    inline double Get_Gamma() { return fragment->Gamma; };
-    inline double Get_M_Q() { return fragment->M_Q; };
-    inline double Get_M() { return fragment->M; };
-    inline double Get_Charge() { return fragment->Charge; };
-    inline double Identified() { return fragment->Identified; };
-    inline TLorentzVector *Get_p4() { return &(fragment->p4); };
-    inline unsigned int Get_id_Z() { return fragment->id_Z; };
-    inline unsigned int Get_id_M() { return fragment->id_M; };
-    inline unsigned int Get_id_Q() { return fragment->id_Q; };
+    inline double Get_En()            const { return fragment.En; };
+    inline double Get_D_En()          const { return fragment.D_En; };
+    inline double Get_D_En2()         const { return fragment.D_En2; };
+    inline double Get_Path()          const { return fragment.Path; };
+    inline double Get_T()             const { return fragment.T; };
+    inline double Get_V()             const { return fragment.V; };
+    inline double Get_Beta()          const { return fragment.Beta; };
+    inline double Get_Gamma()         const { return fragment.Gamma; };
+    inline double Get_M_Q()           const { return fragment.M_Q; };
+    inline double Get_M()             const { return fragment.M; };
+    inline double Get_Charge()        const { return fragment.Charge; };
+    inline double Identified()        const { return fragment.Identified; };
+    inline TLorentzVector *Get_p4()         { return &(fragment.p4); };
+    inline unsigned int Get_id_Z()    const { return fragment.id_Z; };
+    inline unsigned int Get_id_M()    const { return fragment.id_M; };
+    inline unsigned int Get_id_Q()    const { return fragment.id_Q; };
+
+    inline VamosData& Get_Data()        {return fragment;};
 
     double Get_EnFromBrho();
     //////////////////////////////////////////////////////////////////
@@ -124,12 +91,12 @@ public:
 public:
     inline void SetData(Data const *data)
     {
-        if (this->data != nullptr)
-            delete this->data;
-        if (this->fragment != nullptr)
-            delete this->fragment;
-        fragment = new Fragment();
+        delete this->data;
         this->data = data;
+
+        //The following constructs at the same address
+        fragment.~VamosData();
+        new(&fragment) VamosData();
     }
 
     bool Identify();

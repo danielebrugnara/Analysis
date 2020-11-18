@@ -160,6 +160,12 @@ void Selector::SlaveBegin(TTree * /*tree*/){
                             1000, -150, 150,
                             1000, -150, 150));
 
+    Istantiate(pConf.MG.hit_ThetaPhi ,
+               new TH2D("pConf_MG_hit_ThetaPhi",
+                        "Hits on Mugast Theta vs Phi",
+                        1000, 0, UNITS::CONSTANTS::pi,
+                        1000, -UNITS::CONSTANTS::pi, UNITS::CONSTANTS::pi));
+
     for (const auto &it_MG : mugast_fragment.cuts_MG){
         //E TOF////////////////////////////////////////
         Istantiate(pConf.MG.mE_TOF[it_MG],
@@ -220,20 +226,35 @@ void Selector::SlaveBegin(TTree * /*tree*/){
                                     1000, -20, 20, 2500, 0, 2500));
 
                 for (const auto &it_gamma : gammas){
+                    Istantiate(pConf.MG.mELab_ESI[it_M][it_Z][particle][it_gamma],
+                               new TH2D(Form("pConf_MG_mELab_ESI_M%i_Z%i_%s_%s", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
+                                        Form("ELab vs Silicon energy with M%i Z%i in VAMOS and %s in MUGAST and %s in AGATA", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
+                                        1000, 0, 20, 1000, 0, 20));
+
+                    Istantiate(pConf.MG.mThetaLab_ELost[it_M][it_Z][particle][it_gamma],
+                               new TH2D(Form("pConf_MG_mELost_ThetaLab_M%i_Z%i_%s_%s", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
+                                        Form("Energy lost in target layers vs Theta Lab with M%i Z%i in VAMOS and %s in MUGAST and %s in AGATA", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
+                                        1000, 0, UNITS::CONSTANTS::pi, 1000, 0, 20));
+
                     Istantiate(pData.MG.mELab_ThetaLab[it_M][it_Z][particle][it_gamma],
                                new TH2D(Form("pData_MG_mELab_ThetaLab_M%i_Z%i_%s_%s", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
                                         Form("ELab vs Theta Lab with M%i Z%i in VAMOS and %s in MUGAST and %s in AGATA", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
-                                        1000, 0, 3.1416, 1000, 0, 20));
+                                        1000, 0, UNITS::CONSTANTS::pi, 1000, 0, 20));
 
                     Istantiate(pData.MG.mEx_ThetaLab[it_M][it_Z][particle][it_gamma],
                                new TH2D(Form("pData_MG_mEx_ThetaLab_M%i_Z%i_%s_%s", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
                                         Form("Ex vs Theta Lab with M%i Z%i in VAMOS and %s in MUGAST and %s in AGATA", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
-                                        1000, 0, 3.1416, 1000, -10, 10));
+                                        1000, 0, UNITS::CONSTANTS::pi, 1000, -10, 10));
+
+                    Istantiate(pData.MG.mEx_Phi[it_M][it_Z][particle][it_gamma],
+                               new TH2D(Form("pData_MG_mEx_Phi_M%i_Z%i_%s_%s", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
+                                        Form("Ex vs Phi with M%i Z%i in VAMOS and %s in MUGAST and %s in AGATA", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
+                                        1000, -UNITS::CONSTANTS::pi, UNITS::CONSTANTS::pi, 1000, -10, 10));
 
                     Istantiate(pData.MG.hThetaCM[it_M][it_Z][particle][it_gamma],
                                new TH1D(Form("pData_MG_hThetaCM_M%i_Z%i_%s_%s", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
                                         Form("Theta CM with M%i Z%i in VAMOS and %s in MUGAST and %s in AGATA", it_M, it_Z, particle.c_str(), it_gamma.c_str()),
-                                        1000, 0, 3.1415));
+                                        1000, 0, UNITS::CONSTANTS::pi));
                 }
             }
             Istantiate(pData.MG.hEx[it_M][it_Z]["NONE"],
@@ -243,19 +264,27 @@ void Selector::SlaveBegin(TTree * /*tree*/){
         }
     }
 
+    Istantiate(tree , new TTree("AnalyzedTree", "AnalyzedTree"));
+    if (tree) {
+        tree->Branch("VamosData", &vamos_fragment.Get_Data());
+        tree->Branch("MugastData", &mugast_fragment.Get_Data());
+        tree->Branch("AgataData", &agata_gammas.Get_Data());
+    }
     //TODO: Add MUST2
 
+    //Exit if the graph file was not created
     if (new_graph_file != nullptr){
         new_graph_file->close();
+        std::cout << "Exiting from selector after creating new graph file!\n";
         exit(1);
     }
+
 
     DEBUG("------------>finished: SI initialization", "");
 
     ///Temporary histogram///////////////////////////////////////////////////////////////////////////
-    general_histo_ptr.reset(new TH2D("test", "Ex vs theta Lab", 1000, TMath::Pi()/2., TMath::Pi(), 1000, -10, 10));
-    //fOutput->Add(general_histo_ptr.get());
-    Output.push_back(general_histo_ptr.get());
+    general_histo_ptr.reset(new TH3D("test", "Ex vs theta Lab",  1000, 0, 10, 1000, 260, 380, 12, 0, 12));
+     Output.push_back(general_histo_ptr.get());
 
     DEBUG("------------>finished: Selector::SlaveBegin()", "");
 }
@@ -296,6 +325,12 @@ Bool_t Selector::Process(Long64_t entry){
     if (entry % 10000 == 0)
         mugast_fragment.StoreTWvsIce();
 
+    for (unsigned int ii = 0; ii < mugast_fragment.Get_Mult(); ++ii) {
+        if (mugast_fragment.Get_Ex(ii)<-2.)
+            general_histo_ptr->Fill(mugast_fragment.Get_SI_E(ii), mugast_fragment.Get_T(ii), mugast_fragment.Get_MG(ii) );
+    }
+
+    Fill(tree.get());
     return kTRUE;
 }
 
@@ -387,6 +422,9 @@ inline void Selector::PlotMugastGraphs(){
                     mugast_fragment.Get_Pos(ii)->Y(),
                     mugast_fragment.Get_Pos(ii)->Z());
 
+            Fill(pConf.MG.hit_ThetaPhi.get(),
+                 mugast_fragment.Get_Pos(ii)->Theta(),
+                 mugast_fragment.Get_Pos(ii)->Phi());
         }
         //Ex
         Fill(pData.MG.hEx[vamos_fragment.Get_id_M()]
@@ -401,24 +439,40 @@ inline void Selector::PlotMugastGraphs(){
              mugast_fragment.Get_ThetaLab(ii),
              mugast_fragment.Get_E(ii));
 
+        Fill(pConf.MG.mELab_ESI[vamos_fragment.Get_id_M()]
+             [vamos_fragment.Get_id_Z()]
+             [mugast_fragment.Get_Particle(ii)]
+             ["NOCONDITION"].get(),
+             mugast_fragment.Get_E(ii),
+             mugast_fragment.Get_SI_E(ii));
+
+        Fill(pConf.MG.mThetaLab_ELost[vamos_fragment.Get_id_M()]
+             [vamos_fragment.Get_id_Z()]
+             [mugast_fragment.Get_Particle(ii)]
+             ["NOCONDITION"].get(),
+             mugast_fragment.Get_ThetaLab(ii),
+             mugast_fragment.Get_E(ii)-mugast_fragment.Get_SI_E(ii));
+
         Fill(pData.MG.mEx_ThetaLab[vamos_fragment.Get_id_M()]
-                                    [vamos_fragment.Get_id_Z()]
+             [vamos_fragment.Get_id_Z()]
                                     [mugast_fragment.Get_Particle(ii)]
                                     ["NOCONDITION"].get(),
              mugast_fragment.Get_ThetaLab(ii),
              mugast_fragment.Get_Ex(ii));
 
+        Fill(pData.MG.mEx_Phi[vamos_fragment.Get_id_M()]
+             [vamos_fragment.Get_id_Z()]
+             [mugast_fragment.Get_Particle(ii)]
+             ["NOCONDITION"].get(),
+             mugast_fragment.Get_Phi(ii),
+             mugast_fragment.Get_Ex(ii));
+
         Fill(pData.MG.hThetaCM[vamos_fragment.Get_id_M()]
-                                    [vamos_fragment.Get_id_Z()]
+             [vamos_fragment.Get_id_Z()]
                                     [mugast_fragment.Get_Particle(ii)]
                                     ["NOCONDITION"].get(),
              mugast_fragment.Get_ThetaCM(ii));
 
-        if (vamos_fragment.Get_id_M()==47 && vamos_fragment.Get_id_Z()==19 && mugast_fragment.Get_Particle(ii)=="m2_z1"){
-        general_histo_ptr->Fill(
-             mugast_fragment.Get_ThetaLab(ii),
-             mugast_fragment.Get_Ex(ii));
-        }
         if (agata_gammas.In_Coincidence()){
             //ELab Theta Lab
             for (long unsigned int jj = 0; jj < agata_gammas.Get_Mult(); ++jj){
@@ -440,11 +494,32 @@ inline void Selector::PlotMugastGraphs(){
                              mugast_fragment.Get_ThetaLab(ii),
                              mugast_fragment.Get_E(ii));
 
+                        Fill(pConf.MG.mELab_ESI[vamos_fragment.Get_id_M()]
+                             [vamos_fragment.Get_id_Z()]
+                             [mugast_fragment.Get_Particle(ii)]
+                             [it_gamma].get(),
+                             mugast_fragment.Get_E(ii),
+                             mugast_fragment.Get_SI_E(ii));
+
+                        Fill(pConf.MG.mThetaLab_ELost[vamos_fragment.Get_id_M()]
+                             [vamos_fragment.Get_id_Z()]
+                             [mugast_fragment.Get_Particle(ii)]
+                             [it_gamma].get(),
+                             mugast_fragment.Get_ThetaLab(ii),
+                             mugast_fragment.Get_E(ii)-mugast_fragment.Get_SI_E(ii));
+
                         Fill(pData.MG.mEx_ThetaLab[vamos_fragment.Get_id_M()]
                                                     [vamos_fragment.Get_id_Z()]
                                                     [mugast_fragment.Get_Particle(ii)]
                                                     [it_gamma].get(),
                              mugast_fragment.Get_ThetaLab(ii),
+                             mugast_fragment.Get_Ex(ii));
+
+                        Fill(pData.MG.mEx_Phi[vamos_fragment.Get_id_M()]
+                             [vamos_fragment.Get_id_Z()]
+                             [mugast_fragment.Get_Particle(ii)]
+                             [it_gamma].get(),
+                             mugast_fragment.Get_Phi(ii),
                              mugast_fragment.Get_Ex(ii));
 
                         Fill(pData.MG.hThetaCM[vamos_fragment.Get_id_M()]
@@ -634,6 +709,15 @@ inline bool Selector::Fill(TH3D* histo, const double &data1,
     }
     return true;
 }
+
+bool Selector::Fill(TTree *tree) {
+    if (tree == nullptr)
+        return false;
+
+    tree->Fill();
+    return true;
+}
+
 void Selector::Init(TTree *tree){
     fReader.SetTree(tree);
 }
@@ -641,3 +725,4 @@ void Selector::Init(TTree *tree){
 Bool_t Selector::Notify(){
     return kTRUE;
 }
+
