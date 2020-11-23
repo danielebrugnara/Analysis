@@ -26,11 +26,12 @@
 #include <TF1.h>
 #include <TF1Convolution.h>
 #include <TFitResult.h>
+#include <TCanvas.h>
 
 
 class SpectrumAnalyzer {
 public:
-    explicit SpectrumAnalyzer(const std::string &, const bool&, const bool&);
+    explicit SpectrumAnalyzer(const std::string &, const bool&, const bool&, const bool&);
 
     ~SpectrumAnalyzer();
 
@@ -41,6 +42,7 @@ private:
 
     std::string file_name;
     bool debug_canvas;
+    bool use_main_transitions;
     bool simulation;
     TH2D gg;
     TH1D hspec;
@@ -64,6 +66,8 @@ private:
     static IntensityData ReadIntensities(const std::string&);
     void GenerateRelativeEffGraph();
     void GenerateAbsoluteEffGraph();
+
+    static TF1 FitEffCurve(TGraphErrors&);
 
     static void UpdateErrors(TH1D &);
 

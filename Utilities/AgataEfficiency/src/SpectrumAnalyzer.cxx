@@ -1,8 +1,9 @@
 #include "SpectrumAnalyzer.h"
 
-SpectrumAnalyzer::SpectrumAnalyzer(const std::string & file_name, const bool& debug_canvas, const bool& use_cores):
+SpectrumAnalyzer::SpectrumAnalyzer(const std::string & file_name, const bool& debug_canvas, const bool& use_cores, const bool& use_main_transitions):
         file_name(file_name),
         debug_canvas(debug_canvas),
+        use_main_transitions(use_main_transitions),
         simulation(false),
         levelscheme("files/adoptedLevels152Sm.csv"),
         fit_interval(15.),
@@ -75,6 +76,15 @@ void SpectrumAnalyzer::Analyze() {
 
     TFile outfile(out_file_name.c_str(),"recreate");
     relative_eff_graph.Write();
+    FitEffCurve(relative_eff_graph).Write();
+
+    if (debug_canvas|| true) {
+        TCanvas cv;
+        relative_eff_graph.Draw();
+        FitEffCurve(relative_eff_graph).Draw("same");
+        cv.WaitPrimitive();
+    }
+
     absolute_eff_graph.Write();
     sigma_graph.Write();
     tau_graph.Write();
@@ -362,9 +372,13 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
     for (const auto& it_transition: seen_transitions){
         std::vector<std::pair<double, double>> energies;
         energies.reserve(it_transition.size());
+        double max_intensity = 0;
         for (const auto & it: it_transition){
             energies.push_back(eu152_intensities[it]);
+            if (energies.back().second > max_intensity)
+                max_intensity = energies.back().second;
         }
+
         bool left_tails = !simulation;
         Fitter fitter(spect, energies, left_tails);
         if (debug_canvas)
@@ -375,6 +389,7 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
         else
             fitter.WriteParsOnFile(pars_file_name, fit_idx++);
 
+        if (max_intensity < 0.01 && use_main_transitions) continue; //skips low intansity transitions
         auto results = fitter.Fit();
 
         for (unsigned long int ii=0; ii<results.size(); ++ii){
@@ -444,4 +459,19 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
     }
 }
 
-
+TF1 SpectrumAnalyzer::FitEffCurve(TGraphErrors& gr) {
+    TF1 effcurve("effcurve",
+                 [](const double*x, const double*par){
+                     return (par[0]+
+                             par[1]*log(x[0])+
+                             par[2]*pow(log(x[0]), 2)+
+                             par[3]*pow(log(x[0]), 3)+
+                             par[4]*pow(log(x[0]), 5)+
+                             par[5]*pow(log(x[0]), 7))/x[0];
+                 },
+                 50,
+                 1500,
+                 6);
+    gr.Fit(&effcurve, "M");
+    return effcurve;
+}
