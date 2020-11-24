@@ -15,6 +15,7 @@ int main(int argc, char* argv[]){
     if (argc < 2)    throw std::runtime_error("set inputs correctly\n");
     bool run_selector = false;
     bool debug_canvas = false;
+    bool use_main_transitions = false;
     bool use_cores = false;
     //std::map<int, bool> skip_argc;
     std::vector<std::string> files;
@@ -24,6 +25,7 @@ int main(int argc, char* argv[]){
             std::cout << "--run-selector\t\t\t\truns selector starting from tree\n";
             std::cout << "--debug-canvas\t\t\t\tshows canvas with fits\n";
             std::cout << "--use-cores\t\t\t\tuses core graphs instead of addback\n";
+            std::cout << "--use-main-transitions\t\t\tuses only transitions with intensity > 0.5\n";
             return 0;
         }
         if (val.find("--run-selector") != std::string::npos) {
@@ -41,6 +43,11 @@ int main(int argc, char* argv[]){
             //skip_argc[ii] = true;
             continue;
         }
+        if (val.find("--use-main-transitions") != std::string::npos) {
+            use_main_transitions = true;
+            //skip_argc[ii] = true;
+            continue;
+        }
         files.push_back(val);
     }
 
@@ -49,10 +56,10 @@ int main(int argc, char* argv[]){
             std::cout << "Running selector for : " << file << " \n";
             RunSelector run(file);
             std::cout << "Running analysis\n";
-            SpectrumAnalyzer analyze(run.GetFileName(), debug_canvas, true);
+            SpectrumAnalyzer analyze(run.GetFileName(), debug_canvas, true, use_main_transitions);
         }else{
             std::cout << "Running analysis, file : " << file << "\n";
-            SpectrumAnalyzer analyze(file, debug_canvas, use_cores);
+            SpectrumAnalyzer analyze(file, debug_canvas, use_cores, use_main_transitions);
         }
     }
     std::cout << "Finished the analysis\n";
