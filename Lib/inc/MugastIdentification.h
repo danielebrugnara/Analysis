@@ -16,6 +16,7 @@
 #include "ReactionFragment.h"
 #include "MugastData.h"
 #include "Must2Data.h"
+#include "CatsData.h"
 
 #include "TMugastPhysics.h"
 #include "TMust2Physics.h"
@@ -112,6 +113,7 @@ private: //Data input and output
     Data const *data;
     MugastData fragment;
     Must2Data fragment_must;
+    CatsData fragment_cats;
 
 private: //Internal initialization methods
     bool InitializeCuts();
@@ -151,6 +153,7 @@ public: //Functions called by selector
 
     inline MugastData&  Get_MG_Data()                   {return  fragment;}
     inline Must2Data&  Get_MM_Data()                    {return  fragment_must;}
+    inline CatsData&  Get_Cats_Data()                   {return  fragment_cats;}
 
     //Other methods
     std::vector<std::pair<double, double>> GetTWvsIce();
@@ -171,5 +174,7 @@ public: //Functions called by selector
         new(&fragment) MugastData((**(data->Mugast)).DSSD_E.size());
         fragment_must.~Must2Data();
         new(&fragment_must) Must2Data((**(data->Must2)).EventMultiplicity);
+        fragment_cats.~CatsData();
+        new(&fragment_cats) CatsData((**(data->Cats)).PositionX.size());
     };
 };

@@ -48,7 +48,7 @@ void Selector::SlaveBegin(TTree * /*tree*/){
 
     //Passing beam energy in MeV, target position mm
     //mugast_fragment.Initialize(379.04, TVector3(0, 0, 25.));
-    mugast_fragment.Initialize(450.00*UNITS::MeV, TVector3(0, 0, 25.));
+    mugast_fragment.Initialize(458.217*UNITS::MeV, TVector3(0, 0, 25.));
 
     DEBUG("------------>finished: vamos_fragment initialization", "");
 
@@ -269,6 +269,7 @@ void Selector::SlaveBegin(TTree * /*tree*/){
         tree->Branch("VamosData", &vamos_fragment.Get_Data());
         tree->Branch("MugastData", &mugast_fragment.Get_MG_Data());
         tree->Branch("Must2Data", &mugast_fragment.Get_MM_Data());
+        tree->Branch("CatsData", &mugast_fragment.Get_Cats_Data());
         tree->Branch("AgataData", &agata_gammas.Get_Data());
     }
     //TODO: Add MUST2

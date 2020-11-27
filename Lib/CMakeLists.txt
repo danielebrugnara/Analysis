@@ -11,6 +11,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/libCalibration_rdict.pcm ${CMAKE_C
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/libIdentification_rdict.pcm ${CMAKE_CURRENT_BINARY_DIR}/src/libIdentification.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/libVamosData_rdict.pcm ${CMAKE_CURRENT_BINARY_DIR}/src/libVamosData.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/libMugastData_rdict.pcm ${CMAKE_CURRENT_BINARY_DIR}/src/libMugastData.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/libCatsData_rdict.pcm ${CMAKE_CURRENT_BINARY_DIR}/src/libCatsData.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/libMust2Data_rdict.pcm ${CMAKE_CURRENT_BINARY_DIR}/src/libMust2Data.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/libAgataData_rdict.pcm ${CMAKE_CURRENT_BINARY_DIR}/src/libAgataData.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/libVamosIdentification_rdict.pcm ${CMAKE_CURRENT_BINARY_DIR}/src/libVamosIdentification.rootmap DESTINATION ${LIBRARY_OUTPUT_PATH})

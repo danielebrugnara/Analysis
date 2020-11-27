@@ -308,6 +308,14 @@ bool MugastIdentification::Identify(){
         fragment_must.T2[ii]    = (**(data->Must2)).Si_TY[ii];//TODO: check if second layers are different
         fragment_must.MG[ii]    = (**(data->Must2)).TelescopeNumber[ii];
     }
+    for (unsigned int ii = 0; ii < fragment_cats.multiplicity; ++ii) {
+        fragment_cats.Pos[ii] = TVector3((**(data->Cats)).PositionX[ii],
+                                     (**(data->Cats)).PositionY[ii],
+                                     (**(data->Cats)).PositionZ[ii]);
+        fragment_cats.Charge[ii] = TVector2((**(data->Cats)).ChargeX[ii],
+                                            (**(data->Cats)).ChargeY[ii]);
+    }
+
     DEBUG("------------>finished: setting up fragment", "");
 
     //Evaluate Ice thickness

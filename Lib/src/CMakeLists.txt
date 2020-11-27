@@ -65,6 +65,11 @@ add_library(Must2Data SHARED Must2Data.cxx G__Must2Data.cxx)
 set_target_properties(Must2Data PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
 target_link_libraries(Must2Data ${ROOT_LIBRARIES} MugastData)
 
+ROOT_GENERATE_DICTIONARY(G__CatsData CatsData.h LINKDEF ${analysis_SOURCE_DIR}/Lib/inc/CatsDataLinkDef.h)
+add_library(CatsData SHARED CatsData.cxx G__CatsData.cxx)
+set_target_properties(CatsData PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
+target_link_libraries(CatsData ${ROOT_LIBRARIES})
+
 ROOT_GENERATE_DICTIONARY(G__AgataData AgataData.h LINKDEF ${analysis_SOURCE_DIR}/Lib/inc/AgataDataLinkDef.h)
 add_library(AgataData SHARED AgataData.cxx G__AgataData.cxx)
 set_target_properties(AgataData PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
@@ -80,7 +85,7 @@ target_link_libraries(VamosIdentification ${ROOT_LIBRARIES} Interpolation VamosD
 ROOT_GENERATE_DICTIONARY(G__MugastIdentification MugastIdentification.h LINKDEF ${analysis_SOURCE_DIR}/Lib/inc/MugastIdentificationLinkDef.h)
 add_library(MugastIdentification SHARED MugastIdentification.cxx Identification.cxx G__MugastIdentification.cxx G__Identification.cxx)
 set_target_properties(MugastIdentification PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
-target_link_libraries(MugastIdentification ${ROOT_LIBRARIES} Interpolation Minimizer NPMugast NPMUST2 NPCATS Calibration EnergyLoss MugastData Must2Data)
+target_link_libraries(MugastIdentification ${ROOT_LIBRARIES} Interpolation Minimizer NPMugast NPMUST2 NPCATS Calibration EnergyLoss MugastData Must2Data CatsData)
 
 ROOT_GENERATE_DICTIONARY(G__AgataProcessing AgataProcessing.h LINKDEF ${analysis_SOURCE_DIR}/Lib/inc/AgataProcessingLinkDef.h)
 add_library(AgataProcessing SHARED AgataProcessing.cxx G__AgataProcessing.cxx)
