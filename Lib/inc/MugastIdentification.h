@@ -15,8 +15,10 @@
 #include "ReactionReconstruction.h"
 #include "ReactionFragment.h"
 #include "MugastData.h"
+#include "Must2Data.h"
 
 #include "TMugastPhysics.h"
+#include "TMust2Physics.h"
 #include "TCATSPhysics.h"
 
 class MugastIdentification : public Identification
@@ -30,19 +32,22 @@ public: //Data exchange  types
     struct Data
     {
         TTreeReaderValue<TMugastPhysics> *Mugast;
+        TTreeReaderValue<TMust2Physics> *Must2;
         TTreeReaderValue<TCATSPhysics> *Cats;
         TTreeReaderValue<float> *TW;
         int VAMOS_id_M;
         int VAMOS_id_Z;
         Data(TTreeReaderValue<TMugastPhysics> *Mugast,
+             TTreeReaderValue<TMust2Physics> *Must2,
              TTreeReaderValue<TCATSPhysics> *Cats,
              TTreeReaderValue<float> *TW,
              int VAMOS_id_M,
-             int VAMOS_id_Z) : Mugast(Mugast),
-                               Cats(Cats),
-                               TW(TW),
-                               VAMOS_id_M(VAMOS_id_M),
-                               VAMOS_id_Z(VAMOS_id_Z){};
+             int VAMOS_id_Z) :  Mugast(Mugast),
+                                Must2(Must2),
+                                Cats(Cats),
+                                TW(TW),
+                                VAMOS_id_M(VAMOS_id_M),
+                                VAMOS_id_Z(VAMOS_id_Z){};
     };
 
 private: //Constants used internally
@@ -106,6 +111,7 @@ private: //Variables used internally
 private: //Data input and output
     Data const *data;
     MugastData fragment;
+    Must2Data fragment_must;
 
 private: //Internal initialization methods
     bool InitializeCuts();
@@ -142,7 +148,9 @@ public: //Functions called by selector
         {return fragment.EmissionDirection[i].Angle(TVector3(0, 0, 1));};
     inline double       Get_Phi(const int &i) const
         {return fragment.EmissionDirection[i].Phi();};
-    inline MugastData&  Get_Data()                  {return  fragment;}
+
+    inline MugastData&  Get_MG_Data()                   {return  fragment;}
+    inline Must2Data&  Get_MM_Data()                    {return  fragment_must;}
 
     //Other methods
     std::vector<std::pair<double, double>> GetTWvsIce();
@@ -161,5 +169,7 @@ public: //Functions called by selector
         //The following constructs at the same address
         fragment.~MugastData();
         new(&fragment) MugastData((**(data->Mugast)).DSSD_E.size());
+        fragment_must.~Must2Data();
+        new(&fragment_must) Must2Data((**(data->Must2)).EventMultiplicity);
     };
 };

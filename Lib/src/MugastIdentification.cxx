@@ -279,6 +279,7 @@ bool MugastIdentification::Identify(){
         fragment.Pos[ii]   = TVector3((**(data->Mugast)).PosX[ii],
                                      (**(data->Mugast)).PosY[ii],
                                      (**(data->Mugast)).PosZ[ii]);
+        fragment.EmissionDirection[ii] = fragment.Pos[ii] - target_pos;
         fragment.TelescopeNormal[ii] = TVector3((**(data->Mugast)).TelescopeNormalX[ii],
                                                  (**(data->Mugast)).TelescopeNormalY[ii],
                                                  (**(data->Mugast)).TelescopeNormalZ[ii]);
@@ -289,6 +290,23 @@ bool MugastIdentification::Identify(){
         fragment.SI_T[ii]  = (**(data->Mugast)).DSSD_T[ii];
         fragment.T2[ii]    = (**(data->Mugast)).SecondLayer_T[ii];
         fragment.MG[ii]    = (**(data->Mugast)).TelescopeNumber[ii];
+    }
+    for (unsigned int ii = 0; ii < fragment_must.multiplicity; ++ii){
+        fragment_must.Indentified[ii] = false;
+        fragment_must.Pos[ii]   = TVector3((**(data->Must2)).PosX[ii],
+                                      (**(data->Must2)).PosY[ii],
+                                      (**(data->Must2)).PosZ[ii]);
+        fragment_must.EmissionDirection[ii] = fragment_must.Pos[ii] - target_pos;
+        fragment_must.TelescopeNormal[ii] = TVector3(0,0,0);
+        fragment_must.SI_E[ii]  = (**(data->Must2)).Si_E[ii];
+        fragment_must.CsI_E[ii]  = (**(data->Must2)).CsI_E[ii];
+        fragment_must.CsI_T[ii]  = (**(data->Must2)).CsI_T[ii];
+        fragment_must.SI_E2[ii] = (**(data->Must2)).Si_EY[ii];
+        fragment_must.SI_X[ii]  = (**(data->Must2)).Si_X[ii];
+        fragment_must.SI_Y[ii]  = (**(data->Must2)).Si_Y[ii];
+        fragment_must.SI_T[ii]  = (**(data->Must2)).Si_T[ii];
+        fragment_must.T2[ii]    = (**(data->Must2)).Si_TY[ii];//TODO: check if second layers are different
+        fragment_must.MG[ii]    = (**(data->Must2)).TelescopeNumber[ii];
     }
     DEBUG("------------>finished: setting up fragment", "");
 
@@ -369,7 +387,6 @@ bool MugastIdentification::Identify(){
     std::unordered_map<std::string, EnergyLoss *> *ptr_tmp;
     for (unsigned int ii = 0; ii < fragment.multiplicity; ++ii){
         //if (!fragment.Indentified[ii]) {
-        fragment.EmissionDirection[ii] = fragment.Pos[ii] - target_pos;
         if (!fragment.Indentified[ii] || fragment.M[ii] == 4){ //TODO: fix to include alphas
             fragment.E[ii] = fragment.SI_E[ii];
             fragment.Ex[ii] = 0;

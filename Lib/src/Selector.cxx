@@ -267,7 +267,8 @@ void Selector::SlaveBegin(TTree * /*tree*/){
     Istantiate(tree , new TTree("AnalyzedTree", "AnalyzedTree"));
     if (tree) {
         tree->Branch("VamosData", &vamos_fragment.Get_Data());
-        tree->Branch("MugastData", &mugast_fragment.Get_Data());
+        tree->Branch("MugastData", &mugast_fragment.Get_MG_Data());
+        tree->Branch("Must2Data", &mugast_fragment.Get_MM_Data());
         tree->Branch("AgataData", &agata_gammas.Get_Data());
     }
     //TODO: Add MUST2
@@ -356,6 +357,7 @@ inline void Selector::LoadVamosData(){
 
 inline void Selector::LoadMugastData(){
     mugast_fragment.SetData(new MugastIdentification::Data(&Mugast,
+                                                           &MUST2,
                                                            &CATS,
                                                            &TW,
                                                            vamos_fragment.Get_id_M(),
