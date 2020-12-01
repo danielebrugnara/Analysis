@@ -55,9 +55,9 @@ private: //Constants used internally
     static constexpr int n_detectors{6};
     static constexpr int n_strips{128};
     const int charge_state_interpolation{16}; //Cannot be made static constexpr because it is passed as reference
-    static constexpr double gradient_descent_normalization{1.E3};
+    //static constexpr double gradient_descent_normalization{1.E3};
     static constexpr double ice_percentage_second {0.85};
-    const double average_beam_thickness = 3.723*UNITS::mm; //500 Torr
+    const double average_beam_thickness = 3.72109*UNITS::mm;    //700 mbar
 
 public:
     std::array<std::string, 3> light_particles;
@@ -65,12 +65,7 @@ public:
     std::array<int, n_detectors> cuts_MG;
 
 private: //Variables used internally
-    //std::array<int, n_detectors> cuts_MG;
-    std::array<int, 3> cuts_M;
-    std::array<int, 2> cuts_Z;
-    //std::array<std::string, 3> light_particles;
-    std::array<std::string, 5> fragments;
-    //std::array<std::string, 2> strips;
+    std::array<std::string, 7> fragments;
 
     double beam_energy{};
     double initial_beam_energy{};

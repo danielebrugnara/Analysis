@@ -10,22 +10,12 @@ MugastIdentification::MugastIdentification() :
                            light_particles({"m1_z1", "m2_z1", "m4_z2"}),
                            strips({"X", "Y"}),
                            cuts_MG({1, 3, 4, 5, 7, 11}),
-                           cuts_M({1, 2, 4}),
-                           cuts_Z({1, 2}),
-                           fragments({"m1_z1", "m2_z1", "m4_z2", "m46_z18", "m47_z19"}),
-                           layers({"ice_front",
-                                   "havar_front",
-                                   "he3_front",
-                                   "he3_back",
-                                   "havar_back",
-                                   "ice_back",
-                                   "al_front"}),
+                           fragments({"m1_z1", "m2_z1", "m3_z1", "m3_z2", "m4_z2", "m46_z18", "m47_z19"}),
+                           layers({"ice_front","havar_front","he3_front","he3_back","havar_back","ice_back","al_front"}),
                            use_constant_thickness(false),
                            with_cuts(true),
                            havar_thickness(3.8E-3*UNITS::mm), //in mm
-                           data(nullptr){
-    system("rm -f Configs/Interpolations/TW_Ice_Thickness.root");//TODO: remove this.. it is temporary
-}
+                           data(nullptr){}
 
 MugastIdentification::~MugastIdentification()
 {
@@ -71,23 +61,24 @@ bool MugastIdentification::Initialize(const double &beam_energy,
                                             ReactionFragment::FragmentSettings(1, 1, 0, 0, 0),
                                             ReactionFragment::FragmentSettings(48, 19, 0, 0, 0)})));
     reaction.emplace("M47_Z19_m2_z1", new ReactionReconstruction2body(
-            ReactionReconstruction2body::ReactionInput2body({
+                                            ReactionReconstruction2body::ReactionInput2body({
                                                                     ReactionFragment::FragmentSettings(46, 18, 0, beam_energy, 0),
                                                                     ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
                                                                     ReactionFragment::FragmentSettings(2, 1, 0, 0, 0),
                                                                     ReactionFragment::FragmentSettings(47, 19, 0,0, 0)})));
     reaction.emplace("M47_Z19_m4_z2", new ReactionReconstruction2body(
-            ReactionReconstruction2body::ReactionInput2body({
+                                            ReactionReconstruction2body::ReactionInput2body({
                                                                     ReactionFragment::FragmentSettings(46, 18, 0, beam_energy, 0),
                                                                     ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
                                                                     ReactionFragment::FragmentSettings(4, 2, 0, 0, 0),
                                                                     ReactionFragment::FragmentSettings(45, 18, 0,0, 0)})));
     reaction.emplace("M46_Z18_m3_z2", new ReactionReconstruction2body(
-            ReactionReconstruction2body::ReactionInput2body({
+                                            ReactionReconstruction2body::ReactionInput2body({
                                                                     ReactionFragment::FragmentSettings(46, 18, 0, beam_energy, 0),
                                                                     ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
                                                                     ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
                                                                     ReactionFragment::FragmentSettings(46, 18, 0,0, 0)})));
+
     beam_ref = &reaction.at("M47_Z19_m2_z1")->GetReactionFragment(1);
 
     //Setting up interpolations for target deformation//////
@@ -106,7 +97,9 @@ bool MugastIdentification::Initialize(const double &beam_energy,
 }
 
 bool MugastIdentification::InitializeCuts(){
-    auto* tmp = new std::unordered_map<std::string, TCutG *>();
+
+    //E-TOF cuts
+    std::unordered_map<std::string, TCutG *> tmp;
     std::vector<std::string> tmp_cut_names;
 
     tmp_cut_names.emplace_back("E_TOF_m1_z1_MG1");
@@ -132,12 +125,30 @@ bool MugastIdentification::InitializeCuts(){
 
     for (const auto &cut_name : tmp_cut_names){
         try{
-            (*tmp)[cut_name] = cuts.at(cut_name);
+            tmp[cut_name] = cuts.at(cut_name);
         }catch (const std::out_of_range &err){
             std::cerr << "Unable to find one of the E_TOF cuts : " << cut_name << "\n";
         }
     }
-    cut_type["E_TOF"] = *tmp;
+    cut_type["E_TOF"] = tmp;
+
+    //DE-E cuts
+    tmp.clear();
+    tmp_cut_names.clear();
+
+    tmp_cut_names.emplace_back("DE_E_m1_z1_MM");
+    tmp_cut_names.emplace_back("DE_E_m2_z1_MM");
+    tmp_cut_names.emplace_back("DE_E_m3_z1_MM");
+    tmp_cut_names.emplace_back("DE_E_m3_z2_MM");
+    tmp_cut_names.emplace_back("DE_E_m4_z2_MM");
+    for (const auto &cut_name : tmp_cut_names){
+        try{
+            tmp[cut_name] = cuts.at(cut_name);
+        }catch (const std::out_of_range &err){
+            std::cerr << "Unable to find one of the E_TOF cuts : " << cut_name << "\n";
+        }
+    }
+    cut_type["DE_E"] = tmp;
     return true;
 }
 
@@ -167,50 +178,37 @@ bool MugastIdentification::InitializeELoss(){
     layer_names["al_front"]     = "Al";
 
     std::unordered_map<std::string, std::string> fragment_names;
-    fragment_names["m1_z1"]     = "Proton";
-    fragment_names["m2_z1"]     = "Deuteron";
-    fragment_names["m4_z2"]     = "Alpha";
+    fragment_names["m1_z1"]     = "H1";
+    fragment_names["m2_z1"]     = "H2";
+    fragment_names["m3_z1"]     = "H3";
+    fragment_names["m3_z2"]     = "He3";
+    fragment_names["m4_z2"]     = "He4";
     fragment_names["m46_z18"]   = "Ar46";
     fragment_names["m47_z19"]   = "K47";
 
-    for (const auto &fragment : fragments){
-        for (const auto &layer : layers){
-            energy_loss[fragment][layer] = nullptr;
+    for (const auto &it_frag : fragments){
+        for (const auto &it_layer : layers){
+            energy_loss[it_frag][it_layer] = nullptr;
         }
     }
 
     std::string e_loss_file_path("./Configs/ELossTables/");
-    std::string pressure("500Torr");
 
-    int beam_precision = 100;
-    int fragment_precision = 200;
+    int beam_precision = 100;       //Beam can have lower precision
+    int fragment_precision = 200;   //Beam can have lower precision
 
     if (e_loss_file_path != nullptr){
-        for (const auto &fragment : fragments){
+        for (const auto &it : fragments){
             int precision;
-            if (fragment == "m46_z18")
+            if (it == "m46_z18")
                 precision = beam_precision;
             else
                 precision = fragment_precision;
 
             for (const auto &layer : layers){
                 std::string tmp_string;
-                if (layer_names[layer] != "Helium"){
-                    tmp_string = e_loss_file_path +
-                                 fragment_names[fragment] +
-                                 "_in_" +
-                                 layer_names[layer] +
-                                 ".txt";
-                }else{
-                    tmp_string = e_loss_file_path +
-                                 fragment_names[fragment] +
-                                 "_in_" +
-                                 layer_names[layer]
-                                 +
-                                 pressure +
-                                 ".txt";
-                }
-                energy_loss[fragment][layer] = new EnergyLoss(tmp_string, "SRIM", precision);
+                tmp_string = e_loss_file_path+fragment_names[it]+"_in_"+layer_names[layer]+".txt";
+                energy_loss[it][layer] = new EnergyLoss(tmp_string, "SRIM", precision);
             }
         }
     }
@@ -223,17 +221,9 @@ bool MugastIdentification::InitializeELoss(){
     current_ice_thickness.second = current_ice_thickness.first * ice_percentage_second;
     beam_energy_match_threashold = 0.3*UNITS::MeV; //In MeV
 
-    std::string path_TW_vs_ice = "./Configs/Interpolations/TW_Ice_Thickness.root";
-    std::ifstream tmp_file(path_TW_vs_ice);
-    if (tmp_file){
-        tmp_file.close();
-        auto* tmp_root_file = new TFile(path_TW_vs_ice.c_str());
-        TW_vs_ice_thickness = new Interpolation(tmp_root_file);
-        tmp_root_file->Close();
-    }else{
-        TW_vs_ice_thickness = nullptr;
-        TW_vs_ice.reserve(100);
-    }
+    TW_vs_ice_thickness = nullptr;
+    TW_vs_ice.reserve(100);
+
     return true;
 }
 

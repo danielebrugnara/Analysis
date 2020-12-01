@@ -14,7 +14,7 @@ public:
     Identification();
     ~Identification();
 
-    void LoadCuts(std::string);
+    void LoadCuts(const std::string&);
 
 private:
 protected:

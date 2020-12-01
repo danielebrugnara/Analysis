@@ -11,6 +11,7 @@
 
 void Temperature_Density(){
     
+    const double mbar_to_atm = 0.0009869233;
     std::map<double,TGraph*> graph;
 
     graph.emplace(3.33, new TGraph());
@@ -626,7 +627,7 @@ void Temperature_Density(){
 
     std::map<double,TGraph*> graph2;
 
-    it = graph2.emplace(0.987, new TGraph()).first;
+    it = graph2.emplace(0.987/mbar_to_atm, new TGraph()).first;
 
 	it->second->SetPoint(1	,4.28	,291.13);
 	it->second->SetPoint(2	,4.41	,306.95);
@@ -649,7 +650,7 @@ void Temperature_Density(){
 	it->second->SetPoint(19	,15.83	,1254.5);
     it->second->RemovePoint(0);
 
-    it = graph2.emplace(1.926, new TGraph()).first;
+    it = graph2.emplace(1.926/mbar_to_atm, new TGraph()).first;
 
 	it->second->SetPoint(1	,4.30	,110.60);
 	it->second->SetPoint(2	,4.40	,118.52);
@@ -672,7 +673,7 @@ void Temperature_Density(){
 	it->second->SetPoint(19	,15.26	,639.73);
     it->second->RemovePoint(0);
 
-    it = graph2.emplace(2.87, new TGraph()).first;
+    it = graph2.emplace(2.87/mbar_to_atm, new TGraph()).first;
 
 	it->second->SetPoint(1	,4.32	,55.45);
 	it->second->SetPoint(2	,4.83	,80.27);
@@ -693,7 +694,7 @@ void Temperature_Density(){
 	it->second->SetPoint(17	,20.38	,591.22);
     it->second->RemovePoint(0);
 
-    it = graph2.emplace(5.55, new TGraph()).first;
+    it = graph2.emplace(5.55/mbar_to_atm, new TGraph()).first;
 
 	it->second->SetPoint(1	,4.23	,38.78);
 	it->second->SetPoint(2	,4.43	,39.95);
@@ -720,7 +721,7 @@ void Temperature_Density(){
     it->second->RemovePoint(0);
 
 
-    it = graph2.emplace(9.97, new TGraph()).first;
+    it = graph2.emplace(9.97/mbar_to_atm, new TGraph()).first;
 
 	it->second->SetPoint(1	,4.29	,33.65);
 	it->second->SetPoint(2	,5.45	,37.29);
@@ -738,7 +739,7 @@ void Temperature_Density(){
 	it->second->SetPoint(14	,15.97	,130.23);
     it->second->RemovePoint(0);
 
-    it = graph2.emplace(15.91, new TGraph()).first;
+    it = graph2.emplace(15.91/mbar_to_atm, new TGraph()).first;
 
 	it->second->SetPoint(1	,4.30	,30.54);
 	it->second->SetPoint(2	,4.42	,30.69);
@@ -772,17 +773,22 @@ void Temperature_Density(){
     c1->SetLogx();
     Color_t col = 1;
 
-    auto* gr = new TMultiGraph("gr", "Volume at different temperatures;P[atm];V[cm^3/mol]");
+    auto* gr = new TMultiGraph("gr", "Volume at different temperatures;P[mbar];V[cm^3/mol]");
     auto* gr2 = new TMultiGraph("gr2", "Volume at different pressures;T[K];V[cm^3/mol]");
 
     if (use_rho){
-        gr->SetTitle("Density at different temperatures;P[atm];rho[g/cm^3]");
-        gr2->SetTitle("Density at different pressures;T[K];rho[g/cm^3]");
+        gr->SetTitle("Density at different temperatures;P[mbar];#rho[g/cm^{3}]");
+        gr->GetXaxis()->CenterTitle();
+        gr->GetYaxis()->CenterTitle();
+        gr2->SetTitle("Density at different pressures;T[K];#rho[g/cm^{3}]");
+        gr2->GetXaxis()->CenterTitle();
+        gr2->GetYaxis()->CenterTitle();
         for(auto& it2: graph){
             for (int i=0; i<it2.second->GetN(); ++i){
-                it2.second->SetPoint(i, it2.second->GetPointX(i), gmol/it2.second->GetPointY(i));
+                it2.second->SetPoint(i, it2.second->GetPointX(i)/mbar_to_atm, gmol/it2.second->GetPointY(i));
             }   
         }
+            
         for(auto& it2: graph2){
             for (int i=0; i<it2.second->GetN(); ++i){
                 it2.second->SetPoint(i, it2.second->GetPointX(i), gmol/it2.second->GetPointY(i));
@@ -795,13 +801,13 @@ void Temperature_Density(){
     for(auto& it2: graph){
         col+=2;
         it2.second->SetMarkerColor(col);
-        it2.second->SetTitle(Form("T = %f K", it2.first));
+        it2.second->SetTitle(Form("T = %.2f K", it2.first));
         it2.second->GetYaxis()->SetTitleOffset(1.5);
         
         gr->Add(it2.second);
         for (int i=0; i<it2.second->GetN(); ++i){
             gr_2d->SetPoint(gr_2d->GetN(),it2.second->GetPointX(i),it2.second->GetPointY(i),it2.first);
-            gr_tot->SetPoint(gr_tot->GetN(),it2.second->GetPointX(i),it2.second->GetPointY(i),it2.first);
+            gr_tot->SetPoint(gr_tot->GetN(),it2.second->GetPointX(i),it2.first,it2.second->GetPointY(i));
         }
     }
 
@@ -816,12 +822,12 @@ void Temperature_Density(){
     for(auto& it2: graph2){
         col+=2;
         it2.second->SetMarkerColor(col);
-        it2.second->SetTitle(Form("P = %f atm", it2.first));
+        it2.second->SetTitle(Form("P = %.1f mbar", it2.first));
         it2.second->GetYaxis()->SetTitleOffset(1.5);
         gr2->Add(it2.second);
         for (int i=0; i<it2.second->GetN(); ++i){
             gr2_2d->SetPoint(gr2_2d->GetN(),it2.second->GetPointX(i),it2.second->GetPointY(i),it2.first);
-            gr_tot->SetPoint(gr_tot->GetN(),it2.first, it2.second->GetPointY(i),it2.second->GetPointX(i));
+            gr_tot->SetPoint(gr_tot->GetN(),it2.first,it2.second->GetPointX(i), it2.second->GetPointY(i));
         }
     }
     gr2->Draw("ap*");
@@ -863,27 +869,9 @@ void Temperature_Density(){
     legend = pad->BuildLegend(0.6, 0, 1,0.4);
     legend->Draw();
 
+    auto* interpolation = new TGraphDelaunay(gr_tot);
+    interpolation->SetName("graph");
+    interpolation->SetTitle("title");
+    gr_tot->SaveAs("density.root");
 
-//    int nsteps =1000;
-//    double startx = 0;
-//    double starty = 1;
-//    double endx = 100;
-//    double endy = 2000;    
-//    double stepx = (endx-startx)/nsteps;
-//    double stepy = (endy-starty)/nsteps;
-//    auto* gr_final = new TGraph2D();
-//    TGraphDelaunay interp(gr_tot);
-//    for(int i=0; i<nsteps; ++i){
-//        for(int j=0; j<nsteps; ++j){
-//            double res = interp.ComputeZ(startx+i*stepx, starty+j*stepy);
-//            if (res >0)
-//
-//                gr_final->SetPoint(gr_final->GetN(), startx+i*stepx, starty+j*stepy, res);
-//        }
-//    }
-//    auto* c6 = new TCanvas();
-//    c6->SetLogy();
-//    c6->SetLogx();
-//    c6->SetLogz();
-//    gr_final->Draw("surf"); 
 }   

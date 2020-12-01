@@ -7,8 +7,7 @@
 #endif
 
 Identification::Identification()
-{
-}
+= default;
 
 Identification::~Identification()
 {
@@ -18,13 +17,13 @@ Identification::~Identification()
     }
 }
 
-void Identification::LoadCuts(std::string path)
+void Identification::LoadCuts(const std::string& path)
 {
     std::ifstream input_file(path);
     if (!input_file)
         throw std::runtime_error("File " + path + " not present\n");
     input_file.close();
-    TFile *cuts_file = new TFile(path.c_str(), "READ");
+    auto *cuts_file = new TFile(path.c_str(), "READ");
     if (!(cuts_file->IsOpen()))
         throw std::runtime_error("VAMOS file not opened\n");
 
@@ -38,10 +37,9 @@ void Identification::LoadCuts(std::string path)
         if (obj->InheritsFrom("TCutG"))
         {
             DEBUG("Key : ", key->GetName());
-            TCutG *tmp = (TCutG *)obj;
+            auto *tmp = (TCutG *)obj;
             cuts[tmp->GetName()] = tmp;
         }
     }
     DEBUG("Finished looking for cuts", "");
-    return;
-}
+    }
