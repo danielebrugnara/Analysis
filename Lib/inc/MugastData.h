@@ -14,6 +14,7 @@ class MugastData: public TObject{
     std::vector<int> SI_Y;                      //Intrinsic Y
     std::vector<double> SI_E;                   //Energy deposition measured
     std::vector<double> SI_E2;                  //Second layer energy deposition
+    std::vector<double> Tot_E;                  //Energy deposition measured
     std::vector<double> E;                      //After E-Loss corrections
     std::vector<double> E_CM;                   //After E-Loss corrections
     std::vector<double> Ex;                     //Ex computed with reaction
@@ -38,6 +39,7 @@ class MugastData: public TObject{
         SI_Y.resize(multiplicity);
         SI_E.resize(multiplicity);
         SI_E2.resize(multiplicity);
+        Tot_E.resize(multiplicity);
         E.resize(multiplicity);
         E_CM.resize(multiplicity);
         Ex.resize(multiplicity);

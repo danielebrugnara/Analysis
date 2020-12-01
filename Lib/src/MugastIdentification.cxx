@@ -82,6 +82,12 @@ bool MugastIdentification::Initialize(const double &beam_energy,
                                                                     ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
                                                                     ReactionFragment::FragmentSettings(4, 2, 0, 0, 0),
                                                                     ReactionFragment::FragmentSettings(45, 18, 0,0, 0)})));
+    reaction.emplace("M46_Z18_m3_z2", new ReactionReconstruction2body(
+            ReactionReconstruction2body::ReactionInput2body({
+                                                                    ReactionFragment::FragmentSettings(46, 18, 0, beam_energy, 0),
+                                                                    ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
+                                                                    ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
+                                                                    ReactionFragment::FragmentSettings(46, 18, 0,0, 0)})));
     beam_ref = &reaction.at("M47_Z19_m2_z1")->GetReactionFragment(1);
 
     //Setting up interpolations for target deformation//////
@@ -285,6 +291,7 @@ bool MugastIdentification::Identify(){
                                                  (**(data->Mugast)).TelescopeNormalZ[ii]);
         fragment.SI_E[ii]  = (**(data->Mugast)).DSSD_E[ii];
         fragment.SI_E2[ii] = (**(data->Mugast)).SecondLayer_E[ii];
+        fragment.Tot_E[ii] = fragment.SI_E[ii];
         fragment.SI_X[ii]  = (**(data->Mugast)).DSSD_X[ii];
         fragment.SI_Y[ii]  = (**(data->Mugast)).DSSD_Y[ii];
         fragment.SI_T[ii]  = (**(data->Mugast)).DSSD_T[ii];
@@ -302,6 +309,7 @@ bool MugastIdentification::Identify(){
         fragment_must.CsI_E[ii]  = (**(data->Must2)).CsI_E[ii];
         fragment_must.CsI_T[ii]  = (**(data->Must2)).CsI_T[ii];
         fragment_must.SI_E2[ii] = (**(data->Must2)).Si_EY[ii];
+        fragment_must.Tot_E[ii]  = fragment_must.SI_E[ii] + fragment_must.CsI_E[ii];
         fragment_must.SI_X[ii]  = (**(data->Must2)).Si_X[ii];
         fragment_must.SI_Y[ii]  = (**(data->Must2)).Si_Y[ii];
         fragment_must.SI_T[ii]  = (**(data->Must2)).Si_T[ii];
@@ -324,14 +332,10 @@ bool MugastIdentification::Identify(){
     final_beam_energy = beam_ref->GetEkFromBrho_Q(brho, charge_state_interpolation);
     initial_beam_energy = InitialBeamEnergy(final_beam_energy, current_ice_thickness.first);
 
-    if (TW_vs_ice_thickness == nullptr){
-        if (!use_constant_thickness){
-            IdentifyIceThickness();
-        }
-    }else{
-        current_ice_thickness.first = ice_thickness->Evaluate(**(data->TW));
-        current_ice_thickness.second = current_ice_thickness.first * ice_percentage_second;
+    if (!use_constant_thickness){
+        IdentifyIceThickness();
     }
+
     for (const auto &it : reaction){
         it.second->SetBeamEnergy(MiddleTargetBeamEnergy(final_beam_energy));
     }
@@ -365,7 +369,7 @@ bool MugastIdentification::Identify(){
                     with_cuts = false;
                     continue;
                 }
-                if (tmp_cut->IsInside(fragment.SI_E[ii], fragment.T[ii])){
+                if (tmp_cut->IsInside(fragment.Tot_E[ii], fragment.T[ii])){
                     if (fragment.Indentified[ii])
                         throw std::runtime_error("Overlapping MUGAST E TOF gates :" +
                                                  cut_it +
@@ -396,7 +400,7 @@ bool MugastIdentification::Identify(){
     for (unsigned int ii = 0; ii < fragment.multiplicity; ++ii){
         //if (!fragment.Indentified[ii]) {
         if (!fragment.Indentified[ii] || fragment.M[ii] == 4){ //TODO: fix to include alphas
-            fragment.E[ii] = fragment.SI_E[ii];
+            fragment.E[ii] = fragment.Tot_E[ii];
             fragment.Ex[ii] = 0;
             continue;
         }
@@ -411,7 +415,7 @@ bool MugastIdentification::Identify(){
 
         //Passivation layer
         tmp_en = (*ptr_tmp)["al_front"]
-                     ->EvaluateInitialEnergy(fragment.SI_E[ii],
+                     ->EvaluateInitialEnergy(fragment.Tot_E[ii],
                                              0.4E-3*UNITS::mm, //Units in mm!
                                              fragment.EmissionDirection[ii]
                                                  .Angle(fragment.TelescopeNormal[ii]));
@@ -436,12 +440,6 @@ bool MugastIdentification::Identify(){
                                          fragment.Particle[ii])) != reaction.end()){
             fragment.Ex[ii] = reaction_it->second->Set_Ek_Theta(fragment.E[ii], fragment.EmissionDirection[ii].Theta());//WARNING this could be wring
             fragment.E_CM[ii] = reaction_it->second->GetReactionFragment(3).Get_Ek_cm();
-//            std::cout <<  "\n<---------------------------------------------------> "  << std::endl;
-//            double tmpp = ComputeDistanceInGas(fragment.Pos[ii], target_pos);
-//            std::cout <<  "Found thickness: " << tmpp << std::endl;
-//            std::cout <<  "Original thickness: " << gas_thickness->Evaluate(theta)*UNITS::mm << std::endl;
-//            std::cout << "xxx> Actual theta : " << TMath::Pi()-theta << std::endl;
-//            std::cout << "xxx> Actual phi : " << fragment.EmissionDirection[ii].Phi()<< std::endl;
         }
         else{
             fragment.Ex[ii] = 0;
