@@ -184,7 +184,7 @@ void DE_E_cuts(){
    cut3->Write();
    cut4->Write();
    cut5->Write();
-   ff->Write();
-   ff->Close();
+   ff.Write();
+   ff.Close();
 
 }

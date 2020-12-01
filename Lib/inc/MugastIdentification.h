@@ -60,13 +60,11 @@ private: //Constants used internally
     const double average_beam_thickness = 3.72109*UNITS::mm;    //700 mbar
 
 public:
-    std::array<std::string, 3> light_particles;
-    std::array<std::string, 2> strips;
+    std::array<std::string, 5> light_particles;
     std::array<int, n_detectors> cuts_MG;
+    std::array<std::string, 2> strips;
 
 private: //Variables used internally
-    std::array<std::string, 7> fragments;
-
     double beam_energy{};
     double initial_beam_energy{};
     double final_beam_energy{};
@@ -84,8 +82,6 @@ private: //Variables used internally
     Interpolation *gas_thickness_cartesian{};
     Interpolation *havar_angle{};
     Interpolation *TW_Brho_M46_Z18{};
-    Interpolation *ice_thickness{};
-    Interpolation *TW_vs_ice_thickness{};
     std::vector<std::pair<double, double>> TW_vs_ice;
 
     //Minimizer for ice thickness estimation
@@ -121,6 +117,10 @@ private: //Functions used internally during analysis
     double  ComputeDistanceInGas(const TVector3&, const TVector3&);
     double  InitialBeamEnergy(double, double);
     double  MiddleTargetBeamEnergy(double);
+    bool Identify_Mugast();
+    bool Identify_Must2();
+    bool ReconstructEnergy_Mugast();
+    bool ReconstructEnergy_Must2();
 
 public: //Functions called by selector
     bool Identify();
@@ -154,10 +154,8 @@ public: //Functions called by selector
     std::vector<std::pair<double, double>> GetTWvsIce();
 
     inline void StoreTWvsIce(){
-        if (TW_vs_ice_thickness == nullptr){
             TW_vs_ice.emplace_back(**(data->TW),
                                    current_ice_thickness.first);
-        }
     };
 
     inline void SetData(Data const *data){
