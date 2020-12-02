@@ -72,8 +72,8 @@ private: //Variables used internally
     double brho{};
     TVector3 target_pos;
 
-    std::unordered_map<std::string, unique_ptr<ReactionReconstruction2body>> reaction;
-    std::unordered_map<std::string, unique_ptr<ReactionReconstruction2body>>::iterator reaction_it;
+    std::unordered_map<std::string, unique_ptr<ReactionReconstruction2body<long double>>> reaction;
+    std::unordered_map<std::string, unique_ptr<ReactionReconstruction2body<long double>>>::iterator reaction_it;
     ReactionFragment* beam_ref{};
     std::vector<std::string> layers;
 

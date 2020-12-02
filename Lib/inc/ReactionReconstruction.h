@@ -10,6 +10,7 @@
 
 #include <ReactionFragment.h>
 
+template<typename T>
 class ReactionReconstruction{
 protected:
     ReactionReconstruction( ReactionFragment::FragmentSettings const &,
@@ -24,11 +25,12 @@ protected:
     const double precision{1.E-8};
 public:
     ReactionReconstruction()=delete;
-    virtual void SetBeamEnergy(long double const &);
+    virtual void SetBeamEnergy(T const &);
 };
 
 //p1 + p2 -> p3 + p4 ## where p2 is at rest in lab
-class ReactionReconstruction2body : protected ReactionReconstruction{
+template<typename T>
+class ReactionReconstruction2body : protected ReactionReconstruction<T>{
 private:
     void CheckVectors();
     virtual void UpdateVectors(const bool&);
@@ -47,33 +49,33 @@ public:
     ReactionFragment& GetExFreeFragment();
     ReactionFragment& GetExFixedFragment();
 
-    long double Get_ThetaMax();
+    T Get_ThetaMax();
 
-    void SetBeamEnergy(long double const & E) override;
+    void SetBeamEnergy(T const & E) override;
 
-    void Set_E              (long double const &);
-    void Set_Ek             (long double const &);
-    long double Set_E_cm         (long double const &);
-    long double Set_Ek_cm         (long double const &);
-    void Set_Theta          (long double const &, bool const &);
-    void Set_Theta_cm       (long double const &);
-    void Set_Theta_Phi      (long double const &, long double const &, bool const &);
-    void Set_Theta_Phi_cm   (long double const &, long double const &);
-    long double Set_E_Theta      (long double const &, long double const &, const bool& = true);
-    long double Set_Ek_Theta      (long double const &, long double const &, const bool& = true);
-    long double Set_E_Theta_cm   (long double const &, long double const &);
-    long double Set_Ek_Theta_cm   (long double const &, long double const &);
-    long double Set_E_Theta_Phi      (long double const &, long double const &, long double const &);
-    long double Set_Ek_Theta_Phi      (long double const &, long double const &, long double const &);
-    long double Set_E_Theta_Phi_cm   (long double const &, long double const &, long double const &);
-    long double Set_Ek_Theta_Phi_cm   (long double const &, long double const &, long double const &);
+    void Set_E              (T const &);
+    void Set_Ek             (T const &);
+    T Set_E_cm              (T const &);
+    T Set_Ek_cm             (T const &);
+    void Set_Theta          (T const &, bool const &);
+    void Set_Theta_cm       (T const &);
+    void Set_Theta_Phi      (T const &, T const &, bool const &);
+    void Set_Theta_Phi_cm   (T const &, T const &);
+    T Set_E_Theta           (T const &, T const &, const bool& = true);
+    T Set_Ek_Theta          (T const &, T const &, const bool& = true);
+    T Set_E_Theta_cm        (T const &, T const &);
+    T Set_Ek_Theta_cm       (T const &, T const &);
+    T Set_E_Theta_Phi       (T const &, T const &, T const &);
+    T Set_Ek_Theta_Phi      (T const &, T const &, T const &);
+    T Set_E_Theta_Phi_cm    (T const &, T const &, T const &);
+    T Set_Ek_Theta_Phi_cm   (T const &, T const &, T const &);
     void Set_Beta           (TVector3 const &);
-    void Set_P              (long double const &);
+    void Set_P              (T const &);
 
     ReactionFragment & GetReactionFragment(const int & nr) {
         switch (nr) {
-            case 1: return p1;
-            case 2: return p2;
+            case 1: return this->p1;
+            case 2: return this->p2;
             case 3: return p3;
             case 4: return p4;
             default: throw std::runtime_error("Reaction fragment chosen not existent\n");
@@ -86,12 +88,13 @@ protected:
 };
 
 //p1 + p2 -> p3 + p4* -> p3 + p5 + p6
-class ReactionReconstruction3body : protected ReactionReconstruction2body{
+template<typename T>
+class ReactionReconstruction3body : protected ReactionReconstruction2body<T>{
 private:
 
 public:
     ReactionReconstruction3body()=delete;
-    ReactionReconstruction3body(ReactionInput2body const &,
+    ReactionReconstruction3body(std::array<ReactionFragment::FragmentSettings, 4> const &,
                                 ReactionFragment::FragmentSettings const &,
                                 ReactionFragment::FragmentSettings const &);
     virtual ~ReactionReconstruction3body()=default;

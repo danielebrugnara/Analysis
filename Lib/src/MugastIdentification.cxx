@@ -53,26 +53,26 @@ bool MugastIdentification::Initialize(const double &beam_energy,
     }
 
     //Setup of reactions////////////////////////////////
-    reaction.emplace("M47_Z19_m1_z1", new ReactionReconstruction2body(
-            ReactionReconstruction2body::ReactionInput2body({
+    reaction.emplace("M47_Z19_m1_z1", new ReactionReconstruction2body<long double>(
+            ReactionReconstruction2body<long double>::ReactionInput2body({
                                                                     ReactionFragment::FragmentSettings(46, 18, 0, beam_energy, 0),
                                                                     ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
                                                                     ReactionFragment::FragmentSettings(1, 1, 0, 0, 0),
                                                                     ReactionFragment::FragmentSettings(48, 19, 0, 0, 0)})));
-    reaction.emplace("M47_Z19_m2_z1", new ReactionReconstruction2body(
-            ReactionReconstruction2body::ReactionInput2body({
+    reaction.emplace("M47_Z19_m2_z1", new ReactionReconstruction2body<long double>(
+            ReactionReconstruction2body<long double>::ReactionInput2body({
                                                                     ReactionFragment::FragmentSettings(46, 18, 0, beam_energy, 0),
                                                                     ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
                                                                     ReactionFragment::FragmentSettings(2, 1, 0, 0, 0),
                                                                     ReactionFragment::FragmentSettings(47, 19, 0,0, 0)})));
-    reaction.emplace("M47_Z19_m4_z2", new ReactionReconstruction2body(
-            ReactionReconstruction2body::ReactionInput2body({
+    reaction.emplace("M47_Z19_m4_z2", new ReactionReconstruction2body<long double>(
+            ReactionReconstruction2body<long double>::ReactionInput2body({
                                                                     ReactionFragment::FragmentSettings(46, 18, 0, beam_energy, 0),
                                                                     ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
                                                                     ReactionFragment::FragmentSettings(4, 2, 0, 0, 0),
                                                                     ReactionFragment::FragmentSettings(45, 18, 0,0, 0)})));
-    reaction.emplace("M46_Z18_m3_z2", new ReactionReconstruction2body(
-            ReactionReconstruction2body::ReactionInput2body({
+    reaction.emplace("M46_Z18_m3_z2", new ReactionReconstruction2body<long double>(
+            ReactionReconstruction2body<long double>::ReactionInput2body({
                                                                     ReactionFragment::FragmentSettings(46, 18, 0, beam_energy, 0),
                                                                     ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
                                                                     ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
