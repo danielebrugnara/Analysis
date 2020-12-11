@@ -1,24 +1,34 @@
+#pragma once
 
+#include <array>
+#include <functional>
+#include <iostream>
+#include <math.h>
 
-class Minimizer{
-    public:
-        Minimizer(double, bool, double,  double, double, double, int, double);
-        ~Minimizer();
+class Minimizer
+{
+public:
+  Minimizer(std::function<double(const double &)>, double, double, double, int, double, double);
+  Minimizer(double, double, double, int, double, double);
+  inline double Step(std::pair<double, double>); 
+  ~Minimizer();
 
-        inline double Step(double );
-        double GetCoefficient(){return _Coefficient;};
-    private:
-        std::array <double, 2> _Y;
-        std::array <double, 2> _X;
-        std::array < long double, 2> _Derivative;
-        std::array <long double, 2> _Step;
-        std::array <long double, 2> _Rate;
+  void SetThreashold(double);
+private:
+  //double (*function_ptr) (const double &);
+  std::function<double(const double &)> function_ptr;
+  std::array<double, 2> x;
+  std::array<long double, 2> derivative;
+  std::array<long double, 2> step;
+  std::array<long double, 2> rate;
+  double startingRate;
+  double coefficient;
+  double threshold;
+  double max_steps;
+  double quenching;
+  double h;
+  int n_steps;
 
-        int _NSteps;
-        bool _Verbose;
-        double _StartingRate;
-        double _Coefficient;
-        double _Threshold;
-        double _Quenching;
-        double _MaxSteps;
+public:
+  double Minimize();
 };
