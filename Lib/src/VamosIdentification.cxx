@@ -6,29 +6,29 @@
 #  define DEBUG(x, y) 
 #endif
 
-VamosIdentification::VamosIdentification() : cuts_Z({18, 19, -1}),
-                                             //cuts_M({45, 46, 47, -1, -2}),
+VamosIdentification::VamosIdentification() : cutsZ({18, 19, -1}),
+                                             //cutsM({45, 46, 47, -1, -2}),
                                              //cuts_Q({13, 14, 15, 16, 17, 18, 19, -1, -2}),
-                                             cuts_M({45, 46, 47, -2}),
-                                             cuts_Q({13, 14, 15, 16, 17, 18, 19, -2}),
+                                             cutsM({45, 46, 47, -2}),
+                                             //cuts_Q({13, 14, 15, 16, 17, 18, 19, -2}),
                                              data(nullptr)
 {
 }
 
-bool VamosIdentification::Initialize()
+bool VamosIdentification::initialize()
 {
-    DEBUG("------------>VamosIdentification::Initialize()", "");
+    DEBUG("------------>VamosIdentification::initialize()", "");
 
     //Focal plane aligments
-    ReadFPTimeShifts();
-    auto *tmp_file = new TFile("./Configs/Interpolations/InterpolationTimeFP.root");
-    FP_time_interpolation = new Interpolation(tmp_file);
-    tmp_file->Close();
+    readFpTimeShifts();
+    auto *tmpFile = new TFile("./Configs/Interpolations/InterpolationTimeFP.root");
+    fpTimeInterpolation = new Interpolation(tmpFile);
+    tmpFile->Close();
 
     //Masses in MeV [M][Z] as ints
-    for (const auto &it_M : cuts_M)
+    for (const auto &it_M : cutsM)
     {
-        for (const auto &it_Z : cuts_Z)
+        for (const auto &it_Z : cutsZ)
         {
             //mass[it_M][it_Z] = NPL::Nucleus(it_Z, it_M).Mass();
             if (it_Z > 0 && it_M > 0)
@@ -104,28 +104,28 @@ bool VamosIdentification::Initialize()
 VamosIdentification::~VamosIdentification()
 {
     delete data;
-    delete FP_time_interpolation;
+    delete fpTimeInterpolation;
 }
 
-void VamosIdentification::ReadFPTimeShifts()
+void VamosIdentification::readFpTimeShifts()
 {
-    std::ifstream cali_file("./Configs/Calibrations/FP_Time.cal");
+    std::ifstream caliFile("./Configs/Calibrations/FP_Time.cal");
     std::string line;
     std::string min;
     std::string max;
     std::string shift;
-    if (!cali_file)
+    if (!caliFile)
         throw std::runtime_error("Error Opening cali file\n");
-    while (std::getline(cali_file, line))
+    while (std::getline(caliFile, line))
     {
         std::stringstream str;
         str << line;
         str >> min >> max >> shift;
-        TimeShifts.emplace_back(std::stod(max), std::stod(shift));
+        timeShifts.emplace_back(std::stod(max), std::stod(shift));
     }
     double tmp = -1E6;
     DEBUG("Dumping FP shift calibration", "");
-    for (const auto &it : TimeShifts)
+    for (const auto &it : timeShifts)
     {
         if (it.first < tmp)
             throw std::runtime_error("Time shifts not incremental\n");
@@ -135,23 +135,24 @@ void VamosIdentification::ReadFPTimeShifts()
     }
 }
 
-bool VamosIdentification::Identify()
+bool VamosIdentification::identify()
 {
+    fragment.BRho = **data->Brho;
     fragment.PTPosition.Set(**data->Pf,**data->Tf);
     fragment.FocalPlanePosition.Set(**data->Xf,**data->Yf);
     fragment.EmissionVersor.SetMagThetaPhi(1, **data->ThetaL, **data->PhiL);
 
-    fragment.En = ((*data->IC)[0] > IC_threashold) * ((*data->IC)[0] +
-                                                       ((*data->IC)[1] > IC_threashold) * (((*data->IC)[1] * (**data->Xf <= 45)) + (((*data->IC)[1] + 1.) * (**data->Xf > 45)) + //Correction for mis aligment IC1:Xf
-                                                                                           ((*data->IC)[2] > IC_threashold) * ((*data->IC)[2] +
-                                                                                           ((*data->IC)[3] > IC_threashold) * ((*data->IC)[3] +
-                                                                                           ((*data->IC)[4] > IC_threashold) * ((*data->IC)[4] +
-                                                                                           ((*data->IC)[5] > IC_threashold) * ((*data->IC)[5]))))));
-    fragment.D_En = ((*data->IC)[0] > IC_threashold) * ((*data->IC)[0] + ((*data->IC)[1] > IC_threashold) * ((*data->IC)[1]));
-    fragment.D_En2 = (*data->IC)[0] * ((*data->IC)[1] > IC_threashold);
+    fragment.En = ((*data->IC)[0] > icThreashold) * ((*data->IC)[0] +
+                                                     ((*data->IC)[1] > icThreashold) * (((*data->IC)[1] * (**data->Xf <= 45)) + (((*data->IC)[1] + 1.) * (**data->Xf > 45)) + //Correction for mis aligment IC1:Xf
+                                                                                           ((*data->IC)[2] > icThreashold) * ((*data->IC)[2] +
+                                                                                                                              ((*data->IC)[3] > icThreashold) * ((*data->IC)[3] +
+                                                                                                                                                                 ((*data->IC)[4] > icThreashold) * ((*data->IC)[4] +
+                                                                                                                                                                                                    ((*data->IC)[5] > icThreashold) * ((*data->IC)[5]))))));
+    fragment.D_En = ((*data->IC)[0] > icThreashold) * ((*data->IC)[0] + ((*data->IC)[1] > icThreashold) * ((*data->IC)[1]));
+    fragment.D_En2 = (*data->IC)[0] * ((*data->IC)[1] > icThreashold);
 
     //Computing the basic identifiaction
-    fragment.T = GetFPTime();
+    fragment.T = getFpTime();
     fragment.Path = **data->Path + 5;
     fragment.V = fragment.Path / fragment.T;
     fragment.Beta = fragment.V / 29.9792;
@@ -205,12 +206,12 @@ bool VamosIdentification::Identify()
     return fragment.Identified = true;
 }
 
-double VamosIdentification::GetShift()
+double VamosIdentification::getShift()
 {
-    double shift{TimeShifts.at(0).second};
-    if (**data->Xf == -1500 || **data->Xf > TimeShifts.back().first)
+    double shift{timeShifts.at(0).second};
+    if (**data->Xf == -1500 || **data->Xf > timeShifts.back().first)
         return 0;
-    for (const auto &it : TimeShifts)
+    for (const auto &it : timeShifts)
     {
         if (**data->Xf > it.first)
             shift = it.second;
@@ -220,10 +221,10 @@ double VamosIdentification::GetShift()
             break;
         }
     }
-    return shift + FP_time_interpolation->Evaluate(**data->Xf);
+    return shift + fpTimeInterpolation->Evaluate(**data->Xf);
 }
 
-double VamosIdentification::Get_EnFromBrho(){
+double VamosIdentification::getEnFromBrho(){
     if(fragment.id_Z == 0 || fragment.id_M == 0 || fragment.id_Q == 0)
         return 0;
     return sqrt(pow(**data->Brho / 3.3356E-3 * fragment.id_Q, 2) + pow(mass[fragment.id_M][fragment.id_Z], 2)) - (mass[fragment.id_M][fragment.id_Q]);

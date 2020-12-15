@@ -41,13 +41,13 @@ void Selector::SlaveBegin(TTree * /*tree*/){
     //TODO: use constructor to initialize this!!!
     std::string VAMOS_cuts_file = "./Configs/Cuts/VAMOS.root";
     vamos_fragment.LoadCuts(VAMOS_cuts_file);
-    vamos_fragment.Initialize();
+    vamos_fragment.initialize();
 
     std::string MUGAST_cuts_file = "./Configs/Cuts/MUGAST.root";
     mugast_fragment.LoadCuts(MUGAST_cuts_file);
 
     //Passing beam energy in MeV, target position mm
-    //mugast_fragment.Initialize(379.04, TVector3(0, 0, 25.));
+    //mugast_fragment.initialize(379.04, TVector3(0, 0, 25.));
     mugast_fragment.Initialize(458.217*UNITS::MeV, TVector3(0, 0, 25.));
 
     DEBUG("------------>finished: vamos_fragment initialization", "");
@@ -66,7 +66,7 @@ void Selector::SlaveBegin(TTree * /*tree*/){
                         "dE2 E in VAMOS",
                         2000, 10, 350, 2000, 10, 140));
 
-    for (const auto &Z_it : vamos_fragment.cuts_Z){
+    for (const auto &Z_it : vamos_fragment.cutsZ){
         Istantiate(pConf.VAMOS.mQ_MQ[Z_it],
                    new TH2D(Form("pConf_VAMOS_mQ_MQ_Z%i", Z_it),
                             Form("M/Q vs Q with Z%i selection", Z_it),
@@ -96,8 +96,8 @@ void Selector::SlaveBegin(TTree * /*tree*/){
                         1000, -50, 50, 1000, -50, 50));
 
     //Data histograms//////////////////////////////////////////////////////////////////////////////
-    for (const auto &it_M : vamos_fragment.cuts_M){
-        for (const auto &it_Z : vamos_fragment.cuts_Z){
+    for (const auto &it_M : vamos_fragment.cutsM){
+        for (const auto &it_Z : vamos_fragment.cutsZ){
             Istantiate(pData.VAMOS.mTW_Brho[it_M][it_Z],
                        new TH2D(Form("pData_VAMOS_mTW_Brho_%i_%i", it_M, it_Z),
                                 Form("Time vs Brho with M%i Z%i in VAMOS", it_M, it_Z),
@@ -115,8 +115,8 @@ void Selector::SlaveBegin(TTree * /*tree*/){
     //VAMOS
 
     //AGATA
-    for (const auto &it_M : vamos_fragment.cuts_M){
-        for (const auto &it_Z : vamos_fragment.cuts_Z){
+    for (const auto &it_M : vamos_fragment.cutsM){
+        for (const auto &it_Z : vamos_fragment.cutsZ){
             for (const auto &condition : AGATAconditions){
                 Istantiate(pData.AGATA.hDC[it_M][it_Z][condition],
                            new TH1D(Form("pData_AGATA_hDC_M%i_Z%i_cond%s", it_M, it_Z, condition.c_str()),
@@ -197,8 +197,8 @@ void Selector::SlaveBegin(TTree * /*tree*/){
                                 129, 0, 129, 1000, 0, 1500));
         }
 
-        for (const auto &it_M : vamos_fragment.cuts_M){
-            for (const auto &it_Z : vamos_fragment.cuts_Z){
+        for (const auto &it_M : vamos_fragment.cutsM){
+            for (const auto &it_Z : vamos_fragment.cutsZ){
                 Istantiate(pData.MG.mE_TOF[it_M][it_Z][it_MG],
                            new TH2D(Form("pData_MG_mE_TOF_M%i_Z%i_MG%i", it_M, it_Z, it_MG),
                                     Form("E vs TOF of MG%i with M%i Z%i", it_MG, it_M, it_Z),
@@ -212,8 +212,8 @@ void Selector::SlaveBegin(TTree * /*tree*/){
         }
     }
 
-    for (const auto &it_M : vamos_fragment.cuts_M){
-        for (const auto &it_Z : vamos_fragment.cuts_Z){
+    for (const auto &it_M : vamos_fragment.cutsM){
+        for (const auto &it_Z : vamos_fragment.cutsZ){
             for (const auto &particle : mugast_fragment.light_particles){
                 Istantiate(pData.MG.hEx[it_M][it_Z][particle],
                            new TH1D(Form("pData_MG_hEx_M%i_Z%i_%s", it_M, it_Z, particle.c_str()),
@@ -266,10 +266,10 @@ void Selector::SlaveBegin(TTree * /*tree*/){
 
     Istantiate(tree , new TTree("AnalyzedTree", "AnalyzedTree"));
     if (tree) {
-        tree->Branch("VamosData", &vamos_fragment.Get_Data());
-        tree->Branch("MugastData", &mugast_fragment.Get_MG_Data());
-        tree->Branch("Must2Data", &mugast_fragment.Get_MM_Data());
-        tree->Branch("CatsData", &mugast_fragment.Get_Cats_Data());
+        tree->Branch("VamosData", &vamos_fragment.getData());
+        tree->Branch("MugastData", &mugast_fragment.getMgData());
+        tree->Branch("Must2Data", &mugast_fragment.getMmData());
+        tree->Branch("CatsData", &mugast_fragment.getCatsData());
         tree->Branch("AgataData", &agata_gammas.Get_Data());
     }
     //TODO: Add MUST2
@@ -301,7 +301,7 @@ Bool_t Selector::Process(Long64_t entry){
     //Vamos/////////////////////////////////////////////
     LoadVamosData();
     DEBUG("------------>Finished: Loading Vamos data", "");
-    vamos_fragment.Identify();
+    vamos_fragment.identify();
     DEBUG("------------>Finished: Identification", "");
 
     //Agata/////////////////////////////////////////////
@@ -325,11 +325,11 @@ Bool_t Selector::Process(Long64_t entry){
     DEBUG("------------>Finished: Analysis of one event", "");
 
     if (entry % 10000 == 0)
-        mugast_fragment.StoreTWvsIce();
+        mugast_fragment.storeTWvsIce();
 
-    for (unsigned int ii = 0; ii < mugast_fragment.Get_Mult(); ++ii) {
-        if (mugast_fragment.Get_Ex(ii)<-2.)
-            general_histo_ptr->Fill(mugast_fragment.Get_SI_E(ii), mugast_fragment.Get_T(ii), mugast_fragment.Get_MG(ii) );
+    for (unsigned int ii = 0; ii < mugast_fragment.getMult(); ++ii) {
+        if (mugast_fragment.getEx(ii) < -2.)
+            general_histo_ptr->Fill(mugast_fragment.getSiE(ii), mugast_fragment.getT(ii), mugast_fragment.getMg(ii) );
     }
 
     Fill(tree.get());
@@ -357,12 +357,12 @@ inline void Selector::LoadVamosData(){
 }
 
 inline void Selector::LoadMugastData(){
-    mugast_fragment.SetData(new MugastIdentification::Data(&Mugast,
+    mugast_fragment.setData(new MugastIdentification::Data(&Mugast,
                                                            &MUST2,
                                                            &CATS,
                                                            &TW,
-                                                           vamos_fragment.Get_id_M(),
-                                                           vamos_fragment.Get_id_Z()));
+                                                           vamos_fragment.getIdM(),
+                                                           vamos_fragment.getIdZ()));
 }
 
 inline void Selector::LoadAgataData(){
@@ -374,115 +374,115 @@ inline void Selector::LoadAgataData(){
                                                    &AddX,
                                                    &AddY,
                                                    &AddZ,
-                                                   vamos_fragment.Get_p4()));
+                                                   vamos_fragment.getP4()));
 }
 
 inline void Selector::PlotVamosGraphs(){
     DEBUG("------------>Selector::PlotVamosGraphs()", "");
     //dE-E plot, no conditions
-    Fill(pConf.VAMOS.mdE_E.get(),vamos_fragment.Get_En(), vamos_fragment.Get_D_En());
-    Fill(pConf.VAMOS.mdE2_E.get(),vamos_fragment.Get_En(), vamos_fragment.Get_D_En2());
+    Fill(pConf.VAMOS.mdE_E.get(), vamos_fragment.getEn(), vamos_fragment.getDEn());
+    Fill(pConf.VAMOS.mdE2_E.get(), vamos_fragment.getEn(), vamos_fragment.getDEn2());
 
-    if (vamos_fragment.Get_id_Z() == 0)
+    if (vamos_fragment.getIdZ() == 0)
         return;
-    Fill(pConf.VAMOS.mQ_MQ[vamos_fragment.Get_id_Z()].get(),
-         vamos_fragment.Get_M_Q(),
-         vamos_fragment.Get_Charge());
-    Fill(pConf.VAMOS.Xf_MQ[vamos_fragment.Get_id_Z()].get(),
-         vamos_fragment.Get_M_Q(),
+    Fill(pConf.VAMOS.mQ_MQ[vamos_fragment.getIdZ()].get(),
+         vamos_fragment.getMQ(),
+         vamos_fragment.getCharge());
+    Fill(pConf.VAMOS.Xf_MQ[vamos_fragment.getIdZ()].get(),
+         vamos_fragment.getMQ(),
          *Xf);
-    if (!vamos_fragment.Identified())
+    if (!vamos_fragment.identified())
         return;
-    Fill(pData.VAMOS.mTW_Brho[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()].get(),
+    Fill(pData.VAMOS.mTW_Brho[vamos_fragment.getIdM()][vamos_fragment.getIdZ()].get(),
          *TW, *Brho);
 
-    for (unsigned int ii = 0; ii < mugast_fragment.Get_Mult(); ++ii){
-        Fill(pData.VAMOS.mE_Theta[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][mugast_fragment.Get_Particle(ii)].get(),
-             vamos_fragment.Get_p4()->Angle(TVector3(0, 0, 1)),
-            vamos_fragment.Get_EnFromBrho());
+    for (unsigned int ii = 0; ii < mugast_fragment.getMult(); ++ii){
+        Fill(pData.VAMOS.mE_Theta[vamos_fragment.getIdM()][vamos_fragment.getIdZ()][mugast_fragment.getParticle(ii)].get(),
+             vamos_fragment.getP4()->Angle(TVector3(0, 0, 1)),
+             vamos_fragment.getEnFromBrho());
     }
 }
 
 inline void Selector::PlotMugastGraphs(){
     DEBUG("------------>Selector::PlotMugastGraphs()", "");
-    for (unsigned int ii = 0; ii < mugast_fragment.Get_Mult(); ++ii){
-        if (mugast_fragment.Get_T(ii)>260 && mugast_fragment.Get_T(ii)<380){
+    for (unsigned int ii = 0; ii < mugast_fragment.getMult(); ++ii){
+        if (mugast_fragment.getT(ii) > 260 && mugast_fragment.getT(ii) < 380){
             //Only events with tof
             Fill(pConf.MG.hit.get(),
-                    mugast_fragment.Get_Pos(ii)->X(),
-                    mugast_fragment.Get_Pos(ii)->Y(),
-                    mugast_fragment.Get_Pos(ii)->Z());
+                 mugast_fragment.getPos(ii)->X(),
+                 mugast_fragment.getPos(ii)->Y(),
+                 mugast_fragment.getPos(ii)->Z());
 
             Fill(pConf.MG.hit_XY.get(),
-                    mugast_fragment.Get_Pos(ii)->X(),
-                    mugast_fragment.Get_Pos(ii)->Y());
+                 mugast_fragment.getPos(ii)->X(),
+                 mugast_fragment.getPos(ii)->Y());
 
             Fill(pConf.MG.hit_XZ.get(),
-                    mugast_fragment.Get_Pos(ii)->X(),
-                    mugast_fragment.Get_Pos(ii)->Z());
+                 mugast_fragment.getPos(ii)->X(),
+                 mugast_fragment.getPos(ii)->Z());
 
             Fill(pConf.MG.hit_YZ.get(),
-                    mugast_fragment.Get_Pos(ii)->Y(),
-                    mugast_fragment.Get_Pos(ii)->Z());
+                 mugast_fragment.getPos(ii)->Y(),
+                 mugast_fragment.getPos(ii)->Z());
 
             Fill(pConf.MG.hit_ThetaPhi.get(),
-                 mugast_fragment.Get_Pos(ii)->Theta(),
-                 mugast_fragment.Get_Pos(ii)->Phi());
+                 mugast_fragment.getPos(ii)->Theta(),
+                 mugast_fragment.getPos(ii)->Phi());
         }
         //Ex
-        Fill(pData.MG.hEx[vamos_fragment.Get_id_M()]
-                         [vamos_fragment.Get_id_Z()]
-                         [mugast_fragment.Get_Particle(ii)].get(),
-             mugast_fragment.Get_Ex(ii));
+        Fill(pData.MG.hEx[vamos_fragment.getIdM()]
+                         [vamos_fragment.getIdZ()]
+                         [mugast_fragment.getParticle(ii)].get(),
+             mugast_fragment.getEx(ii));
 
-        Fill(pData.MG.mELab_ThetaLab[vamos_fragment.Get_id_M()]
-                                    [vamos_fragment.Get_id_Z()]
-                                    [mugast_fragment.Get_Particle(ii)]
+        Fill(pData.MG.mELab_ThetaLab[vamos_fragment.getIdM()]
+                                    [vamos_fragment.getIdZ()]
+                                    [mugast_fragment.getParticle(ii)]
                                     ["NOCONDITION"].get(),
-             mugast_fragment.Get_ThetaLab(ii),
-             mugast_fragment.Get_E(ii));
+             mugast_fragment.getThetaLab(ii),
+             mugast_fragment.getE(ii));
 
-        Fill(pConf.MG.mELab_ESI[vamos_fragment.Get_id_M()]
-             [vamos_fragment.Get_id_Z()]
-             [mugast_fragment.Get_Particle(ii)]
+        Fill(pConf.MG.mELab_ESI[vamos_fragment.getIdM()]
+             [vamos_fragment.getIdZ()]
+             [mugast_fragment.getParticle(ii)]
              ["NOCONDITION"].get(),
-             mugast_fragment.Get_E(ii),
-             mugast_fragment.Get_SI_E(ii));
+             mugast_fragment.getE(ii),
+             mugast_fragment.getSiE(ii));
 
-        Fill(pConf.MG.mThetaLab_ELost[vamos_fragment.Get_id_M()]
-             [vamos_fragment.Get_id_Z()]
-             [mugast_fragment.Get_Particle(ii)]
+        Fill(pConf.MG.mThetaLab_ELost[vamos_fragment.getIdM()]
+             [vamos_fragment.getIdZ()]
+             [mugast_fragment.getParticle(ii)]
              ["NOCONDITION"].get(),
-             mugast_fragment.Get_ThetaLab(ii),
-             mugast_fragment.Get_E(ii)-mugast_fragment.Get_SI_E(ii));
+             mugast_fragment.getThetaLab(ii),
+             mugast_fragment.getE(ii) - mugast_fragment.getSiE(ii));
 
-        Fill(pData.MG.mEx_ThetaLab[vamos_fragment.Get_id_M()]
-             [vamos_fragment.Get_id_Z()]
-                                    [mugast_fragment.Get_Particle(ii)]
+        Fill(pData.MG.mEx_ThetaLab[vamos_fragment.getIdM()]
+             [vamos_fragment.getIdZ()]
+                                    [mugast_fragment.getParticle(ii)]
                                     ["NOCONDITION"].get(),
-             mugast_fragment.Get_ThetaLab(ii),
-             mugast_fragment.Get_Ex(ii));
+             mugast_fragment.getThetaLab(ii),
+             mugast_fragment.getEx(ii));
 
-        Fill(pData.MG.mEx_Phi[vamos_fragment.Get_id_M()]
-             [vamos_fragment.Get_id_Z()]
-             [mugast_fragment.Get_Particle(ii)]
+        Fill(pData.MG.mEx_Phi[vamos_fragment.getIdM()]
+             [vamos_fragment.getIdZ()]
+             [mugast_fragment.getParticle(ii)]
              ["NOCONDITION"].get(),
-             mugast_fragment.Get_Phi(ii),
-             mugast_fragment.Get_Ex(ii));
+             mugast_fragment.getPhi(ii),
+             mugast_fragment.getEx(ii));
 
-        Fill(pData.MG.hThetaCM[vamos_fragment.Get_id_M()]
-             [vamos_fragment.Get_id_Z()]
-                                    [mugast_fragment.Get_Particle(ii)]
+        Fill(pData.MG.hThetaCM[vamos_fragment.getIdM()]
+             [vamos_fragment.getIdZ()]
+                                    [mugast_fragment.getParticle(ii)]
                                     ["NOCONDITION"].get(),
-             mugast_fragment.Get_ThetaCM(ii));
+             mugast_fragment.getThetaCm(ii));
 
         if (agata_gammas.In_Coincidence()){
             //ELab Theta Lab
             for (long unsigned int jj = 0; jj < agata_gammas.Get_Mult(); ++jj){
-                Fill(pData.MG.mEx_EDC[vamos_fragment.Get_id_M()]
-                                     [vamos_fragment.Get_id_Z()]
-                                     [mugast_fragment.Get_Particle(ii)].get(),
-                     mugast_fragment.Get_Ex(ii),
+                Fill(pData.MG.mEx_EDC[vamos_fragment.getIdM()]
+                                     [vamos_fragment.getIdZ()]
+                                     [mugast_fragment.getParticle(ii)].get(),
+                     mugast_fragment.getEx(ii),
                      agata_gammas.Get_EDC(jj));
 
                 for (const auto &it_gamma : gammas){
@@ -490,93 +490,93 @@ inline void Selector::PlotMugastGraphs(){
                         continue;
                     if (abs(std::stod(it_gamma) - agata_gammas.Get_EDC(jj)) < gamma_gate){
                         //ELab ThetaLab with gamma condition
-                        Fill(pData.MG.mELab_ThetaLab[vamos_fragment.Get_id_M()]
-                                                    [vamos_fragment.Get_id_Z()]
-                                                    [mugast_fragment.Get_Particle(ii)]
+                        Fill(pData.MG.mELab_ThetaLab[vamos_fragment.getIdM()]
+                                                    [vamos_fragment.getIdZ()]
+                                                    [mugast_fragment.getParticle(ii)]
                                                     [it_gamma].get(),
-                             mugast_fragment.Get_ThetaLab(ii),
-                             mugast_fragment.Get_E(ii));
+                             mugast_fragment.getThetaLab(ii),
+                             mugast_fragment.getE(ii));
 
-                        Fill(pConf.MG.mELab_ESI[vamos_fragment.Get_id_M()]
-                             [vamos_fragment.Get_id_Z()]
-                             [mugast_fragment.Get_Particle(ii)]
+                        Fill(pConf.MG.mELab_ESI[vamos_fragment.getIdM()]
+                             [vamos_fragment.getIdZ()]
+                             [mugast_fragment.getParticle(ii)]
                              [it_gamma].get(),
-                             mugast_fragment.Get_E(ii),
-                             mugast_fragment.Get_SI_E(ii));
+                             mugast_fragment.getE(ii),
+                             mugast_fragment.getSiE(ii));
 
-                        Fill(pConf.MG.mThetaLab_ELost[vamos_fragment.Get_id_M()]
-                             [vamos_fragment.Get_id_Z()]
-                             [mugast_fragment.Get_Particle(ii)]
+                        Fill(pConf.MG.mThetaLab_ELost[vamos_fragment.getIdM()]
+                             [vamos_fragment.getIdZ()]
+                             [mugast_fragment.getParticle(ii)]
                              [it_gamma].get(),
-                             mugast_fragment.Get_ThetaLab(ii),
-                             mugast_fragment.Get_E(ii)-mugast_fragment.Get_SI_E(ii));
+                             mugast_fragment.getThetaLab(ii),
+                             mugast_fragment.getE(ii) - mugast_fragment.getSiE(ii));
 
-                        Fill(pData.MG.mEx_ThetaLab[vamos_fragment.Get_id_M()]
-                                                    [vamos_fragment.Get_id_Z()]
-                                                    [mugast_fragment.Get_Particle(ii)]
+                        Fill(pData.MG.mEx_ThetaLab[vamos_fragment.getIdM()]
+                                                    [vamos_fragment.getIdZ()]
+                                                    [mugast_fragment.getParticle(ii)]
                                                     [it_gamma].get(),
-                             mugast_fragment.Get_ThetaLab(ii),
-                             mugast_fragment.Get_Ex(ii));
+                             mugast_fragment.getThetaLab(ii),
+                             mugast_fragment.getEx(ii));
 
-                        Fill(pData.MG.mEx_Phi[vamos_fragment.Get_id_M()]
-                             [vamos_fragment.Get_id_Z()]
-                             [mugast_fragment.Get_Particle(ii)]
+                        Fill(pData.MG.mEx_Phi[vamos_fragment.getIdM()]
+                             [vamos_fragment.getIdZ()]
+                             [mugast_fragment.getParticle(ii)]
                              [it_gamma].get(),
-                             mugast_fragment.Get_Phi(ii),
-                             mugast_fragment.Get_Ex(ii));
+                             mugast_fragment.getPhi(ii),
+                             mugast_fragment.getEx(ii));
 
-                        Fill(pData.MG.hThetaCM[vamos_fragment.Get_id_M()]
-                                                    [vamos_fragment.Get_id_Z()]
-                                                    [mugast_fragment.Get_Particle(ii)]
+                        Fill(pData.MG.hThetaCM[vamos_fragment.getIdM()]
+                                                    [vamos_fragment.getIdZ()]
+                                                    [mugast_fragment.getParticle(ii)]
                                                     [it_gamma].get(),
-                             mugast_fragment.Get_ThetaCM(ii));
+                             mugast_fragment.getThetaCm(ii));
                     }
                 }
             }
         }
 
         //E TOF
-        Fill(pConf.MG.mE_TOF[mugast_fragment.Get_MG(ii)].get(),
-             mugast_fragment.Get_SI_E(ii),
-             mugast_fragment.Get_T(ii));
+        Fill(pConf.MG.mE_TOF[mugast_fragment.getMg(ii)].get(),
+             mugast_fragment.getSiE(ii),
+             mugast_fragment.getT(ii));
 
-        Fill(pConf.MG.mE_TOF2[mugast_fragment.Get_MG(ii)].get(),
-             mugast_fragment.Get_SI_E(ii),
-             mugast_fragment.Get_T2(ii));
+        Fill(pConf.MG.mE_TOF2[mugast_fragment.getMg(ii)].get(),
+             mugast_fragment.getSiE(ii),
+             mugast_fragment.getT2(ii));
 
-            Fill(pConf.MG.mStrip_E[mugast_fragment.Get_MG(ii)]["X"].get(),
-                 mugast_fragment.Get_SI_X(ii),
-                 mugast_fragment.Get_SI_E(ii));
+            Fill(pConf.MG.mStrip_E[mugast_fragment.getMg(ii)]["X"].get(),
+                 mugast_fragment.getSiX(ii),
+                 mugast_fragment.getSiE(ii));
 
-            Fill(pConf.MG.mStrip_T[mugast_fragment.Get_MG(ii)]["X"].get(),
-                 mugast_fragment.Get_SI_X(ii),
-                 mugast_fragment.Get_T(ii));
+            Fill(pConf.MG.mStrip_T[mugast_fragment.getMg(ii)]["X"].get(),
+                 mugast_fragment.getSiX(ii),
+                 mugast_fragment.getT(ii));
 
-            Fill(pConf.MG.mStrip_T2[mugast_fragment.Get_MG(ii)]["X"].get(),
-                 mugast_fragment.Get_SI_X(ii),
-                 mugast_fragment.Get_T2(ii));
+            Fill(pConf.MG.mStrip_T2[mugast_fragment.getMg(ii)]["X"].get(),
+                 mugast_fragment.getSiX(ii),
+                 mugast_fragment.getT2(ii));
 
-            Fill(pConf.MG.mStrip_E[mugast_fragment.Get_MG(ii)]["Y"].get(),
-                 mugast_fragment.Get_SI_Y(ii),
-                 mugast_fragment.Get_SI_E(ii));
+            Fill(pConf.MG.mStrip_E[mugast_fragment.getMg(ii)]["Y"].get(),
+                 mugast_fragment.getSiY(ii),
+                 mugast_fragment.getSiE(ii));
 
-            Fill(pConf.MG.mStrip_T[mugast_fragment.Get_MG(ii)]["Y"].get(),
-                 mugast_fragment.Get_SI_Y(ii),
-                 mugast_fragment.Get_T(ii));
+            Fill(pConf.MG.mStrip_T[mugast_fragment.getMg(ii)]["Y"].get(),
+                 mugast_fragment.getSiY(ii),
+                 mugast_fragment.getT(ii));
 
-            Fill(pConf.MG.mStrip_T2[mugast_fragment.Get_MG(ii)]["Y"].get(),
-                 mugast_fragment.Get_SI_Y(ii),
-                 mugast_fragment.Get_T2(ii));
+            Fill(pConf.MG.mStrip_T2[mugast_fragment.getMg(ii)]["Y"].get(),
+                 mugast_fragment.getSiY(ii),
+                 mugast_fragment.getT2(ii));
 
-        if (vamos_fragment.Identified())
+        if (vamos_fragment.identified())
         {
-            Fill(pData.MG.mE_TOF[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][mugast_fragment.Get_MG(ii)].get(),
-                 mugast_fragment.Get_SI_E(ii),
-                 mugast_fragment.Get_T(ii));
+            Fill(pData.MG.mE_TOF[vamos_fragment.getIdM()][vamos_fragment.getIdZ()][mugast_fragment.getMg(ii)].get(),
+                 mugast_fragment.getSiE(ii),
+                 mugast_fragment.getT(ii));
 
-            Fill(pData.MG.mE_TOF2[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()][mugast_fragment.Get_MG(ii)].get(),
-                 mugast_fragment.Get_SI_E(ii),
-                 mugast_fragment.Get_T2(ii));
+            Fill(pData.MG.mE_TOF2[vamos_fragment.getIdM()][vamos_fragment.getIdZ()][mugast_fragment.getMg(ii)].get(),
+                 mugast_fragment.getSiE(ii),
+                 mugast_fragment.getT2(ii));
         }
     }
 }
@@ -589,13 +589,13 @@ inline void Selector::PlotAgataGraphs(){
         for (unsigned int ii = 0; ii < agata_gammas.Get_Mult(); ++ii)
         {
             //Only agata
-            Fill(pData.AGATA.hDC[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()]["NONE"].get(),
+            Fill(pData.AGATA.hDC[vamos_fragment.getIdM()][vamos_fragment.getIdZ()]["NONE"].get(),
                  agata_gammas.Get_EDC(ii));
             for (unsigned int jj = 0; jj < agata_gammas.Get_Mult(); ++jj){
                 if (ii == jj)
                     continue;
 
-                Fill(pData.AGATA.mDC[vamos_fragment.Get_id_M()][vamos_fragment.Get_id_Z()].get(),
+                Fill(pData.AGATA.mDC[vamos_fragment.getIdM()][vamos_fragment.getIdZ()].get(),
                      agata_gammas.Get_EDC(ii),
                      agata_gammas.Get_EDC(jj));
             }
@@ -648,7 +648,7 @@ bool Selector::GetSettings(){
 }
 
 std::vector<std::pair<double, double>> Selector::GetTWvsIce(){
-    return mugast_fragment.GetTWvsIce();
+    return mugast_fragment.getTWvsIce();
 }
 
 inline bool Selector::Fill(TH1D* histo, const double &data1){

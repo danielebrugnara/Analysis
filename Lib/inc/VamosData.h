@@ -22,6 +22,7 @@ class VamosData: public TObject{
     double M_Q;        //Mass over charge
     double M;          //Mass
     double Charge;     //Charge state
+    double BRho;       //Brho
     bool Identified;   //Positive identification
     TLorentzVector p4; //4 momentum of recoil
     int id_M;
@@ -41,6 +42,7 @@ class VamosData: public TObject{
                  M_Q(0),
                  M(0),
                  Charge(0),
+                 BRho(0),
                  Identified(false),
                  p4(),
                  id_M(0),

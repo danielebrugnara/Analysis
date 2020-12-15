@@ -85,89 +85,89 @@ private: //Variables used internally
     std::vector<std::pair<double, double>> TW_vs_ice;
 
     //Minimizer for ice thickness estimation
-    std::unique_ptr<Minimizer> ice_thickness_minimizer;
-    std::unique_ptr<Minimizer> distance_minimizer;
+    std::unique_ptr<Minimizer> iceThicknessMinimizer;
+    std::unique_ptr<Minimizer> distanceMinimizer;
 
     //Calibrations
-    std::unordered_map<int, Calibration *> calibrations_TY;
+    std::unordered_map<int, Calibration *> calibrationsTy;
 
     //Energy Loss
-    std::unordered_map<std::string, std::unordered_map<std::string, EnergyLoss *>> energy_loss;
-    std::pair<double, double> current_ice_thickness;//first layer, second layer
+    std::unordered_map<std::string, std::unordered_map<std::string, EnergyLoss *>> energyLoss;
+    std::pair<double, double> currentIceThickness;//first layer, second layer
     bool use_constant_thickness;
 
     bool with_cuts;
-    double havar_thickness;
+    double havarThickness;
 
 
 private: //Data input and output
     Data const *data;
     MugastData fragment;
-    Must2Data fragment_must;
-    CatsData fragment_cats;
+    Must2Data fragmentMust;
+    CatsData fragmentCats;
 
 private: //Internal initialization methods
-    bool InitializeCuts();
-    bool InitializeCalibration();
-    bool InitializeELoss();
-    bool InitializeInterpolations();
+    bool initializeCuts();
+    bool initializeCalibration();
+    bool initializeELoss();
+    bool initializeInterpolations();
 
 private: //Functions used internally during analysis
-    void    IdentifyIceThickness();
+    void    identifyIceThickness();
     double  ComputeDistanceInGas(const TVector3&, const TVector3&);
     double  InitialBeamEnergy(double, double);
     double  MiddleTargetBeamEnergy(double);
-    bool Identify_Mugast();
-    bool Identify_Must2();
-    bool ReconstructEnergy_Mugast();
-    bool ReconstructEnergy_Must2();
+    bool identifyMugast();
+    bool identifyMust2();
+    bool reconstructEnergyMugast();
+    bool reconstructEnergyMust2();
 
 public: //Functions called by selector
     bool Identify();
     //Getter methods
-    inline unsigned int Get_Mult()             const { return fragment.multiplicity; };
-    inline TVector3*    Get_Pos(const int &i)        { return &(fragment.Pos[i]); };
-    inline int          Get_SI_X(const int &i) const { return fragment.SI_X[i]; };
-    inline int          Get_SI_Y(const int &i) const { return fragment.SI_Y[i]; };
-    inline double       Get_SI_E(const int &i) const { return fragment.SI_E[i]; };
-    inline double       Get_T2(const int &i)   const { return fragment.T2[i]; };
-    inline double       Get_MG(const int &i)   const { return fragment.MG[i]; };
-    inline double       Get_M(const int &i)    const { return fragment.M[i]; };
-    inline double       Get_Z(const int &i)    const { return fragment.Z[i]; };
-    inline double       Get_E(const int &i)    const { return fragment.E[i]; };
-    inline double       Get_Ex(const int &i)   const { return fragment.Ex[i]; };
-    inline double       Get_T(const int &i)    const { return fragment.T[i]; }
-    inline std::string  Get_Particle(const int &i) const { return fragment.Particle[i]; }
-    inline double       Get_ThetaCM(const int &i)  const {return fragment.E_CM[i];};
-    inline TVector3*    Get_EmissionDirection(const int &i)
+    inline unsigned int getMult()             const { return fragment.multiplicity; };
+    inline TVector3*    getPos(const int &i)        { return &(fragment.Pos[i]); };
+    inline int          getSiX(const int &i) const { return fragment.SI_X[i]; };
+    inline int          getSiY(const int &i) const { return fragment.SI_Y[i]; };
+    inline double       getSiE(const int &i) const { return fragment.SI_E[i]; };
+    inline double       getT2(const int &i)   const { return fragment.T2[i]; };
+    inline double       getMg(const int &i)   const { return fragment.MG[i]; };
+    inline double       getM(const int &i)    const { return fragment.M[i]; };
+    inline double       getZ(const int &i)    const { return fragment.Z[i]; };
+    inline double       getE(const int &i)    const { return fragment.E[i]; };
+    inline double       getEx(const int &i)   const { return fragment.Ex[i]; };
+    inline double       getT(const int &i)    const { return fragment.T[i]; }
+    inline std::string  getParticle(const int &i) const { return fragment.Particle[i]; }
+    inline double       getThetaCm(const int &i)  const {return fragment.E_CM[i];};
+    inline TVector3*    getEmissionDirection(const int &i)
         { return &(fragment.EmissionDirection[i]); };
-    inline double       Get_ThetaLab(const int &i) const
+    inline double       getThetaLab(const int &i) const
         {return fragment.EmissionDirection[i].Angle(TVector3(0, 0, 1));};
-    inline double       Get_Phi(const int &i) const
+    inline double       getPhi(const int &i) const
         {return fragment.EmissionDirection[i].Phi();};
 
-    inline MugastData&  Get_MG_Data()                   {return  fragment;}
-    inline Must2Data&  Get_MM_Data()                    {return  fragment_must;}
-    inline CatsData&  Get_Cats_Data()                   {return  fragment_cats;}
+    inline MugastData&  getMgData()                   {return  fragment;}
+    inline Must2Data&  getMmData()                    {return  fragmentMust;}
+    inline CatsData&  getCatsData()                   {return  fragmentCats;}
 
     //Other methods
-    std::vector<std::pair<double, double>> GetTWvsIce();
+    std::vector<std::pair<double, double>> getTWvsIce();
 
-    inline void StoreTWvsIce(){
+    inline void storeTWvsIce(){
             TW_vs_ice.emplace_back(**(data->TW),
-                                   current_ice_thickness.first);
+                                   currentIceThickness.first);
     };
 
-    inline void SetData(Data const *data){
+    inline void setData(Data const *data){
         delete this->data;
         this->data = data;
 
         //The following constructs at the same address
         fragment.~MugastData();
         new(&fragment) MugastData((**(data->Mugast)).DSSD_E.size());
-        fragment_must.~Must2Data();
-        new(&fragment_must) Must2Data((**(data->Must2)).EventMultiplicity);
-        fragment_cats.~CatsData();
-        new(&fragment_cats) CatsData((**(data->Cats)).PositionX.size());
+        fragmentMust.~Must2Data();
+        new(&fragmentMust) Must2Data((**(data->Must2)).EventMultiplicity);
+        fragmentCats.~CatsData();
+        new(&fragmentCats) CatsData((**(data->Cats)).PositionX.size());
     };
 };

@@ -1,6 +1,6 @@
 #CMakeLists.txt for analysis package. It creates a library with dictionary and a main program
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
-project(effanalysis)
+project(kinematiclineplotter)
 
 #Where to find the libraries
 set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/src/")
@@ -49,4 +49,4 @@ foreach(dir ${dirs})
 endforeach()
 
 add_subdirectory(src)
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/files DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/Configs DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

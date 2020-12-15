@@ -17,7 +17,7 @@ class VamosIdentification : public Identification
 public:
     VamosIdentification();
     ~VamosIdentification();
-    bool Initialize();
+    bool initialize();
 
     struct Data
     {
@@ -54,47 +54,47 @@ public:
                                                         AGAVA_VAMOSTS(AGAVA_VAMOSTS),
                                                         T_FPMW_CATS2_C(T_FPMW_CATS2_C){};
     };
-    std::array<int, 3> cuts_Z;
-    //std::array<int, 5> cuts_M;
+    std::array<int, 3> cutsZ;
+    //std::array<int, 5> cutsM;
     //std::array<int, 9> cuts_Q;
-    std::array<int, 4> cuts_M;
-    std::array<int, 8> cuts_Q;
+    std::array<int, 4> cutsM;
+    //std::array<int, 8> cuts_Q;
 
 private:
     std::unordered_map<int, std::unordered_map<int, double>> mass;
-    const Double_t AMU_TO_MEV{931.4936148};
-    void ReadFPTimeShifts();
-    std::vector<std::pair<double, double>> TimeShifts; //Xf-max, shift
+    //const Double_t AMU_TO_MEV{931.4936148};
+    void readFpTimeShifts();
+    std::vector<std::pair<double, double>> timeShifts; //Xf-max, shift
     Data const *data;
     VamosData fragment;
 
-    Interpolation *FP_time_interpolation;
+    Interpolation *fpTimeInterpolation;
 
-    const double IC_threashold{0.1};
+    const double icThreashold{0.1};
 
 public:
     //Various computed fragment properties
 
-    inline double Get_En()            const { return fragment.En; };
-    inline double Get_D_En()          const { return fragment.D_En; };
-    inline double Get_D_En2()         const { return fragment.D_En2; };
-    inline double Get_Path()          const { return fragment.Path; };
-    inline double Get_T()             const { return fragment.T; };
-    inline double Get_V()             const { return fragment.V; };
-    inline double Get_Beta()          const { return fragment.Beta; };
-    inline double Get_Gamma()         const { return fragment.Gamma; };
-    inline double Get_M_Q()           const { return fragment.M_Q; };
-    inline double Get_M()             const { return fragment.M; };
-    inline double Get_Charge()        const { return fragment.Charge; };
-    inline double Identified()        const { return fragment.Identified; };
-    inline TLorentzVector *Get_p4()         { return &(fragment.p4); };
-    inline unsigned int Get_id_Z()    const { return fragment.id_Z; };
-    inline unsigned int Get_id_M()    const { return fragment.id_M; };
-    inline unsigned int Get_id_Q()    const { return fragment.id_Q; };
+    inline double getEn()            const { return fragment.En; };
+    inline double getDEn()          const { return fragment.D_En; };
+    inline double getDEn2()         const { return fragment.D_En2; };
+    inline double getPath()          const { return fragment.Path; };
+    inline double getT()             const { return fragment.T; };
+    inline double getV()             const { return fragment.V; };
+    inline double getBeta()          const { return fragment.Beta; };
+    inline double getGamma()         const { return fragment.Gamma; };
+    inline double getMQ()           const { return fragment.M_Q; };
+    inline double getM()             const { return fragment.M; };
+    inline double getCharge()        const { return fragment.Charge; };
+    inline double identified()        const { return fragment.Identified; };
+    inline TLorentzVector *getP4()         { return &(fragment.p4); };
+    inline unsigned int getIdZ()    const { return fragment.id_Z; };
+    inline unsigned int getIdM()    const { return fragment.id_M; };
+    inline unsigned int getIdQ()    const { return fragment.id_Q; };
 
-    inline VamosData& Get_Data()        {return fragment;};
+    inline VamosData& getData()        {return fragment;};
 
-    double Get_EnFromBrho();
+    double getEnFromBrho();
     //////////////////////////////////////////////////////////////////
     //Inline Functions implementation (required to be in header file)
 public:
@@ -108,13 +108,14 @@ public:
         new(&fragment) VamosData();
     }
 
-    bool Identify();
+    bool identify();
 
 private:
-    double GetShift();
+    double getShift();
 
-    inline double GetFPTime()
+    inline double getFpTime()
     {
-        return 540.5 * (**data->AGAVA_VAMOSTS < 104753375647998) + 537.9 * (**data->AGAVA_VAMOSTS >= 104753375647998) - 2. * **data->T_FPMW_CATS2_C + GetShift();
+        return 540.5 * (**data->AGAVA_VAMOSTS < 104753375647998) + 537.9 * (**data->AGAVA_VAMOSTS >= 104753375647998) - 2. * **data->T_FPMW_CATS2_C +
+                getShift();
     }
 };
