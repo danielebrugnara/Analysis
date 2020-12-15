@@ -1,48 +1,56 @@
 #include "Plotter.h"
 
-
-void Plotter::plotLines(){
-    TStyle style;
+Plotter::Plotter():
+        style("default", "Default"),
+        beam_energy(400*UNITS::MeV)
+{
     style.cd();
     style.SetCanvasPreferGL(kTRUE);
-
-
-    std::map<std::string, std::pair<ReactionReconstruction2body<long double>*, TF1*>> graphs;
-    double beam_energy = 400*UNITS::MeV;
-
-    graphs.emplace("M48_Z19_m1_z1", std::make_pair(new ReactionReconstruction2body<long double>(
+    reactions.emplace("M48_Z19_m1_z1", new ReactionReconstruction2body<long double>(
             ReactionReconstruction2body<long double>::ReactionInput2body({
                                                                                  ReactionFragment::FragmentSettings(46, 18, 0, beam_energy, 0),
                                                                                  ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
                                                                                  ReactionFragment::FragmentSettings(1, 1, 0, 0, 0),
-                                                                                 ReactionFragment::FragmentSettings(48, 19, 0, 0, 0)})),
-                                                   nullptr));
+                                                                                 ReactionFragment::FragmentSettings(48, 19, 0, 0, 0)})));
 
-    graphs.emplace("M47_Z19_m2_z1", std::make_pair(new ReactionReconstruction2body<long double>(
+    reactions.emplace("M47_Z19_m2_z1", new ReactionReconstruction2body<long double>(
             ReactionReconstruction2body<long double>::ReactionInput2body({
                                                                                  ReactionFragment::FragmentSettings(46, 18, 0, beam_energy, 0),
                                                                                  ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
                                                                                  ReactionFragment::FragmentSettings(2, 1, 0, 0, 0),
-                                                                                 ReactionFragment::FragmentSettings(47, 19, 0,0, 0)})),
-                                                   nullptr));
+                                                                                 ReactionFragment::FragmentSettings(47, 19, 0,0, 0)})));
 
-    graphs.emplace("M45_Z18_m4_z2", std::make_pair(new ReactionReconstruction2body<long double>(
+    reactions.emplace("M45_Z18_m4_z2", new ReactionReconstruction2body<long double>(
             ReactionReconstruction2body<long double>::ReactionInput2body({
                                                                                  ReactionFragment::FragmentSettings(46, 18, 0, beam_energy, 0),
                                                                                  ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
                                                                                  ReactionFragment::FragmentSettings(4, 2, 0, 0, 0),
-                                                                                 ReactionFragment::FragmentSettings(45, 18, 0,0, 0)})),
-                                                   nullptr));
+                                                                                 ReactionFragment::FragmentSettings(45, 18, 0,0, 0)})));
 
-    graphs.emplace("M46_Z18_m3_z2", std::make_pair(new ReactionReconstruction2body<long double>(
+    reactions.emplace("M46_Z18_m3_z2", new ReactionReconstruction2body<long double>(
             ReactionReconstruction2body<long double>::ReactionInput2body({
                                                                                  ReactionFragment::FragmentSettings(46, 18, 0, beam_energy, 0),
                                                                                  ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
                                                                                  ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
-                                                                                 ReactionFragment::FragmentSettings(46, 18, 0,0, 0)})),
-                                                   nullptr));
+                                                                                 ReactionFragment::FragmentSettings(46, 18, 0,0, 0)})));
 
+    reactions.emplace("M43_Z18_m6_z2", new ReactionReconstruction2body<long double>(
+            ReactionReconstruction2body<long double>::ReactionInput2body({
+                                                                                 ReactionFragment::FragmentSettings(46, 18, 0, beam_energy, 0),
+                                                                                 ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
+                                                                                 ReactionFragment::FragmentSettings(6, 2, 0, 0, 0),
+                                                                                 ReactionFragment::FragmentSettings(43, 18, 0,0, 0)})));
+    for (auto& it: reactions){
+        it.second->SetPrecision(1E-4);
+    }
+}
 
+void Plotter::plotVamosAcceptance(){
+
+    std::map<std::string, std::pair<ReactionReconstruction2body<long double>*, TF1*>> graphs;
+    for (auto& it: reactions){
+        graphs.emplace(it.first, std::make_pair(it.second,nullptr));
+    }
 
     int cnt=1;
     TMultiGraph multigraph;
@@ -52,12 +60,13 @@ void Plotter::plotLines(){
 //    std::vector<int> charge_states = {15};
 
     TLegend legend(0.7, 0.5, 1, 1);
+
+    double brhoLost = 0.36;
     for(auto& it: graphs){
         cnt++;
         auto* reaction = it.second.first;
         reaction->ChooseFixed(4);
         reaction->ChooseExFixed(4);
-        double brhoLost = 0.36;
         for(const auto&it_opts: opts) {
             for (const auto &it_q: charge_states) {
 
@@ -80,7 +89,7 @@ void Plotter::plotLines(){
                 auto* tmp = new TGraph(it.second.second, "");
                 multigraph.Add(tmp);
                 if(it_opts)
-                    legend.AddEntry(tmp, it.first.c_str(), "l");
+                    legend.AddEntry(tmp, it.second.first->Get_Name().c_str(), "l");
             }
         }
     }
@@ -95,10 +104,100 @@ void Plotter::plotLines(){
 
     TCanvas cv;
     multigraph.Draw("al");
+    multigraph.GetXaxis()->SetRangeUser(0, 1.2);
     vamosAcceptance.Draw("f");
     vamosAcceptance.Draw();
     legend.Draw();
     cv.Draw();
     cv.WaitPrimitive();
-    cv.SaveAs("Acceptance.root", "recreate");
 }
+
+void Plotter::plotMugastAcceptance() {
+    std::map<std::string, std::pair<ReactionReconstruction2body<long double>*, TF1*>> graphs;
+    for (auto& it: reactions){
+        graphs.emplace(it.first, std::make_pair(it.second,nullptr));
+    }
+
+    int cnt=1;
+    TMultiGraph multigraph;
+    multigraph.SetTitle("Mugast acceptance;Angle[rad];Energy[MeV];");
+
+    TLegend legend(0.7, 0.5, 1, 1);
+    for(auto& it: graphs){
+        cnt++;
+        auto* reaction = it.second.first;
+        reaction->ChooseFixed(3);
+        reaction->ChooseExFixed(3);
+        it.second.second = new TF1(it.first.c_str(),
+                                   [&reaction](double *x, double *y) {
+                                       reaction->Set_Theta(*x, false);
+                                       //return (double) reaction->GetFreeFragment().Get_P().Vect().Mag(); //Momentum
+                                       return (double) reaction->GetFixedFragment().Get_Ek(); //Energy
+                                   },
+                                   0.,
+                                   reaction->Get_ThetaMax(),
+                                    //UNITS::CONSTANTS::pi,
+                                   0);
+        it.second.second->SetNpx(10000);
+        it.second.second->SetLineColorAlpha(cnt, 0.4);
+        auto* tmp = new TGraph(it.second.second, "");
+        multigraph.Add(tmp);
+        legend.AddEntry(tmp, it.second.first->Get_Name().c_str(), "l");
+
+        if (reaction->Get_ThetaMax()<UNITS::CONSTANTS::pi) {
+            auto* tmp = new TF1((it.first + "_2").c_str(),
+                    [&reaction](double *x, double *y) {
+                        reaction->Set_Theta(*x, true);
+                        //return (double) reaction->GetFreeFragment().Get_P().Vect().Mag(); //Momentum
+                        return (double) reaction->GetFixedFragment().Get_Ek(); //Energy
+                    },
+                0.,
+                    reaction->Get_ThetaMax(),
+                    //UNITS::CONSTANTS::pi,
+                    0);
+            it.second.second->SetNpx(10000);
+            it.second.second->SetLineColorAlpha(cnt, 0.4);
+            multigraph.Add(new TGraph(tmp));
+        }
+    }
+
+    std::vector<double> xAcceptanceMM = {0.18, 0.8, 0.8, 0.18, 0.18};
+    std::vector<double> yAcceptanceMM = {1, 1, 137, 137, 1};
+    TPolyLine acceptanceMM(xAcceptanceMM.size(), &xAcceptanceMM[0], &yAcceptanceMM[0]);
+    acceptanceMM.SetFillColorAlpha(kRed, 0.13);
+    //acceptanceMM.SetFillColor(kRed);
+    acceptanceMM.SetLineColor(2);
+    acceptanceMM.SetLineWidth(4);
+
+    std::vector<double> xAcceptanceMG = {2, 2.79, 2.79, 2, 2};
+    std::vector<double> yAcceptanceMG = {1, 1, 29.4, 29.4, 1};
+    TPolyLine acceptanceMG(xAcceptanceMG.size(), &xAcceptanceMG[0], &yAcceptanceMG[0]);
+    acceptanceMG.SetFillColorAlpha(kBlue, 0.13);
+    //acceptanceMG.SetFillColor(kRed);
+    acceptanceMG.SetLineColor(2);
+    acceptanceMG.SetLineWidth(4);
+
+    std::vector<double> xAcceptanceMGAnular = {2.83, 2.985, 2.985, 2.83, 2.83};
+    std::vector<double> yAcceptanceMGAnular = {0.8, 0.8, 29.4, 29.4, 0.8};
+    TPolyLine acceptanceMGAnular(xAcceptanceMGAnular.size(), &xAcceptanceMGAnular[0], &yAcceptanceMGAnular[0]);
+    acceptanceMGAnular.SetFillColorAlpha(kBlue, 0.13);
+    //acceptanceMGAnular.SetFillColor(kRed);
+    acceptanceMGAnular.SetLineColor(2);
+    acceptanceMGAnular.SetLineWidth(4);
+
+    TCanvas cv;
+    multigraph.Draw("al");
+    //multigraph.GetXaxis()->SetRangeUser(0, 1.2);
+    acceptanceMM.Draw("f");
+    acceptanceMM.Draw();
+    acceptanceMG.Draw("f");
+    acceptanceMG.Draw();
+    acceptanceMGAnular.Draw("f");
+    acceptanceMGAnular.Draw();
+    legend.Draw();
+    cv.Draw();
+    cv.WaitPrimitive();
+
+}
+
+

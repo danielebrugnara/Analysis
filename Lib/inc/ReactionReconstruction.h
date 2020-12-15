@@ -22,10 +22,11 @@ protected:
     TLorentzVector P_TOT;
     bool changed_initial_conditions;
     virtual ~ReactionReconstruction()=default;
-    const double precision{1.E-8};
+    T precision{1.E-8};
 public:
     ReactionReconstruction()=delete;
     virtual void SetBeamEnergy(T const &);
+    virtual void SetPrecision(T const&);
 };
 
 //p1 + p2 -> p3 + p4 ## where p2 is at rest in lab
@@ -52,6 +53,7 @@ public:
     T Get_ThetaMax();
 
     void SetBeamEnergy(T const & E) override;
+    void SetPrecision(T const & E) override;
 
     void Set_E              (T const &);
     void Set_Ek             (T const &);
@@ -127,6 +129,11 @@ void ReactionReconstruction<T>::SetBeamEnergy(const T & Energy) {
 }
 
 template<typename T>
+void ReactionReconstruction<T>::SetPrecision(const T & precision){
+    this->precision = precision;
+}
+
+template<typename T>
 void ReactionReconstruction<T>::UpdateVectors() {
     P_TOT = p1.Get_P() + p2.Get_P();
     p1.Set_betacm(P_TOT.BoostVector());
@@ -151,13 +158,14 @@ ReactionReconstruction2body<T>::ReactionReconstruction2body(ReactionInput2body c
 template<typename T>
 std::string ReactionReconstruction2body<T>::Get_Name() const{
     return  this->p1.Get_Name()+
-            "@"+
-            std::to_string(this->p1.Get_Ek()/UNITS::MeV)+
             "("+
             this->p2.Get_Name()+
             ","+
             p3.Get_Name()+
-            ")";
+            ")"+
+            p4.Get_Name()+
+            "@"+
+            std::to_string(this->p1.Get_Ek()/UNITS::MeV);
 }
 
 template<typename T>
@@ -321,11 +329,16 @@ T ReactionReconstruction2body<T>::Set_Ek_cm(const T &Ek) {
 
 template<typename T>
 void ReactionReconstruction2body<T>::Set_Theta(const T & Theta, bool choseMaxSolution) {//Checked
-    if (Get_ThetaMax()==UNITS::CONSTANTS::pi) {
-        if (Theta < UNITS::CONSTANTS::pi / 2)
+    double thetaMax = Get_ThetaMax();
+    if (thetaMax==UNITS::CONSTANTS::pi) {
+        if (Theta < UNITS::CONSTANTS::pi / 2) {
             choseMaxSolution = true;
-        else
+        }else {
             choseMaxSolution = false;
+        }
+    }else{
+        if (Theta > thetaMax)
+            throw std::runtime_error("Theta is exceding theta max\n");
     }
 
     auto & fixed    = GetFixedFragment();
@@ -571,6 +584,11 @@ bool ReactionReconstruction2body<T>::CheckConsistency() const {
 template<typename T>
 void ReactionReconstruction2body<T>::SetBeamEnergy(const T &E) {
     ReactionReconstruction<T>::SetBeamEnergy(E);
+}
+
+template<typename T>
+void ReactionReconstruction2body<T>::SetPrecision(const T & precision) {
+    ReactionReconstruction<T>::SetPrecision(precision);
 }
 
 template<typename T>

@@ -5,6 +5,7 @@
 #include "Units.h"
 
 #include <TStyle.h>
+#include <TAxis.h>
 #include <TPolyLine.h>
 #include <TLegend.h>
 #include <TF1.h>
@@ -15,6 +16,11 @@
 
 class Plotter{
 public:
-    Plotter()=default;
-    void plotLines();
+    Plotter();
+    void plotVamosAcceptance();
+    void plotMugastAcceptance();
+private:
+    TStyle style;
+    std::map<std::string, ReactionReconstruction2body<long double>*> reactions;
+    double beam_energy;
 };

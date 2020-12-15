@@ -53,6 +53,7 @@ void ReactionFragment::GetFromData(const int & A, const int & Z) {
 void ReactionFragment::Extract(std::string const & line) {
 
     Name = line.substr(11,7);
+    Name.erase(std::remove_if(Name.begin(), Name.end(), [](unsigned char x){return std::isspace(x);}), Name.end());
 
     A = std::atoi(line.substr(0,3).data());
     Z = std::atoi(line.substr(4,4).data())/10;
