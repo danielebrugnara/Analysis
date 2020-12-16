@@ -48,14 +48,14 @@ Plotter::Plotter():
     }
 }
 
-void Plotter::plotVamosAcceptance(){
+void Plotter::plotVamosAcceptance(const std::string& file_name){
 
     std::map<std::string, std::pair<ReactionReconstruction2body<long double>*, TF1*>> graphs;
     for (auto& it: reactions){
         graphs.emplace(it.first, std::make_pair(it.second,nullptr));
     }
 
-    int cnt=1;
+    int cnt=0;
     TMultiGraph multigraph;
     multigraph.SetTitle("Vamos acceptance;Angle[rad];Brho[Tm];");
     std::vector<bool> opts = {true, false};
@@ -66,7 +66,6 @@ void Plotter::plotVamosAcceptance(){
 
     double brhoLost = 0.36;
     for(auto& it: graphs){
-        cnt++;
         auto* reaction = it.second.first;
         reaction->ChooseFixed(4);
         reaction->ChooseExFixed(4);
@@ -88,11 +87,14 @@ void Plotter::plotVamosAcceptance(){
                         //UNITS::CONSTANTS::pi,
                                            0);
                 it.second.second->SetNpx(1000);
-                it.second.second->SetLineColorAlpha(cnt, ((double)it_q)/charge_states.back()-0.65);
+                it.second.second->SetLineColorAlpha(colors[cnt], ((double)it_q)/charge_states.back()-0.65);
                 auto* tmp = new TGraph(it.second.second, "");
                 multigraph.Add(tmp);
+
                 if(it_opts)
                     legend.AddEntry(tmp, it.second.first->Get_Name().c_str(), "l");
+
+                cnt++;
             }
         }
     }
@@ -101,8 +103,8 @@ void Plotter::plotVamosAcceptance(){
     std::vector<double> yAcceptance = {0.8, 0.8, 1.15, 1.15, 0.8};
     TPolyLine vamosAcceptance(xAcceptance.size(), &xAcceptance[0], &yAcceptance[0]);
     vamosAcceptance.SetFillColorAlpha(kRed, 0.13);
+    vamosAcceptance.SetLineColorAlpha(kRed, 0.7);
     //vamosAcceptance.SetFillColor(kRed);
-    vamosAcceptance.SetLineColor(2);
     vamosAcceptance.SetLineWidth(4);
 
     TCanvas cv;
@@ -113,25 +115,24 @@ void Plotter::plotVamosAcceptance(){
     legend.Draw();
     cv.Draw();
     cv.WaitPrimitive();
+    cv.SaveAs("vamos_acc.pdf");
 }
 
-void Plotter::plotMugastAcceptance() {
+void Plotter::plotMugastAcceptance(const std::string& file_name) {
     std::map<std::string, std::pair<ReactionReconstruction2body<long double>*, TF1*>> graphs;
     for (auto& it: reactions){
         graphs.emplace(it.first, std::make_pair(it.second,nullptr));
     }
 
-    int cnt=1;
+    int cnt=0;
     TMultiGraph multigraph;
     multigraph.SetTitle("Mugast acceptance;Angle[rad];Energy[MeV];");
 
     TLegend legend(0.7, 0.5, 1, 1);
     for(auto& it: graphs){
-        cnt++;
         auto* reaction = it.second.first;
         reaction->ChooseFixed(3);
         reaction->ChooseExFixed(3);
-        std::cout <<  reaction->Get_Name() << " : " << reaction->Get_ThetaMax() << std::endl;
         it.second.second = new TF1(it.first.c_str(),
                                    [&reaction](double *x, double *y) {
                                        reaction->Set_Theta(*x, true);
@@ -143,7 +144,7 @@ void Plotter::plotMugastAcceptance() {
                                     //UNITS::CONSTANTS::pi,
                                    0);
         it.second.second->SetNpx(10000);
-        it.second.second->SetLineColorAlpha(cnt, 0.4);
+        it.second.second->SetLineColorAlpha(colors[cnt], 0.4);
         auto* tmp = new TGraph(it.second.second, "");
         multigraph.Add(tmp);
         legend.AddEntry(tmp, it.second.first->Get_Name().c_str(), "l");
@@ -160,16 +161,18 @@ void Plotter::plotMugastAcceptance() {
                     //UNITS::CONSTANTS::pi,
                     0);
             it.second.second->SetNpx(10000);
-            it.second.second->SetLineColorAlpha(cnt, 0.4);
+            it.second.second->SetLineColorAlpha(colors[cnt], 0.4);
+            it.second.second->SetLineWidth(10);
             multigraph.Add(new TGraph(tmp));
         }
+        cnt++;
     }
 
     std::vector<double> xAcceptanceMM = {0.18, 0.8, 0.8, 0.18, 0.18};
     std::vector<double> yAcceptanceMM = {1, 1, 137, 137, 1};
     TPolyLine acceptanceMM(xAcceptanceMM.size(), &xAcceptanceMM[0], &yAcceptanceMM[0]);
     acceptanceMM.SetFillColorAlpha(kRed, 0.13);
-    acceptanceMM.SetLineColorAlpha(kRed, 0.33);
+    acceptanceMM.SetLineColorAlpha(kRed, 0.7);
     //acceptanceMM.SetFillColor(kRed);
     acceptanceMM.SetLineWidth(4);
 
@@ -177,7 +180,7 @@ void Plotter::plotMugastAcceptance() {
     std::vector<double> yAcceptanceMG = {1, 1, 29.4, 29.4, 1};
     TPolyLine acceptanceMG(xAcceptanceMG.size(), &xAcceptanceMG[0], &yAcceptanceMG[0]);
     acceptanceMG.SetFillColorAlpha(kBlue, 0.13);
-    acceptanceMG.SetLineColorAlpha(kBlue, 0.33);
+    acceptanceMG.SetLineColorAlpha(kBlue, 0.7);
     //acceptanceMG.SetFillColor(kRed);
     acceptanceMG.SetLineWidth(4);
 
@@ -185,9 +188,11 @@ void Plotter::plotMugastAcceptance() {
     std::vector<double> yAcceptanceMGAnular = {0.8, 0.8, 29.4, 29.4, 0.8};
     TPolyLine acceptanceMGAnular(xAcceptanceMGAnular.size(), &xAcceptanceMGAnular[0], &yAcceptanceMGAnular[0]);
     acceptanceMGAnular.SetFillColorAlpha(kBlue, 0.13);
-    acceptanceMGAnular.SetLineColorAlpha(kBlue, 0.33);
+    acceptanceMGAnular.SetLineColorAlpha(kBlue, 0.7);
     //acceptanceMGAnular.SetFillColor(kRed);
     acceptanceMGAnular.SetLineWidth(4);
+
+    TFile infile(file_name.c_str(), "read");
 
     TCanvas cv;
     multigraph.Draw("al");
@@ -199,8 +204,22 @@ void Plotter::plotMugastAcceptance() {
     acceptanceMGAnular.Draw("f");
     acceptanceMGAnular.Draw();
     legend.Draw();
+    if (infile.IsOpen()){
+        std::cout << "Plotting also histogram\n";
+        infile.Get("Graph")->Draw("same");
+    }
+
     cv.Draw();
     cv.WaitPrimitive();
+    cv.SaveAs("mugast_acc.pdf");
+    TFile outfile("mugast.root", "recreate");
+    outfile.cd();
+    for (const auto&it: graphs){
+        it.second.second->Write("*");
+    }
+    cv.Write();
+    outfile.Write();
+    outfile.Close();
 
 }
 
