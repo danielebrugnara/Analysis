@@ -248,10 +248,10 @@ T ReactionReconstruction2body<T>::Get_ThetaMax() {//Checked
     T val2 = free.Get_M2()- this->p1.Get_M2() - this->p2.Get_M2() - fixed.Get_M2() -2.*this->p1.Get_E()* this->p2.Get_M();
     T sqroot = val1*val1-val2*val2;
     if (sqroot<0){
-        return UNITS::CONSTANTS::pi;
+        return static_cast<T>(UNITS::CONSTANTS::pi);
     }else{
         sqroot = sqrtl(sqroot)/(2.*fixed.Get_M()*this->p1.Get_P().Vect().Mag());
-        return acosl(sqroot);
+        return static_cast<T>(acosl(sqroot));
     }
 }
 

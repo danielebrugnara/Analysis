@@ -1,9 +1,12 @@
 #include "Plotter.h"
 
 Plotter::Plotter():
-        style("default", "Default"),
+        style("Modern", "Default"),
         beam_energy(400*UNITS::MeV)
 {
+    style.SetPalette(1);
+    //style.SetPad;
+    style.SetTitleW(0.9);
     style.cd();
     style.SetCanvasPreferGL(kTRUE);
     reactions.emplace("M48_Z19_m1_z1", new ReactionReconstruction2body<long double>(
@@ -128,9 +131,10 @@ void Plotter::plotMugastAcceptance() {
         auto* reaction = it.second.first;
         reaction->ChooseFixed(3);
         reaction->ChooseExFixed(3);
+        std::cout <<  reaction->Get_Name() << " : " << reaction->Get_ThetaMax() << std::endl;
         it.second.second = new TF1(it.first.c_str(),
                                    [&reaction](double *x, double *y) {
-                                       reaction->Set_Theta(*x, false);
+                                       reaction->Set_Theta(*x, true);
                                        //return (double) reaction->GetFreeFragment().Get_P().Vect().Mag(); //Momentum
                                        return (double) reaction->GetFixedFragment().Get_Ek(); //Energy
                                    },
@@ -147,7 +151,7 @@ void Plotter::plotMugastAcceptance() {
         if (reaction->Get_ThetaMax()<UNITS::CONSTANTS::pi) {
             auto* tmp = new TF1((it.first + "_2").c_str(),
                     [&reaction](double *x, double *y) {
-                        reaction->Set_Theta(*x, true);
+                        reaction->Set_Theta(*x, false);
                         //return (double) reaction->GetFreeFragment().Get_P().Vect().Mag(); //Momentum
                         return (double) reaction->GetFixedFragment().Get_Ek(); //Energy
                     },
@@ -165,24 +169,24 @@ void Plotter::plotMugastAcceptance() {
     std::vector<double> yAcceptanceMM = {1, 1, 137, 137, 1};
     TPolyLine acceptanceMM(xAcceptanceMM.size(), &xAcceptanceMM[0], &yAcceptanceMM[0]);
     acceptanceMM.SetFillColorAlpha(kRed, 0.13);
+    acceptanceMM.SetLineColorAlpha(kRed, 0.33);
     //acceptanceMM.SetFillColor(kRed);
-    acceptanceMM.SetLineColor(2);
     acceptanceMM.SetLineWidth(4);
 
     std::vector<double> xAcceptanceMG = {2, 2.79, 2.79, 2, 2};
     std::vector<double> yAcceptanceMG = {1, 1, 29.4, 29.4, 1};
     TPolyLine acceptanceMG(xAcceptanceMG.size(), &xAcceptanceMG[0], &yAcceptanceMG[0]);
     acceptanceMG.SetFillColorAlpha(kBlue, 0.13);
+    acceptanceMG.SetLineColorAlpha(kBlue, 0.33);
     //acceptanceMG.SetFillColor(kRed);
-    acceptanceMG.SetLineColor(2);
     acceptanceMG.SetLineWidth(4);
 
     std::vector<double> xAcceptanceMGAnular = {2.83, 2.985, 2.985, 2.83, 2.83};
     std::vector<double> yAcceptanceMGAnular = {0.8, 0.8, 29.4, 29.4, 0.8};
     TPolyLine acceptanceMGAnular(xAcceptanceMGAnular.size(), &xAcceptanceMGAnular[0], &yAcceptanceMGAnular[0]);
     acceptanceMGAnular.SetFillColorAlpha(kBlue, 0.13);
+    acceptanceMGAnular.SetLineColorAlpha(kBlue, 0.33);
     //acceptanceMGAnular.SetFillColor(kRed);
-    acceptanceMGAnular.SetLineColor(2);
     acceptanceMGAnular.SetLineWidth(4);
 
     TCanvas cv;
