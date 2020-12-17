@@ -41,18 +41,21 @@ public:
 class Gamma{
 public:
     std::pair<double, double> Egamma;
+    std::pair<double, double> Alpha;
     std::pair<double, double> Ef_Ei;
     std::pair<int, int> Idxf_Idxi;
     std::pair<double, double> Intensity;
     std::pair<double, double> Br;
     std::string Multipol;
     Gamma(std::pair<double, double> Egamma,
+          std::pair<double, double> Alpha,
           std::pair<double, double> Ef_Ei,
           std::pair<int, int> Idxf_Idxi,
           std::pair<double, double> Intensity,
           std::pair<double, double> Br,
           std::string Multipol):
                     Egamma(std::move(Egamma)),
+                    Alpha(std::move(Alpha)),
                     Ef_Ei(std::move(Ef_Ei)),
                     Idxf_Idxi(std::move(Idxf_Idxi)),
                     Intensity(std::move(Intensity)),
@@ -75,12 +78,14 @@ public:
     explicit LevelScheme(const std::string &);
     ~LevelScheme();
     std::vector<std::pair<const Gamma*, const Gamma*>> GetGammaGamma();
+    DiaGraph<Gamma, Level>* GetScheme(){return scheme;};
 private:
     void ReadFile(const std::string &);
     static std::vector<std::string> ReadCSVRow(const std::string &);
     static std::pair<double, double> GetEnergyandError(const std::string &);
     static std::pair<double, double> GetLifetimeandError(const std::string &);
     static std::vector<std::pair<double, double>> GetMultipleEnergiesandError(const std::string &);
+    static std::vector<std::pair<double, double>> GetMultipleAlpha(const std::string &, const int&);
     static std::vector<std::pair<double, double>> GetMultipleIntensitiesandError(const std::string &);
     static std::vector<std::string> GetMultipolariy(const std::string &);
     static std::vector<std::pair<double, Level::Parity>> GetSpinParity(const std::string &);

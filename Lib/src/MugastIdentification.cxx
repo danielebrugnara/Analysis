@@ -376,11 +376,11 @@ bool MugastIdentification::identifyMugast() {
 
             if (foundCut->second->IsInside(fragment.Tot_E[ii], fragment.T[ii])) {
                 if (fragment.Indentified[ii])
-//TODO:                    throw std::runtime_error("Overlapping MUGAST E TOF gates :" +
-//                                             cut_it +
-//                                             "\tMG" +
-//                                             fragment.MG[ii] +
-//                                             "\n");
+                    throw std::runtime_error("Overlapping MUGAST E TOF gates :" +
+                                             cut_it +
+                                             "\tMG" +
+                                             fragment.MG[ii] +
+                                             "\n");
 
                 fragment.M[ii] = std::stoi(cut_it.substr(cut_it.find_first_of('m') + 1,
                                                          cut_it.find_first_of('_') - cut_it.find_first_of('m') -

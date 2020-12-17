@@ -5,7 +5,7 @@ SpectrumAnalyzer::SpectrumAnalyzer(const std::string & file_name, const bool& de
         debug_canvas(debug_canvas),
         use_main_transitions(use_main_transitions),
         simulation(false),
-        levelscheme("files/adoptedLevels152Sm.csv"),
+        levelscheme("files/adoptedLevels152Sm_withalpha.csv"),
         fit_interval(15.),
         proj_interval(30.),
         fit_counter(0){
@@ -154,6 +154,7 @@ void SpectrumAnalyzer::GenerateAbsoluteEffGraph() {
         double engamma1 = it.first->Egamma.first / UNITS::keV;
         double engamma2 = it.second->Egamma.first / UNITS::keV;
         double branching2 = it.second->Br.first;
+        double alpha = it.second->Alpha.first;
 
         std::vector<std::pair<double, double>> energies_x = {std::make_pair(engamma1, 1.)};
         std::vector<std::pair<double, double>> energies_y = {std::make_pair(engamma2, 1.)};
@@ -212,9 +213,9 @@ void SpectrumAnalyzer::GenerateAbsoluteEffGraph() {
         double  integral_y_err = results_y[0].integral.second;
 
         //Computing efficiency
-        double eff = integral_y/(integral_x*branching2);
+        double eff = integral_y/(integral_x*branching2)*(1+alpha);
         double eff_err = 1./branching2* sqrt(pow(integral_y_err/(integral_x),2.)+
-                                                pow(integral_y*integral_x_err/(integral_x*integral_x),2.));
+                                                pow(integral_y*integral_x_err/(integral_x*integral_x),2.))*(1+alpha);
 
         if (eff>1.)
             continue;
@@ -224,6 +225,12 @@ void SpectrumAnalyzer::GenerateAbsoluteEffGraph() {
 
         Y_eff.push_back(eff);
         Y_eff_err.push_back(eff_err);
+
+        std::cout << " ener : " << X.back() << " eff : " << Y_eff.back() << std::endl;
+        TCanvas cv;
+        cv.WaitPrimitive();
+
+
 
         delete proj_y;
     }

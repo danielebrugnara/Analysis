@@ -28,6 +28,7 @@ void LevelScheme::ReadFile(const std::string & input_file_name) {
     column["Multipolarity"] = 6;
     column["FinalLevel"] = 7;
     column["FinalSpinParity"] = 8;
+    column["Alpha"] = 9;
 
     std::vector<std::vector<std::string>> data;
     while(std::getline(fin, line)){
@@ -63,6 +64,10 @@ void LevelScheme::ReadFile(const std::string & input_file_name) {
             std::vector<std::pair<double, double>> tmp_gamma =
                     GetMultipleEnergiesandError(it[column["Egamma"]]);
 
+
+            std::vector<std::pair<double, double>> tmp_alpha =
+                    GetMultipleAlpha(it[column["Alpha"]], tmp_gamma.size());
+
             std::vector<std::pair<double, double>> tmp_intensities =
                     GetMultipleIntensitiesandError(it[column["Intensity"]]);
             auto branchings = ComputeBranching(tmp_intensities);
@@ -78,6 +83,7 @@ void LevelScheme::ReadFile(const std::string & input_file_name) {
                 std::cerr << "multip\n";
             for (long unsigned ii=0; ii<tmp_final_lev.size(); ++ii){
                 gammas.emplace_back(tmp_gamma[ii],
+                                    tmp_alpha[ii],
                                     std::make_pair( tmp_final_lev[ii].first,
                                                     levels.back().Elevel.first),
                                     std::make_pair( energytoindex[tmp_final_lev[ii].first],
@@ -214,6 +220,37 @@ std::vector<std::pair<double, double>> LevelScheme::GetMultipleEnergiesandError(
                                 0);
     }
     return data;
+}
+
+std::vector<std::pair<double, double>> LevelScheme::GetMultipleAlpha(const std::string & st, const int& energySize) {
+    std::vector<std::pair<double, double>> data;
+    for(int i=0; i<energySize; ++i){
+        data.emplace_back(0, 0);
+    }
+    if (st.empty())
+        return data;
+
+    std::string token;
+    std::istringstream ss(st);
+    int cnt = 0;
+    while (std::getline(ss, token, ',')) {
+        while (     !token.empty()
+                    && (token.front() == ' '
+                        ||  token.front() == '\240'
+                        ||  token.front() == '\302'
+                        ||  token.front() == '<')){
+            token.erase(0, 1);
+        }
+        if (!token.empty() && token.back()=='?')
+            token.erase(token.end()-1);
+
+        if (!token.empty())
+            data[cnt].first = std::stod(token);
+
+        cnt++;
+    }
+    return data;
+
 }
 
 std::vector<std::pair<double, double>> LevelScheme::GetMultipleIntensitiesandError(const std::string & st) {

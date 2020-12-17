@@ -142,7 +142,7 @@ Bool_t Selector::Process(Long64_t entry)
         for (const auto & en2: AddE){
             if (en1 == en2) continue;
             data_addb_gg->Fill(en1, en2);
-            data_addb_gg->Fill(en2, en1);
+
         }
     }
     for (const auto & en1: coreE0){
