@@ -58,6 +58,12 @@ private: //Constants used internally
     //static constexpr double gradient_descent_normalization{1.E3};
     static constexpr double ice_percentage_second {0.85};
     const double average_beam_thickness = 3.72109*UNITS::mm;    //700 mbar
+    const std::array<std::pair<double, double>, 16> beam_positions ={
+            std::make_pair(0.5, 0.5),std::make_pair(0.5, -0.5),std::make_pair(-0.5, -0.5),std::make_pair(-0.5, 0.5),
+            std::make_pair(1.0, 1.0),std::make_pair(1.0, -1.0),std::make_pair(-1.0, -1.0),std::make_pair(-1.0, 1.0),
+            std::make_pair(1.5, 1.5),std::make_pair(1.5, -1.5),std::make_pair(-1.5, -1.5),std::make_pair(-1.5, 1.5),
+            std::make_pair(2.0, 2.0),std::make_pair(2.0, -2.0),std::make_pair(-2.0, -2.0),std::make_pair(-2.0, 2.0)
+    };
 
 public:
     std::array<std::string, 5> light_particles;
@@ -114,7 +120,7 @@ private: //Internal initialization methods
 
 private: //Functions used internally during analysis
     void    identifyIceThickness();
-    double  ComputeDistanceInGas(const TVector3&, const TVector3&);
+    double  ComputeDistanceInGas(const TVector3&, const std::pair<double, double>&);
     double  InitialBeamEnergy(double, double);
     double  MiddleTargetBeamEnergy(double);
     bool identifyMugast();

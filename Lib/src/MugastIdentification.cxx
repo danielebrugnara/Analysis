@@ -56,28 +56,28 @@ bool MugastIdentification::Initialize(const double &beam_energy,
     //Reactions where both fragments have been identified///////////////
     reaction.emplace("M48_Z19_m1_z1", new ReactionReconstruction2body<long double>(
             ReactionReconstruction2body<long double>::ReactionInput2body({
-                                                                    ReactionFragment::FragmentSettings(46, 18, 0, beam_energy, 0),
-                                                                    ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
-                                                                    ReactionFragment::FragmentSettings(1, 1, 0, 0, 0),
-                                                                    ReactionFragment::FragmentSettings(48, 19, 0, 0, 0)})));
+                                                                                 ReactionFragment::FragmentSettings(46, 18, 0, beam_energy, 0),
+                                                                                 ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
+                                                                                 ReactionFragment::FragmentSettings(1, 1, 0, 0, 0),
+                                                                                 ReactionFragment::FragmentSettings(48, 19, 0, 0, 0)})));
     reaction.emplace("M47_Z19_m2_z1", new ReactionReconstruction2body<long double>(
             ReactionReconstruction2body<long double>::ReactionInput2body({
-                                                                    ReactionFragment::FragmentSettings(46, 18, 0, beam_energy, 0),
-                                                                    ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
-                                                                    ReactionFragment::FragmentSettings(2, 1, 0, 0, 0),
-                                                                    ReactionFragment::FragmentSettings(47, 19, 0,0, 0)})));
+                                                                                 ReactionFragment::FragmentSettings(46, 18, 0, beam_energy, 0),
+                                                                                 ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
+                                                                                 ReactionFragment::FragmentSettings(2, 1, 0, 0, 0),
+                                                                                 ReactionFragment::FragmentSettings(47, 19, 0,0, 0)})));
     reaction.emplace("M45_Z18_m4_z2", new ReactionReconstruction2body<long double>(
             ReactionReconstruction2body<long double>::ReactionInput2body({
-                                                                    ReactionFragment::FragmentSettings(46, 18, 0, beam_energy, 0),
-                                                                    ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
-                                                                    ReactionFragment::FragmentSettings(4, 2, 0, 0, 0),
-                                                                    ReactionFragment::FragmentSettings(45, 18, 0,0, 0)})));
+                                                                                 ReactionFragment::FragmentSettings(46, 18, 0, beam_energy, 0),
+                                                                                 ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
+                                                                                 ReactionFragment::FragmentSettings(4, 2, 0, 0, 0),
+                                                                                 ReactionFragment::FragmentSettings(45, 18, 0,0, 0)})));
     reaction.emplace("M46_Z18_m3_z2", new ReactionReconstruction2body<long double>(
             ReactionReconstruction2body<long double>::ReactionInput2body({
-                                                                    ReactionFragment::FragmentSettings(46, 18, 0, beam_energy, 0),
-                                                                    ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
-                                                                    ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
-                                                                    ReactionFragment::FragmentSettings(46, 18, 0,0, 0)})));
+                                                                                 ReactionFragment::FragmentSettings(46, 18, 0, beam_energy, 0),
+                                                                                 ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
+                                                                                 ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
+                                                                                 ReactionFragment::FragmentSettings(46, 18, 0,0, 0)})));
 
     //Reactions where only one fragment has been identified///////////////
     reaction.emplace("m1_z1", new ReactionReconstruction2body<long double>(
@@ -421,12 +421,12 @@ bool MugastIdentification::identifyMust2() {
 
 
                 fragmentMust.M[ii] = std::stoi(cut_it.substr(cut_it.find_first_of('m') + 1,
-                                                              cut_it.find_first_of('_') - cut_it.find_first_of('m') -
-                                                              1));
+                                                             cut_it.find_first_of('_') - cut_it.find_first_of('m') -
+                                                             1));
 
                 fragmentMust.Z[ii] = std::stoi(cut_it.substr(cut_it.find_first_of('z') + 1,
-                                                              cut_it.find_first_of('_') - cut_it.find_first_of('z') -
-                                                              1));
+                                                             cut_it.find_first_of('_') - cut_it.find_first_of('z') -
+                                                             1));
 
                 fragmentMust.Indentified[ii] = true;
                 fragmentMust.Particle[ii] = cut_it;
@@ -464,10 +464,12 @@ bool MugastIdentification::reconstructEnergyMugast() {
 
         //Passivation layer
         double tmpEn = 0;
+        double tmpEn2 = 0;
+
         tmpEn = eloss_it->second["al_front"]->EvaluateInitialEnergy(fragment.Tot_E[ii],
-                                                                     0.4E-3*UNITS::mm, //Units in mm!
-                                                                     fragment.EmissionDirection[ii]
-                                                                             .Angle(fragment.TelescopeNormal[ii]));//TODO: telescope normal probabily not correct
+                                                                    0.4E-3*UNITS::mm, //Units in mm!
+                                                                    fragment.EmissionDirection[ii]
+                                                                            .Angle(fragment.TelescopeNormal[ii]));//TODO: telescope normal probabily not correct
 
         tmpEn = eloss_it->second["ice_front"]->EvaluateInitialEnergy(tmpEn,
                                                                      currentIceThickness.first,
@@ -477,11 +479,19 @@ bool MugastIdentification::reconstructEnergyMugast() {
                                                                        havarThickness,
                                                                        havar_angle->Evaluate(theta));
 
+        tmpEn2 = tmpEn;
+
         tmpEn = eloss_it->second["he3_front"]->EvaluateInitialEnergy(tmpEn,
-                                                                      gas_thickness->Evaluate(theta)*UNITS::mm,
+                                                                     gas_thickness->Evaluate(theta)*UNITS::mm,
                                                                      0.);
 
         fragment.E[ii] = tmpEn;
+
+        fragment.E_uncentered[ii].reserve(beam_positions.size());
+        for(const auto& it: beam_positions){
+            fragment.E_uncentered[ii].push_back(ComputeDistanceInGas(fragment.EmissionDirection[ii], it));
+        }
+
 
         if ((reaction_it = reaction.find("M" + std::to_string(data->VAMOS_id_M) +
                                          "_Z" + std::to_string(data->VAMOS_id_Z) +
@@ -529,8 +539,8 @@ bool MugastIdentification::reconstructEnergyMust2() {
         //Passivation layer
         double tmpEn = 0;
         tmpEn = eloss_it->second["al_front"]->EvaluateInitialEnergy(fragmentMust.Tot_E[ii],
-                                                                     0.4E-3 * UNITS::mm, //Units in mm!
-                                                                     0);//TODO: add telescope normal
+                                                                    0.4E-3 * UNITS::mm, //Units in mm!
+                                                                    0);//TODO: add telescope normal
 
         tmpEn = eloss_it->second["ice_front"]->EvaluateInitialEnergy(tmpEn,
                                                                      currentIceThickness.first * ice_percentage_second,
@@ -541,7 +551,7 @@ bool MugastIdentification::reconstructEnergyMust2() {
                                                                        havar_angle->Evaluate(theta));
 
         tmpEn = eloss_it->second["he3_front"]->EvaluateInitialEnergy(tmpEn,
-                                                                      gas_thickness->Evaluate(theta) * UNITS::mm,
+                                                                     gas_thickness->Evaluate(theta) * UNITS::mm,
                                                                      0.);
 
         fragmentMust.E[ii] = tmpEn;
@@ -582,16 +592,16 @@ void MugastIdentification::identifyIceThickness(){
         double tmp_precision{0.1*UNITS::MeV};
 
         iceThicknessMinimizer.reset(new Minimizer([this](const double &tck) {
-                                                          return pow(this->beam_energy
-                                                                     - this->InitialBeamEnergy(this->final_beam_energy, tck), 2)
-                                                                 /(this->beam_energy*this->beam_energy);
-                                                      },
+                                                      return pow(this->beam_energy
+                                                                 - this->InitialBeamEnergy(this->final_beam_energy, tck), 2)
+                                                             /(this->beam_energy*this->beam_energy);
+                                                  },
                                                   currentIceThickness.first,        //starting value
-                                                      2E-4 * currentIceThickness.first, //learning rate
-                                                      tmp_threashold,                     //threashold
-                                                      100,                                //max_steps
-                                                      1,                                  //quenching
-                                                      1.E-4 * currentIceThickness.first)  //h
+                                                  2E-4 * currentIceThickness.first, //learning rate
+                                                  tmp_threashold,                     //threashold
+                                                  100,                                //max_steps
+                                                  1,                                  //quenching
+                                                  1.E-4 * currentIceThickness.first)  //h
         );
 
         while (fabs(beam_energy - InitialBeamEnergy(final_beam_energy, currentIceThickness.first)) > tmp_precision){
@@ -664,20 +674,20 @@ double MugastIdentification::MiddleTargetBeamEnergy(double beam_energy_from_brho
     return beam_energy_from_brho;
 }
 
-double MugastIdentification::ComputeDistanceInGas(const TVector3& vect_det, const TVector3& vect_target) {
-    double x_d = vect_det.X()-vect_target.X();
-    double y_d = vect_det.Y()-vect_target.Y();
-    double z_d = vect_det.Z()-vect_target.Z();
+double MugastIdentification::ComputeDistanceInGas(const TVector3& vect_det, const std::pair<double, double>& incident_pos) {
+    double x_d = vect_det.X(); //-target_pos.X();
+    double y_d = vect_det.Y(); //-target_pos.Y();
+    double z_d = vect_det.Z(); //-target_pos.Y();
 
-    double x_p = data->Cats->Get()->PositionOnTargetX;
-    double y_p = data->Cats->Get()->PositionOnTargetY;
+    double x_p = incident_pos.first;
+    double y_p = incident_pos.second;
+    double z_p = 0;
 
     if (x_p==-1000)
         x_p=0;
     if (y_p==-1000)
         y_p=0;
 
-    double z_p = 0;
     double xx{x_d-x_p};
     double yy{y_d-y_p};
     double zz{z_d-z_p};
@@ -686,7 +696,7 @@ double MugastIdentification::ComputeDistanceInGas(const TVector3& vect_det, cons
     double y{0};
     double z{0};
 
-    double tmp_threashold{1E-3*UNITS::mm};
+    double tmp_threashold{1E-2*UNITS::mm};
 
     //Computes the intersection point between the interpolation and the trajectory of the particle starting
     //from the middle of the target
@@ -694,29 +704,49 @@ double MugastIdentification::ComputeDistanceInGas(const TVector3& vect_det, cons
     //std::cout << "at X: " << x_p << std::endl;
     //std::cout << "at Y: " << y_p << std::endl;
     //std::cout << "threashold: " << tmp_threashold << std::endl;
-    distanceMinimizer.reset(new Minimizer([&,this](const double &x) {
-                                               return pow(zz/xx*(x-x_p)+z_p+this->gas_thickness_cartesian->Evaluate(sqrt(x*x+pow(yy/xx*(x-x_p)+y_p, 2))),
-                                                          2);
-                                           },
-                                          x,                                  //starting value
-                                           1E2*UNITS::mm,                      //learning rate
-                                           tmp_threashold,                     //threashold
-                                           100,                                //max_steps
-                                           1,                                  //quenching
-                                           1E-2*UNITS::mm)                     //h
-    );
+    if (z_d>0){
+        distanceMinimizer.reset(new Minimizer([&,this](const double &x) {
+                                                  return pow(zz/xx*(x-x_p)+z_p+this->gas_thickness_cartesian->Evaluate(sqrt(x*x+pow(yy/xx*(x-x_p)+y_p, 2))),
+                                                             2);
+                                              },
+                                              x,                                  //starting value
+                                              3E2*UNITS::mm,                      //learning rate
+                                              tmp_threashold,                     //threashold
+                                              100,                                //max_steps
+                                              1,                                  //quenching
+                                              1E-2*UNITS::mm)                     //h
+                                );
+    }else{
+        distanceMinimizer.reset(new Minimizer([&,this](const double &x) {
+                                                  return pow(zz/xx*(x-x_p)+z_p-this->gas_thickness_cartesian->Evaluate(sqrt(x*x+pow(yy/xx*(x-x_p)+y_p, 2))),
+                                                             2);
+                                              },
+                                              x,                                  //starting value
+                                              3E2*UNITS::mm,                      //learning rate
+                                              tmp_threashold,                     //threashold
+                                              100,                                //max_steps
+                                              1,                                  //quenching
+                                              1E-2*UNITS::mm)                     //h
+        );
+
+    }
 
     x = distanceMinimizer->Minimize();
     y = yy/xx * (x-x_p) + y_p;
     z = zz/xx * (x-x_p) + z_p;
 
+    std::cout << "------------------->Result : " << std::endl;
+    std::cout << "x in : " << x_p << std::endl;
+    std::cout << "y in : " << y_p << std::endl;
+
     std::cout << "x found : " << x << std::endl;
     std::cout << "y found : " << y << std::endl;
     std::cout << "z found : " << z << std::endl;
-    TVector3 tmpp(x, y, z);
-    std::cout << "xxx> theta found : " << tmpp.Theta() << std::endl;
-    std::cout << "xxx> phi found : " << tmpp.Phi() << std::endl;
 
-    //std::cout << "------------------->Result : "  << sqrt(pow(x-x_p,2)+pow(y-y_p,2)+pow(z-z_p,2)) << std::endl;
+    std::cout << "distance found : " <<   sqrt(pow(x-x_p,2)+pow(y-y_p,2)+pow(z-z_p,2)) <<  std::endl;
+    std::cout << "distance centered: " <<   fragment.E[0] <<  std::endl;
+    std::cout << "valz1 : " << this->gas_thickness_cartesian->Evaluate(sqrt(x*x+pow(yy/xx*(x-x_p)+y_p, 2)))  <<  std::endl;
+    std::cout << "valz2 : " << zz/xx*(x-x_p)+z_p  <<  std::endl;
+    std::cout << "difference : " << this->gas_thickness_cartesian->Evaluate(sqrt(x*x+pow(yy/xx*(x-x_p)+y_p, 2))) - zz/xx*(x-x_p)+z_p << std::endl;
     return sqrt(pow(x-x_p,2)+pow(y-y_p,2)+pow(z-z_p,2));
 }

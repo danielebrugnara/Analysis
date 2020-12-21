@@ -168,6 +168,7 @@ bool Analysis::Job(const int ind, int* exit_status)
         }
     }
     catch (std::runtime_error &e){
+        kill(0,15);
         std::cout << e.what();
     }
     catch (int &e){

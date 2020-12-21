@@ -226,9 +226,9 @@ void SpectrumAnalyzer::GenerateAbsoluteEffGraph() {
         Y_eff.push_back(eff);
         Y_eff_err.push_back(eff_err);
 
-        std::cout << " ener : " << X.back() << " eff : " << Y_eff.back() << std::endl;
-        TCanvas cv;
-        cv.WaitPrimitive();
+        //std::cout << " ener : " << X.back() << " eff : " << Y_eff.back() << std::endl;
+        //TCanvas cv;
+        //cv.WaitPrimitive();
 
 
 
@@ -388,9 +388,9 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
 
         bool left_tails = !simulation;
         Fitter fitter(spect, energies, left_tails);
-        if (debug_canvas)
-            fitter.EnableCanvas();
-
+//        if (debug_canvas)
+//            fitter.EnableCanvas();
+//
         if (read_pars_from_file)
             fitter.ReadParsFromFile(pars_file_name,fit_idx++);
         else
@@ -449,8 +449,10 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
 
     if (!simulation){
         double acq_time = start_stop.Y()-start_stop.X();
-        double source_activity = 22296.;
-        double ndays = 2359.;
+        //double source_activity = 22296.;
+        //double ndays = 2359.;
+        double source_activity = 15524.;
+        double ndays = -222.;
         double t12 = 13.517 *365.2425; //t12 in years * ndays
         double tau = t12 /log(2); //t12 in years * ndays
         source_activity = source_activity * exp(-ndays/tau);
