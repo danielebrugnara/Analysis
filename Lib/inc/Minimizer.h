@@ -12,6 +12,7 @@ public:
   ~Minimizer();
 
   void SetThreashold(double);
+  double GetValue() const{return x.back();};
 private:
   //double (*function_ptr) (const double &);
   std::function<double(const double &)> function_ptr;

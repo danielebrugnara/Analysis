@@ -78,7 +78,7 @@ void SpectrumAnalyzer::Analyze() {
     relative_eff_graph.Write();
     FitEffCurve(relative_eff_graph).Write();
 
-    if (debug_canvas|| true) {
+    if (debug_canvas) {
         TCanvas cv;
         relative_eff_graph.Draw();
         FitEffCurve(relative_eff_graph).Draw("same");
@@ -388,9 +388,9 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
 
         bool left_tails = !simulation;
         Fitter fitter(spect, energies, left_tails);
-//        if (debug_canvas)
-//            fitter.EnableCanvas();
-//
+        if (debug_canvas)
+            fitter.EnableCanvas();
+
         if (read_pars_from_file)
             fitter.ReadParsFromFile(pars_file_name,fit_idx++);
         else

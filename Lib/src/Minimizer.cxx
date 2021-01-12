@@ -50,7 +50,7 @@ double Minimizer::Minimize()
 #endif
 		if(function_ptr(x[1]) >fx && n_steps>2) {
 			step[1]/=2;
-               break;
+            continue;
 		}
         rate[0]=rate[1];
 		rate[1]=rate[1]*quenching;

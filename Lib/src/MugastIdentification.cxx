@@ -292,6 +292,30 @@ bool MugastIdentification::Identify() {
                                     (**(data->Mugast)).PosY[ii],
                                     (**(data->Mugast)).PosZ[ii]);
         fragment.EmissionDirection[ii] = fragment.Pos[ii] - target_pos;
+
+        fragment.BeamPosition[ii].reserve(beam_positions.size());
+        fragment.BeamPosition_X[ii].reserve(beam_positions.size());
+        fragment.BeamPosition_Y[ii].reserve(beam_positions.size());
+
+        fragment.EmissionDirection_uncentered[ii].reserve(beam_positions.size());
+        fragment.EmissionDirection_uncentered_X[ii].reserve(beam_positions.size());
+        fragment.EmissionDirection_uncentered_Y[ii].reserve(beam_positions.size());
+        fragment.EmissionDirection_uncentered_Z[ii].reserve(beam_positions.size());
+        for(const auto& it: beam_positions){
+            fragment.BeamPosition[ii].emplace_back(it.first,it.second, 0);
+            fragment.BeamPosition_X[ii].emplace_back(it.first);
+            fragment.BeamPosition_Y[ii].emplace_back(it.second);
+
+            fragment.EmissionDirection_uncentered[ii].emplace_back(
+                    fragment.EmissionDirection[ii].X()-fragment.BeamPosition[ii].back().X(),
+                    fragment.EmissionDirection[ii].Y()-fragment.BeamPosition[ii].back().Y(),
+                    fragment.EmissionDirection[ii].Z()-fragment.BeamPosition[ii].back().Z());
+
+            fragment.EmissionDirection_uncentered_X[ii].emplace_back(fragment.EmissionDirection_uncentered[ii].back().X());
+            fragment.EmissionDirection_uncentered_Y[ii].emplace_back(fragment.EmissionDirection_uncentered[ii].back().Y());
+            fragment.EmissionDirection_uncentered_Z[ii].emplace_back(fragment.EmissionDirection_uncentered[ii].back().Z());
+        }
+
         fragment.TelescopeNormal[ii] = TVector3((**(data->Mugast)).TelescopeNormalX[ii],
                                                 (**(data->Mugast)).TelescopeNormalY[ii],
                                                 (**(data->Mugast)).TelescopeNormalZ[ii]);
@@ -310,6 +334,30 @@ bool MugastIdentification::Identify() {
                                         (**(data->Must2)).PosY[ii],
                                         (**(data->Must2)).PosZ[ii]);
         fragmentMust.EmissionDirection[ii] = fragmentMust.Pos[ii] - target_pos;
+
+        fragmentMust.BeamPosition[ii].reserve(beam_positions.size());
+        fragmentMust.BeamPosition_X[ii].reserve(beam_positions.size());
+        fragmentMust.BeamPosition_Y[ii].reserve(beam_positions.size());
+
+        fragmentMust.EmissionDirection_uncentered[ii].reserve(beam_positions.size());
+        fragmentMust.EmissionDirection_uncentered_X[ii].reserve(beam_positions.size());
+        fragmentMust.EmissionDirection_uncentered_Y[ii].reserve(beam_positions.size());
+        fragmentMust.EmissionDirection_uncentered_Z[ii].reserve(beam_positions.size());
+        for(const auto& it: beam_positions){
+            fragmentMust.BeamPosition[ii].emplace_back(it.first,it.second, 0);
+            fragmentMust.BeamPosition_X[ii].emplace_back(it.first);
+            fragmentMust.BeamPosition_Y[ii].emplace_back(it.second);
+
+            fragmentMust.EmissionDirection_uncentered[ii].emplace_back(
+                    fragmentMust.EmissionDirection[ii].X()-fragmentMust.BeamPosition[ii].back().X(),
+                    fragmentMust.EmissionDirection[ii].Y()-fragmentMust.BeamPosition[ii].back().Y(),
+                    fragmentMust.EmissionDirection[ii].Z()-fragmentMust.BeamPosition[ii].back().Z());
+
+            fragmentMust.EmissionDirection_uncentered_X[ii].emplace_back(fragmentMust.EmissionDirection_uncentered[ii].back().X());
+            fragmentMust.EmissionDirection_uncentered_Y[ii].emplace_back(fragmentMust.EmissionDirection_uncentered[ii].back().Y());
+            fragmentMust.EmissionDirection_uncentered_Z[ii].emplace_back(fragmentMust.EmissionDirection_uncentered[ii].back().Z());
+        }
+
         fragmentMust.TelescopeNormal[ii] = TVector3(0, 0, 0);
         fragmentMust.SI_E[ii] = (**(data->Must2)).Si_E[ii];
         fragmentMust.CsI_E[ii] = (**(data->Must2)).CsI_E[ii];
@@ -460,11 +508,11 @@ bool MugastIdentification::reconstructEnergyMugast() {
         if (eloss_it == energyLoss.end())
             return false;
 
-        double theta = fragment.EmissionDirection[ii].Angle(TVector3(0, 0, -1));
+        double theta{fragment.EmissionDirection[ii].Angle(TVector3(0, 0, -1))};
 
         //Passivation layer
-        double tmpEn = 0;
-        double tmpEn2 = 0;
+        double tmpEn{0};
+        double tmpEn2{0};
 
         tmpEn = eloss_it->second["al_front"]->EvaluateInitialEnergy(fragment.Tot_E[ii],
                                                                     0.4E-3*UNITS::mm, //Units in mm!
@@ -488,8 +536,17 @@ bool MugastIdentification::reconstructEnergyMugast() {
         fragment.E[ii] = tmpEn;
 
         fragment.E_uncentered[ii].reserve(beam_positions.size());
-        for(const auto& it: beam_positions){
-            fragment.E_uncentered[ii].push_back(ComputeDistanceInGas(fragment.EmissionDirection[ii], it));
+        for(unsigned int jj=0; jj<beam_positions.size(); ++jj){
+            try{
+                fragment.E_uncentered[ii].push_back(eloss_it->second["he3_front"]->EvaluateInitialEnergy(tmpEn2,
+                                                            computeDistanceInGas(fragment.EmissionDirection_uncentered[ii][jj],
+                                                                                 fragment.BeamPosition[ii][jj])*UNITS::mm,
+                                                                                 0)
+                                                    );
+            } catch (std::runtime_error& e) {
+                std::cerr << "Unable to find correct un-centered distance (Mugast) : " << e.what() << std::endl;
+                fragment.E_uncentered[ii].push_back(tmpEn);
+            }
         }
 
 
@@ -499,6 +556,12 @@ bool MugastIdentification::reconstructEnergyMugast() {
                                          fragment.Particle[ii])) != reaction.end()){
             //Vamos and mugast fragment found
             fragment.Ex[ii] = reaction_it->second->Set_Ek_Theta(fragment.E[ii], fragment.EmissionDirection[ii].Theta());//WARNING this could be wring
+            fragment.Ex_uncentered[ii].reserve(beam_positions.size());
+            for(unsigned int jj=0; jj<beam_positions.size(); ++jj){
+                fragment.Ex_uncentered[ii].push_back(reaction_it->second->Set_Ek_Theta(fragment.E_uncentered[ii][jj],
+                                                                                       fragment.EmissionDirection_uncentered[ii][jj].Theta()));
+            }
+
             fragment.E_CM[ii] = reaction_it->second->GetReactionFragment(3).Get_Ek_cm();
         }
         else{
@@ -534,10 +597,12 @@ bool MugastIdentification::reconstructEnergyMust2() {
         if (eloss_it == energyLoss.end())
             return false;
 
-        double theta = fragmentMust.EmissionDirection[ii].Angle(TVector3(0, 0, 1));
+        double theta{fragmentMust.EmissionDirection[ii].Angle(TVector3(0, 0, 1))};
 
         //Passivation layer
-        double tmpEn = 0;
+        double tmpEn{0};
+        double tmpEn2{0};
+
         tmpEn = eloss_it->second["al_front"]->EvaluateInitialEnergy(fragmentMust.Tot_E[ii],
                                                                     0.4E-3 * UNITS::mm, //Units in mm!
                                                                     0);//TODO: add telescope normal
@@ -550,11 +615,28 @@ bool MugastIdentification::reconstructEnergyMust2() {
                                                                        havarThickness,
                                                                        havar_angle->Evaluate(theta));
 
+        tmpEn2 = tmpEn;
+
         tmpEn = eloss_it->second["he3_front"]->EvaluateInitialEnergy(tmpEn,
                                                                      gas_thickness->Evaluate(theta) * UNITS::mm,
                                                                      0.);
 
         fragmentMust.E[ii] = tmpEn;
+
+        fragmentMust.E_uncentered[ii].reserve(beam_positions.size());
+        for(unsigned int jj=0; jj<beam_positions.size(); ++jj){
+            try{
+                fragmentMust.E_uncentered[ii].push_back(eloss_it->second["he3_front"]->EvaluateInitialEnergy(tmpEn2,
+                                                                                                         computeDistanceInGas(fragmentMust.EmissionDirection_uncentered[ii][jj],
+                                                                                                                              fragmentMust.BeamPosition[ii][jj])*UNITS::mm,
+                                                                                                         0)
+                                                        );
+            } catch (std::runtime_error& e) {
+                std::cerr << "Unable to find correct un-centered distance (Must2) : " << e.what() << std::endl;
+                fragmentMust.E_uncentered[ii].push_back(tmpEn);
+            }
+        }
+
 
         if ((reaction_it = reaction.find("M" + std::to_string(data->VAMOS_id_M) +
                                          "_Z" + std::to_string(data->VAMOS_id_Z) +
@@ -563,6 +645,13 @@ bool MugastIdentification::reconstructEnergyMust2() {
             //Vamos and Must2 fragments found
             fragmentMust.Ex[ii] = reaction_it->second->Set_Ek_Theta(fragmentMust.E[ii],
                                                                     fragmentMust.EmissionDirection[ii].Theta());
+
+            fragmentMust.Ex_uncentered[ii].reserve(beam_positions.size());
+            for(unsigned int jj=0; jj<beam_positions.size(); ++jj){
+                fragmentMust.Ex_uncentered[ii].push_back(reaction_it->second->Set_Ek_Theta(fragmentMust.E_uncentered[ii][jj],
+                                                                                           fragmentMust.EmissionDirection_uncentered[ii][jj].Theta()));
+            }
+
             fragmentMust.E_CM[ii] = reaction_it->second->GetReactionFragment(3).Get_Ek_cm();
         } else {
             if ((reaction_it = reaction.find(fragmentMust.Particle[ii])) != reaction.end()) {
@@ -674,79 +763,38 @@ double MugastIdentification::MiddleTargetBeamEnergy(double beam_energy_from_brho
     return beam_energy_from_brho;
 }
 
-double MugastIdentification::ComputeDistanceInGas(const TVector3& vect_det, const std::pair<double, double>& incident_pos) {
-    double x_d = vect_det.X(); //-target_pos.X();
-    double y_d = vect_det.Y(); //-target_pos.Y();
-    double z_d = vect_det.Z(); //-target_pos.Y();
+double MugastIdentification::computeDistanceInGas(TVector3 vectDet, const TVector3& incidentPos) {
 
-    double x_p = incident_pos.first;
-    double y_p = incident_pos.second;
-    double z_p = 0;
+    double tmp_threashold{1E-3*UNITS::mm};
 
-    if (x_p==-1000)
-        x_p=0;
-    if (y_p==-1000)
-        y_p=0;
-
-    double xx{x_d-x_p};
-    double yy{y_d-y_p};
-    double zz{z_d-z_p};
-
-    double x{0};
-    double y{0};
-    double z{0};
-
-    double tmp_threashold{1E-2*UNITS::mm};
-
-    //Computes the intersection point between the interpolation and the trajectory of the particle starting
-    //from the middle of the target
-    //std::cout << "Thickness : " << this->gas_thickness_cartesian->Evaluate(sqrt(x_p*x_p+y_p*y_p)) << std::endl;
-    //std::cout << "at X: " << x_p << std::endl;
-    //std::cout << "at Y: " << y_p << std::endl;
-    //std::cout << "threashold: " << tmp_threashold << std::endl;
-    if (z_d>0){
-        distanceMinimizer.reset(new Minimizer([&,this](const double &x) {
-                                                  return pow(zz/xx*(x-x_p)+z_p+this->gas_thickness_cartesian->Evaluate(sqrt(x*x+pow(yy/xx*(x-x_p)+y_p, 2))),
+    if (vectDet.Z()>0){
+        distanceMinimizer.reset(new Minimizer([&,this](double x) {
+                                                  auto vectTmp = x*vectDet+incidentPos;
+                                                  return pow(vectTmp.Z()-this->gas_thickness_cartesian->Evaluate(sqrt(pow(vectTmp.X(), 2)+pow(vectTmp.Y(), 2))),
                                                              2);
                                               },
-                                              x,                                  //starting value
-                                              3E2*UNITS::mm,                      //learning rate
-                                              tmp_threashold,                     //threashold
-                                              100,                                //max_steps
-                                              1,                                  //quenching
-                                              1E-2*UNITS::mm)                     //h
-                                );
-    }else{
-        distanceMinimizer.reset(new Minimizer([&,this](const double &x) {
-                                                  return pow(zz/xx*(x-x_p)+z_p-this->gas_thickness_cartesian->Evaluate(sqrt(x*x+pow(yy/xx*(x-x_p)+y_p, 2))),
-                                                             2);
-                                              },
-                                              x,                                  //starting value
-                                              3E2*UNITS::mm,                      //learning rate
+                                              1.5*UNITS::mm/vectDet.CosTheta(),   //starting value
+                                              1E-2*UNITS::mm,                     //learning rate
                                               tmp_threashold,                     //threashold
                                               100,                                //max_steps
                                               1,                                  //quenching
                                               1E-2*UNITS::mm)                     //h
         );
-
+    }else{
+        distanceMinimizer.reset(new Minimizer([&,this](double x) {
+                                                  auto vectTmp = x*vectDet+incidentPos;
+                                                  return pow(vectTmp.Z()+this->gas_thickness_cartesian->Evaluate(sqrt(pow(vectTmp.X(), 2)+pow(vectTmp.Y(), 2))),
+                                                             2);
+                                              },
+                                              1.5*UNITS::mm/vectDet.CosTheta(),   //starting value
+                                              1E-2*UNITS::mm,                     //learning rate
+                                              tmp_threashold,                     //threashold
+                                              100,                                //max_steps
+                                              1,                                  //quenching
+                                              1E-2*UNITS::mm)                     //h
+        );
     }
 
-    x = distanceMinimizer->Minimize();
-    y = yy/xx * (x-x_p) + y_p;
-    z = zz/xx * (x-x_p) + z_p;
-
-    std::cout << "------------------->Result : " << std::endl;
-    std::cout << "x in : " << x_p << std::endl;
-    std::cout << "y in : " << y_p << std::endl;
-
-    std::cout << "x found : " << x << std::endl;
-    std::cout << "y found : " << y << std::endl;
-    std::cout << "z found : " << z << std::endl;
-
-    std::cout << "distance found : " <<   sqrt(pow(x-x_p,2)+pow(y-y_p,2)+pow(z-z_p,2)) <<  std::endl;
-    std::cout << "distance centered: " <<   fragment.E[0] <<  std::endl;
-    std::cout << "valz1 : " << this->gas_thickness_cartesian->Evaluate(sqrt(x*x+pow(yy/xx*(x-x_p)+y_p, 2)))  <<  std::endl;
-    std::cout << "valz2 : " << zz/xx*(x-x_p)+z_p  <<  std::endl;
-    std::cout << "difference : " << this->gas_thickness_cartesian->Evaluate(sqrt(x*x+pow(yy/xx*(x-x_p)+y_p, 2))) - zz/xx*(x-x_p)+z_p << std::endl;
-    return sqrt(pow(x-x_p,2)+pow(y-y_p,2)+pow(z-z_p,2));
+    distanceMinimizer->Minimize();
+    return ((distanceMinimizer->GetValue())*vectDet + incidentPos).Mag();
 }

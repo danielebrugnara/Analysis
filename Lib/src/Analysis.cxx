@@ -100,6 +100,8 @@ bool Analysis::Job(const int ind, int* exit_status)
         while (1)
         { //Repeat while there are jobs
             std::string current_run = GetRun();
+            if (current_run.empty()) break;
+
             std::cout << "Run : " << current_run << " assigned to thread\n";
 
             pid_t pid;
@@ -168,8 +170,9 @@ bool Analysis::Job(const int ind, int* exit_status)
         }
     }
     catch (std::runtime_error &e){
+        std::cerr << e.what();
+        std::cerr << "Reached fatal error, terminating\n";
         kill(0,15);
-        std::cout << e.what();
     }
     catch (int &e){
         std::cout << "Exception : " << e << std::endl;
@@ -210,7 +213,8 @@ std::string Analysis::GetRun()
     if (file_names.empty())
     {
         mtx_job_que.unlock();
-        throw std::runtime_error("Finished Runs\n");
+        //throw std::runtime_error("Finished Runs\n");
+        return "";
     }
     run = file_names.top();
     file_names.pop();
