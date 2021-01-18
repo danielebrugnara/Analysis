@@ -41,7 +41,7 @@ public: //Data exchange  types
         Data(TTreeReaderValue<TMugastPhysics> *Mugast,
              TTreeReaderValue<TMust2Physics> *Must2,
              TTreeReaderValue<TCATSPhysics> *Cats,
-             TTreeReaderValue<float> *TW,
+             TTreeReaderValue<Float_t> *TW,
              int VAMOS_id_M,
              int VAMOS_id_Z) :  Mugast(Mugast),
                                 Must2(Must2),
@@ -52,41 +52,45 @@ public: //Data exchange  types
     };
 
 private: //Constants used internally
-    static constexpr int n_detectors{6};
-    static constexpr int n_strips{128};
-    const int charge_state_interpolation{16}; //Cannot be made static constexpr because it is passed as reference
+    static constexpr int nDetectors{6};
+    static constexpr int nStrips{128};
+    const int chargeStateInterpolation{16}; //Cannot be made static constexpr because it is passed as reference
     //static constexpr double gradient_descent_normalization{1.E3};
-    static constexpr double ice_percentage_second {0.85};
-    const double average_beam_thickness = 3.72109*UNITS::mm;    //700 mbar
-    const std::array<std::pair<double, double>, 16> beam_positions = {
+    static constexpr double icePercentageSecond {0.85};
+    const double averageBeamThickness = 3.72109 * UNITS::mm;    //700 mbar
+    const std::array<std::pair<double, double>, 16> beamPositions = {
             std::make_pair(0.5, 0.5),std::make_pair(0.5, -0.5),std::make_pair(-0.5, -0.5),std::make_pair(-0.5, 0.5),
             std::make_pair(1.0, 1.0),std::make_pair(1.0, -1.0),std::make_pair(-1.0, -1.0),std::make_pair(-1.0, 1.0),
             std::make_pair(1.5, 1.5),std::make_pair(1.5, -1.5),std::make_pair(-1.5, -1.5),std::make_pair(-1.5, 1.5),
             std::make_pair(2.0, 2.0),std::make_pair(2.0, -2.0),std::make_pair(-2.0, -2.0),std::make_pair(-2.0, 2.0)
     };
+    const std::array<double, 16> focusScale = {1.3, 1.2, 1.1, 1.,
+                                               0.9, 0.8, 0.7, 0.6,
+                                               0.5, 0.4, 0.3, 0.2,
+                                               0.1, 0.05, 0.025, 0.001};
 
 public:
-    std::array<std::string, 5> light_particles;
-    std::array<int, n_detectors> cuts_MG;
+    std::array<std::string, 5> lightParticles;
+    std::array<int, nDetectors> cutsMg;
     std::array<std::string, 2> strips;
 
 private: //Variables used internally
-    double beam_energy{};
-    double initial_beam_energy{};
-    double final_beam_energy{};
-    double beam_energy_match_threashold{};
+    double beamEnergy{};
+    double initialBeamEnergy{};
+    double finalBeamEnergy{};
+    double beamEnergyMatchThreashold{};
     double brho{};
-    TVector3 target_pos;
+    TVector3 targetPos;
 
     std::unordered_map<std::string, unique_ptr<ReactionReconstruction2body<long double>>> reaction;
-    std::unordered_map<std::string, unique_ptr<ReactionReconstruction2body<long double>>>::iterator reaction_it;
-    ReactionFragment* beam_ref{};
+    std::unordered_map<std::string, unique_ptr<ReactionReconstruction2body<long double>>>::iterator reactionIt;
+    ReactionFragment* beamRef{};
     std::vector<std::string> layers;
 
     //Interpolations
-    Interpolation *gas_thickness{};
-    Interpolation *gas_thickness_cartesian{};
-    Interpolation *havar_angle{};
+    Interpolation *gasThickness{};
+    Interpolation *gasThicknessCartesian{};
+    Interpolation *havarAngle{};
     Interpolation *TW_Brho_M46_Z18{};
     std::vector<std::pair<double, double>> TW_vs_ice;
 
@@ -100,7 +104,7 @@ private: //Variables used internally
     //Energy Loss
     std::unordered_map<std::string, std::unordered_map<std::string, EnergyLoss *>> energyLoss;
     std::pair<double, double> currentIceThickness;//first layer, second layer
-    bool use_constant_thickness;
+    bool useConstantThickness;
 
     bool with_cuts;
     double havarThickness;
@@ -170,10 +174,10 @@ public: //Functions called by selector
 
         //The following constructs at the same address
         fragment.~MugastData();
-        new(&fragment) MugastData((**(data->Mugast)).DSSD_E.size());
+        new(&fragment) MugastData((**(data->Mugast)).DSSD_E.size(), focusScale.size());
         fragmentMust.~Must2Data();
-        new(&fragmentMust) Must2Data((**(data->Must2)).EventMultiplicity);
+        new(&fragmentMust) Must2Data((**(data->Must2)).EventMultiplicity, focusScale.size());
         fragmentCats.~CatsData();
-        new(&fragmentCats) CatsData((**(data->Cats)).PositionX.size());
+        new(&fragmentCats) CatsData((**(data->Cats)).PositionX.size(), focusScale.size());
     };
 };

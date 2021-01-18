@@ -12,8 +12,8 @@ class VamosData: public TObject{
     double D_En;       //DE 1+2
     double D_En2;      //DE 1
     double Path;       //Reconstructed path
-    TVector2 FocalPlanePosition;
-    TVector2 PTPosition;
+    TVector3 FocalPlanePosition;
+    TVector3 PTPosition;
     TVector3 EmissionVersor;
     double T;          //Time
     double V;          //Velocity

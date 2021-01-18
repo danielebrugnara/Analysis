@@ -8,15 +8,19 @@ class CatsData: public TObject{
 public:
     const unsigned int multiplicity;            //Number of particles detected
     std::vector<TVector3> Pos;
+    std::vector<TVector3> PosOnTarget;
+    std::vector<TVector3> Dir;
     //std::vector<TLorentzVector> Beam;
-    std::vector<TVector2> Charge;
+    std::vector<TVector3> Charge;
     CatsData(): multiplicity(0){};
 
-    explicit CatsData(const unsigned int multiplicity)
+    explicit CatsData(const unsigned int multiplicity, const unsigned int options)
                     :multiplicity(multiplicity){
         Pos.resize(multiplicity);
+        PosOnTarget.resize(options);
+        Dir.resize(options);
         //Beam.resize(multiplicity);
         Charge.resize(multiplicity);
     }
-    ClassDef(CatsData, 1);
+    ClassDef(CatsData, 4);
 }; 

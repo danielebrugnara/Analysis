@@ -7,26 +7,26 @@
 #endif
 
 MugastIdentification::MugastIdentification() :
-        light_particles({"m1_z1", "m2_z1", "m3_z1", "m3_z2", "m4_z2"}),
+        lightParticles({"m1_z1", "m2_z1", "m3_z1", "m3_z2", "m4_z2"}),
+        cutsMg({1, 3, 4, 5, 7, 11}),
         strips({"X", "Y"}),
-        cuts_MG({1, 3, 4, 5, 7, 11}),
         layers({"ice_front","havar_front","he3_front","he3_back","havar_back","ice_back","al_front"}),
-        use_constant_thickness(false),
+        useConstantThickness(false),
         with_cuts(true),
         havarThickness(3.8E-3 * UNITS::mm), //in mm
         data(nullptr){}
 
 MugastIdentification::~MugastIdentification()
 {
-    delete gas_thickness;
-    delete havar_angle;
+    delete gasThickness;
+    delete havarAngle;
     delete data;
 
-    for (const auto &MG : cuts_MG)
+    for (const auto &MG : cutsMg)
     {
         delete calibrationsTy[MG];
     }
-    for (const auto &particle : light_particles)
+    for (const auto &particle : lightParticles)
     {
         if (particle == "m4_z2")
             continue; //TODO: generate table
@@ -44,10 +44,10 @@ MugastIdentification::~MugastIdentification()
 bool MugastIdentification::Initialize(const double &beam_energy,
                                       const TVector3 &target_pos){
     DEBUG("------------>MugastIdentification::initialize()", "");
-    this->beam_energy = beam_energy;
-    this->target_pos = target_pos;
+    this->beamEnergy = beam_energy;
+    this->targetPos = target_pos;
 
-    if (use_constant_thickness){
+    if (useConstantThickness){
         currentIceThickness.first = 3E-2 * UNITS::mm;
         currentIceThickness.second = 3E-2 * UNITS::mm;
     }
@@ -105,7 +105,7 @@ bool MugastIdentification::Initialize(const double &beam_energy,
                                                                                  ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
                                                                                  ReactionFragment::FragmentSettings(46, 18, 0,0, 0)})));
 
-    beam_ref = &reaction.at("M47_Z19_m2_z1")->GetReactionFragment(1);
+    beamRef = &reaction.at("M47_Z19_m2_z1")->GetReactionFragment(1);
 
     //Setting up interpolations for target deformation//////
     initializeInterpolations();
@@ -179,7 +179,7 @@ bool MugastIdentification::initializeCuts(){
 }
 
 bool MugastIdentification::initializeCalibration(){
-    for (const auto &MG : cuts_MG){
+    for (const auto &MG : cutsMg){
         std::string file_name = "./Configs/Calibrations/TY_MG" + to_string(MG) + ".cal";
         ifstream file(file_name);
         if (!file){
@@ -187,7 +187,7 @@ bool MugastIdentification::initializeCalibration(){
             continue;
         }
         std::cout << "Calibration :" + file_name + " found\n";
-        calibrationsTy[MG] = new Calibration(file_name, 1, n_strips);
+        calibrationsTy[MG] = new Calibration(file_name, 1, nStrips);
     }
     return true;
 }
@@ -252,20 +252,20 @@ bool MugastIdentification::initializeELoss(){
     }
 
     currentIceThickness.first = 10E-3 * UNITS::mm; //in mm
-    currentIceThickness.second = currentIceThickness.first * ice_percentage_second;
-    beam_energy_match_threashold = 0.3*UNITS::MeV; //In MeV
+    currentIceThickness.second = currentIceThickness.first * icePercentageSecond;
+    beamEnergyMatchThreashold = 0.3 * UNITS::MeV; //In MeV
 
     TW_vs_ice.reserve(100);
     return true;
 }
 
 bool MugastIdentification::initializeInterpolations() {
-    gas_thickness = new Interpolation("./Configs/Interpolations/He_thickness_700mbar.txt");
+    gasThickness = new Interpolation("./Configs/Interpolations/He_thickness_700mbar.txt");
 
-    gas_thickness_cartesian = new Interpolation("./Configs/Interpolations/He_thickness_700mbar_euc.txt");
-    gas_thickness_cartesian->SetUnits(UNITS::mm, UNITS::mm);
+    gasThicknessCartesian = new Interpolation("./Configs/Interpolations/He_thickness_700mbar_euc.txt");
+    gasThicknessCartesian->SetUnits(UNITS::mm, UNITS::mm);
 
-    havar_angle = new Interpolation("./Configs/Interpolations/Entrance_angle_700mbar.txt");
+    havarAngle = new Interpolation("./Configs/Interpolations/Entrance_angle_700mbar.txt");
 
     auto* tmpFile = new TFile("./Configs/Interpolations/TW_Brho_M46_Z18.root");
     if (tmpFile->IsOpen()){
@@ -286,34 +286,43 @@ std::vector<std::pair<double, double>> MugastIdentification::getTWvsIce(){
 bool MugastIdentification::Identify() {
     DEBUG("------------>MugastIdentification::identify()", "");
     //Initialization of basic structure
+
+    for (unsigned int ii = 0; ii < fragmentCats.multiplicity; ++ii) {
+        fragmentCats.Pos[ii] = TVector3((**(data->Cats)).PositionX[ii],
+                                        (**(data->Cats)).PositionY[ii],
+                                        (**(data->Cats)).PositionZ[ii]);
+        if (fragmentCats.Pos[ii].X() == -1000) fragmentCats.Pos[ii].SetX(0);
+        if (fragmentCats.Pos[ii].Y() == -1000) fragmentCats.Pos[ii].SetY(0);
+
+        fragmentCats.Charge[ii] = TVector3((**(data->Cats)).ChargeX[ii],
+                                           (**(data->Cats)).ChargeY[ii],
+                                            0);
+
+        if (ii==0){
+            for (unsigned int jj=0; jj<focusScale.size(); ++jj) {
+                fragmentCats.PosOnTarget[jj] = (fragmentCats.Pos[0]*focusScale[jj]);
+                fragmentCats.PosOnTarget[jj].SetZ(0);
+                fragmentCats.Dir[jj] = fragmentCats.Pos[0]-fragmentCats.PosOnTarget[jj];
+            }
+        }
+    }
+
     for (unsigned int ii = 0; ii < fragment.multiplicity; ++ii) {
         fragment.Indentified[ii] = false;
         fragment.Pos[ii] = TVector3((**(data->Mugast)).PosX[ii],
                                     (**(data->Mugast)).PosY[ii],
                                     (**(data->Mugast)).PosZ[ii]);
-        fragment.EmissionDirection[ii] = fragment.Pos[ii] - target_pos;
+        fragment.EmissionDirection[ii] = fragment.Pos[ii] - targetPos;
 
-        fragment.BeamPosition[ii].reserve(beam_positions.size());
-        fragment.BeamPosition_X[ii].reserve(beam_positions.size());
-        fragment.BeamPosition_Y[ii].reserve(beam_positions.size());
-
-        fragment.EmissionDirection_uncentered[ii].reserve(beam_positions.size());
-        fragment.EmissionDirection_uncentered_X[ii].reserve(beam_positions.size());
-        fragment.EmissionDirection_uncentered_Y[ii].reserve(beam_positions.size());
-        fragment.EmissionDirection_uncentered_Z[ii].reserve(beam_positions.size());
-        for(const auto& it: beam_positions){
-            fragment.BeamPosition[ii].emplace_back(it.first,it.second, 0);
-            fragment.BeamPosition_X[ii].emplace_back(it.first);
-            fragment.BeamPosition_Y[ii].emplace_back(it.second);
-
-            fragment.EmissionDirection_uncentered[ii].emplace_back(
-                    fragment.EmissionDirection[ii].X()-fragment.BeamPosition[ii].back().X(),
-                    fragment.EmissionDirection[ii].Y()-fragment.BeamPosition[ii].back().Y(),
-                    fragment.EmissionDirection[ii].Z()-fragment.BeamPosition[ii].back().Z());
-
-            fragment.EmissionDirection_uncentered_X[ii].emplace_back(fragment.EmissionDirection_uncentered[ii].back().X());
-            fragment.EmissionDirection_uncentered_Y[ii].emplace_back(fragment.EmissionDirection_uncentered[ii].back().Y());
-            fragment.EmissionDirection_uncentered_Z[ii].emplace_back(fragment.EmissionDirection_uncentered[ii].back().Z());
+        if (ii==0){
+            for(unsigned int jj=0; jj<beamPositions.size();++jj){
+                fragment.BeamPosition_uncentered[jj] = TVector3(beamPositions[jj].first,beamPositions[jj].second, 0);
+                fragment.EmissionDirection_uncentered[jj] = fragment.EmissionDirection[0] - fragment.BeamPosition_uncentered[jj];
+            }
+            for (unsigned int jj=0; jj<focusScale.size(); ++jj) {
+                fragment.BeamPosition_corrected[jj] = fragmentCats.PosOnTarget[jj];
+                fragment.EmissionDirection_corrected[jj] = fragment.EmissionDirection[0] -fragmentCats.PosOnTarget[jj];
+            }
         }
 
         fragment.TelescopeNormal[ii] = TVector3((**(data->Mugast)).TelescopeNormalX[ii],
@@ -333,29 +342,18 @@ bool MugastIdentification::Identify() {
         fragmentMust.Pos[ii] = TVector3((**(data->Must2)).PosX[ii],
                                         (**(data->Must2)).PosY[ii],
                                         (**(data->Must2)).PosZ[ii]);
-        fragmentMust.EmissionDirection[ii] = fragmentMust.Pos[ii] - target_pos;
+        fragmentMust.EmissionDirection[ii] = fragmentMust.Pos[ii] - targetPos;
 
-        fragmentMust.BeamPosition[ii].reserve(beam_positions.size());
-        fragmentMust.BeamPosition_X[ii].reserve(beam_positions.size());
-        fragmentMust.BeamPosition_Y[ii].reserve(beam_positions.size());
 
-        fragmentMust.EmissionDirection_uncentered[ii].reserve(beam_positions.size());
-        fragmentMust.EmissionDirection_uncentered_X[ii].reserve(beam_positions.size());
-        fragmentMust.EmissionDirection_uncentered_Y[ii].reserve(beam_positions.size());
-        fragmentMust.EmissionDirection_uncentered_Z[ii].reserve(beam_positions.size());
-        for(const auto& it: beam_positions){
-            fragmentMust.BeamPosition[ii].emplace_back(it.first,it.second, 0);
-            fragmentMust.BeamPosition_X[ii].emplace_back(it.first);
-            fragmentMust.BeamPosition_Y[ii].emplace_back(it.second);
-
-            fragmentMust.EmissionDirection_uncentered[ii].emplace_back(
-                    fragmentMust.EmissionDirection[ii].X()-fragmentMust.BeamPosition[ii].back().X(),
-                    fragmentMust.EmissionDirection[ii].Y()-fragmentMust.BeamPosition[ii].back().Y(),
-                    fragmentMust.EmissionDirection[ii].Z()-fragmentMust.BeamPosition[ii].back().Z());
-
-            fragmentMust.EmissionDirection_uncentered_X[ii].emplace_back(fragmentMust.EmissionDirection_uncentered[ii].back().X());
-            fragmentMust.EmissionDirection_uncentered_Y[ii].emplace_back(fragmentMust.EmissionDirection_uncentered[ii].back().Y());
-            fragmentMust.EmissionDirection_uncentered_Z[ii].emplace_back(fragmentMust.EmissionDirection_uncentered[ii].back().Z());
+        if (ii==0){
+            for(unsigned int jj=0; jj<beamPositions.size();++jj){
+                fragmentMust.BeamPosition_uncentered[jj] = TVector3(beamPositions[jj].first,beamPositions[jj].second, 0);
+                fragmentMust.EmissionDirection_uncentered[jj] = fragmentMust.EmissionDirection[0] - fragmentMust.BeamPosition_uncentered[jj];
+            }
+            for (unsigned int jj=0; jj<focusScale.size(); ++jj) {
+                fragmentMust.BeamPosition_corrected[jj] = fragmentCats.PosOnTarget[jj];
+                fragmentMust.EmissionDirection_corrected[jj] = fragmentMust.EmissionDirection[0] -fragmentCats.PosOnTarget[jj];
+            }
         }
 
         fragmentMust.TelescopeNormal[ii] = TVector3(0, 0, 0);
@@ -370,27 +368,19 @@ bool MugastIdentification::Identify() {
         fragmentMust.T2[ii] = (**(data->Must2)).Si_TY[ii];//TODO: check if second layers are different
         fragmentMust.MG[ii] = (**(data->Must2)).TelescopeNumber[ii];
     }
-    for (unsigned int ii = 0; ii < fragmentCats.multiplicity; ++ii) {
-        fragmentCats.Pos[ii] = TVector3((**(data->Cats)).PositionX[ii],
-                                        (**(data->Cats)).PositionY[ii],
-                                        (**(data->Cats)).PositionZ[ii]);
-        fragmentCats.Charge[ii] = TVector2((**(data->Cats)).ChargeX[ii],
-                                           (**(data->Cats)).ChargeY[ii]);
-    }
 
     DEBUG("------------>finished: setting up fragment", "");
 
-    //Evaluate Ice thickness
     brho = TW_Brho_M46_Z18->Evaluate(**(data->TW));
-    final_beam_energy = beam_ref->GetEkFromBrho_Q(brho, charge_state_interpolation);
-    initial_beam_energy = InitialBeamEnergy(final_beam_energy, currentIceThickness.first);
+    finalBeamEnergy = beamRef->GetEkFromBrho_Q(brho, chargeStateInterpolation);
+    initialBeamEnergy = InitialBeamEnergy(finalBeamEnergy, currentIceThickness.first);
 
-    if (!use_constant_thickness) {
+    if (!useConstantThickness) {
         identifyIceThickness();
     }
 
     for (const auto &it : reaction) {
-        it.second->SetBeamEnergy(MiddleTargetBeamEnergy(final_beam_energy));
+        it.second->SetBeamEnergy(MiddleTargetBeamEnergy(finalBeamEnergy));
     }
 
     DEBUG("------------>starting: recalibrations", "");
@@ -410,6 +400,7 @@ bool MugastIdentification::Identify() {
     reconstructEnergyMugast();
     identifyMust2();
     reconstructEnergyMust2();
+    return true;
 }
 
 bool MugastIdentification::identifyMugast() {
@@ -417,7 +408,7 @@ bool MugastIdentification::identifyMugast() {
 
     for (unsigned int ii = 0; ii < fragment.multiplicity; ++ii) {
         fragment.Particle[ii] = "NONE";
-        for (const auto &cut_it : light_particles) {
+        for (const auto &cut_it : lightParticles) {
             foundCut = cut_type["E_TOF"].find("E_TOF_" + cut_it + "_MG" + std::to_string(static_cast<int>(fragment.MG[ii])));
 
             if (foundCut == cut_type["E_TOF"].end()) continue;
@@ -456,7 +447,7 @@ bool MugastIdentification::identifyMust2() {
 
     for (unsigned int ii = 0; ii < fragmentMust.multiplicity; ++ii) {
         fragmentMust.Particle[ii] = "NONE";
-        for (const auto &cut_it : light_particles) {
+        for (const auto &cut_it : lightParticles) {
             foundCut = cut_type["DE_E"].find("DE_E_" + cut_it + "_MM");
 
             if (foundCut == cut_type["DE_E"].end()) continue;
@@ -521,55 +512,76 @@ bool MugastIdentification::reconstructEnergyMugast() {
 
         tmpEn = eloss_it->second["ice_front"]->EvaluateInitialEnergy(tmpEn,
                                                                      currentIceThickness.first,
-                                                                     havar_angle->Evaluate(theta));
+                                                                     havarAngle->Evaluate(theta));
 
         tmpEn = eloss_it->second["havar_front"]->EvaluateInitialEnergy(tmpEn,
                                                                        havarThickness,
-                                                                       havar_angle->Evaluate(theta));
+                                                                       havarAngle->Evaluate(theta));
 
         tmpEn2 = tmpEn;
 
         tmpEn = eloss_it->second["he3_front"]->EvaluateInitialEnergy(tmpEn,
-                                                                     gas_thickness->Evaluate(theta)*UNITS::mm,
+                                                                     gasThickness->Evaluate(theta) * UNITS::mm,
                                                                      0.);
 
         fragment.E[ii] = tmpEn;
 
-        fragment.E_uncentered[ii].reserve(beam_positions.size());
-        for(unsigned int jj=0; jj<beam_positions.size(); ++jj){
-            try{
-                fragment.E_uncentered[ii].push_back(eloss_it->second["he3_front"]->EvaluateInitialEnergy(tmpEn2,
-                                                            computeDistanceInGas(fragment.EmissionDirection_uncentered[ii][jj],
-                                                                                 fragment.BeamPosition[ii][jj])*UNITS::mm,
-                                                                                 0)
-                                                    );
-            } catch (std::runtime_error& e) {
-                std::cerr << "Unable to find correct un-centered distance (Mugast) : " << e.what() << std::endl;
-                fragment.E_uncentered[ii].push_back(tmpEn);
+        if (1 || ii==0) {
+            for (unsigned int jj = 0; jj < beamPositions.size(); ++jj) {
+                try {
+                    fragment.E_uncentered[ii].push_back(eloss_it->second["he3_front"]->EvaluateInitialEnergy(tmpEn2,
+                                                                                                             computeDistanceInGas(
+                                                                                                                     fragment.EmissionDirection_uncentered[jj],
+                                                                                                                     fragment.BeamPosition_uncentered[jj]) *UNITS::mm,
+                                                                                                             0)
+                    );
+                } catch (std::runtime_error &e) {
+                    std::cerr << "Unable to find correct un-centered distance (Mugast) : " << e.what() << std::endl;
+                    fragment.E_uncentered[ii].push_back(tmpEn);
+                }
+            }
+            for (unsigned int jj = 0; jj < focusScale.size(); ++jj) {
+                try {
+                    fragment.E_corrected[ii].push_back(eloss_it->second["he3_front"]->EvaluateInitialEnergy(tmpEn2,
+                                                                                                             computeDistanceInGas(
+                                                                                                                     fragment.EmissionDirection_corrected[jj],
+                                                                                                                     fragmentCats.PosOnTarget[jj]) *UNITS::mm,
+                                                                                                             0)
+                    );
+                } catch (std::runtime_error &e) {
+                    std::cerr << "Unable to find correct un-centered distance (Mugast) : " << e.what() << std::endl;
+                    fragment.E_uncentered[ii].push_back(tmpEn);
+                }
             }
         }
 
-
-        if ((reaction_it = reaction.find("M" + std::to_string(data->VAMOS_id_M) +
-                                         "_Z" + std::to_string(data->VAMOS_id_Z) +
-                                         "_" +
-                                         fragment.Particle[ii])) != reaction.end()){
+        if ((reactionIt = reaction.find("M" + std::to_string(data->VAMOS_id_M) +
+                                        "_Z" + std::to_string(data->VAMOS_id_Z) +
+                                        "_" +
+                                        fragment.Particle[ii])) != reaction.end()){
             //Vamos and mugast fragment found
-            fragment.Ex[ii] = reaction_it->second->Set_Ek_Theta(fragment.E[ii], fragment.EmissionDirection[ii].Theta());//WARNING this could be wring
-            fragment.Ex_uncentered[ii].reserve(beam_positions.size());
-            for(unsigned int jj=0; jj<beam_positions.size(); ++jj){
-                fragment.Ex_uncentered[ii].push_back(reaction_it->second->Set_Ek_Theta(fragment.E_uncentered[ii][jj],
-                                                                                       fragment.EmissionDirection_uncentered[ii][jj].Theta()));
+            fragment.Ex[ii] = reactionIt->second->Set_Ek_Theta(fragment.E[ii], fragment.EmissionDirection[ii].Theta());//WARNING this could be wring
+            fragment.Ex_uncentered[ii].reserve(beamPositions.size());
+            fragment.Ex_corrected[ii].reserve(focusScale.size());
+            if (1 || ii == 0) {
+                for (unsigned int jj = 0; jj < beamPositions.size(); ++jj) {
+                    fragment.Ex_uncentered[ii].push_back(reactionIt->second->Set_Ek_Theta(fragment.E_uncentered[ii][jj],
+                                                                                          fragment.EmissionDirection_uncentered[jj].Theta()));
+                }
+                for (unsigned int jj = 0; jj < focusScale.size(); ++jj) {
+                    fragment.Ex_uncentered[ii].push_back(reactionIt->second->Set_Ek_Theta(fragment.E_corrected[ii][jj],
+                                                                                          fragment.EmissionDirection_corrected[jj].Theta()));
+                }
             }
 
-            fragment.E_CM[ii] = reaction_it->second->GetReactionFragment(3).Get_Ek_cm();
+            fragment.E_CM[ii] = reactionIt->second->GetReactionFragment(3).Get_Ek_cm();
         }
         else{
-            if ((reaction_it = reaction.find(fragment.Particle[ii])) != reaction.end()) {
+            if ((reactionIt = reaction.find(fragment.Particle[ii])) != reaction.end()) {
                 //Only mugast fragment found
-                fragment.Ex[ii] = reaction_it->second->Set_Ek_Theta(fragment.E[ii],
-                                                                    fragment.EmissionDirection[ii].Theta());//WARNING this could be wring
-                fragment.E_CM[ii] = reaction_it->second->GetReactionFragment(3).Get_Ek_cm();
+                fragment.Ex[ii] = reactionIt->second->Set_Ek_Theta(fragment.E[ii],
+                                                                   fragment.EmissionDirection[ii].Theta());//WARNING this could be wring
+                fragment.E_CM[ii] = reactionIt->second->GetReactionFragment(3).Get_Ek_cm();
             }else
                 fragment.Ex[ii] = -2000;
         }
@@ -608,57 +620,78 @@ bool MugastIdentification::reconstructEnergyMust2() {
                                                                     0);//TODO: add telescope normal
 
         tmpEn = eloss_it->second["ice_front"]->EvaluateInitialEnergy(tmpEn,
-                                                                     currentIceThickness.first * ice_percentage_second,
-                                                                     havar_angle->Evaluate(theta));
+                                                                     currentIceThickness.first * icePercentageSecond,
+                                                                     havarAngle->Evaluate(theta));
 
         tmpEn = eloss_it->second["havar_front"]->EvaluateInitialEnergy(tmpEn,
                                                                        havarThickness,
-                                                                       havar_angle->Evaluate(theta));
+                                                                       havarAngle->Evaluate(theta));
 
         tmpEn2 = tmpEn;
 
         tmpEn = eloss_it->second["he3_front"]->EvaluateInitialEnergy(tmpEn,
-                                                                     gas_thickness->Evaluate(theta) * UNITS::mm,
+                                                                     gasThickness->Evaluate(theta) * UNITS::mm,
                                                                      0.);
 
         fragmentMust.E[ii] = tmpEn;
 
-        fragmentMust.E_uncentered[ii].reserve(beam_positions.size());
-        for(unsigned int jj=0; jj<beam_positions.size(); ++jj){
-            try{
-                fragmentMust.E_uncentered[ii].push_back(eloss_it->second["he3_front"]->EvaluateInitialEnergy(tmpEn2,
-                                                                                                         computeDistanceInGas(fragmentMust.EmissionDirection_uncentered[ii][jj],
-                                                                                                                              fragmentMust.BeamPosition[ii][jj])*UNITS::mm,
-                                                                                                         0)
-                                                        );
-            } catch (std::runtime_error& e) {
-                std::cerr << "Unable to find correct un-centered distance (Must2) : " << e.what() << std::endl;
-                fragmentMust.E_uncentered[ii].push_back(tmpEn);
+        if (1 || ii==0) {
+            for (unsigned int jj = 0; jj < beamPositions.size(); ++jj) {
+                try {
+                    fragmentMust.E_uncentered[ii].push_back(eloss_it->second["he3_front"]->EvaluateInitialEnergy(tmpEn2,
+                                                                                                             computeDistanceInGas(
+                                                                                                                     fragmentMust.EmissionDirection_uncentered[jj],
+                                                                                                                     fragmentMust.BeamPosition_uncentered[jj]) *UNITS::mm,
+                                                                                                             0)
+                    );
+                } catch (std::runtime_error &e) {
+                    std::cerr << "Unable to find correct un-centered distance (Mugast) : " << e.what() << std::endl;
+                    fragmentMust.E_uncentered[ii].push_back(tmpEn);
+                }
+            }
+            for (unsigned int jj = 0; jj < focusScale.size(); ++jj) {
+                try {
+                            fragmentMust.E_corrected[ii].push_back(eloss_it->second["he3_front"]->EvaluateInitialEnergy(tmpEn2,
+                                                                                                                        computeDistanceInGas(
+                                                                                                                    fragmentMust.EmissionDirection_corrected[jj],
+                                                                                                                    fragmentCats.PosOnTarget[jj]) *UNITS::mm,
+                                                                                                            0)
+                    );
+                } catch (std::runtime_error &e) {
+                    std::cerr << "Unable to find correct un-centered distance (Mugast) : " << e.what() << std::endl;
+                    fragmentMust.E_uncentered[ii].push_back(tmpEn);
+                }
             }
         }
 
-
-        if ((reaction_it = reaction.find("M" + std::to_string(data->VAMOS_id_M) +
-                                         "_Z" + std::to_string(data->VAMOS_id_Z) +
-                                         "_" +
-                                         fragmentMust.Particle[ii])) != reaction.end()) {
+        if ((reactionIt = reaction.find("M" + std::to_string(data->VAMOS_id_M) +
+                                        "_Z" + std::to_string(data->VAMOS_id_Z) +
+                                        "_" +
+                                        fragmentMust.Particle[ii])) != reaction.end()) {
             //Vamos and Must2 fragments found
-            fragmentMust.Ex[ii] = reaction_it->second->Set_Ek_Theta(fragmentMust.E[ii],
-                                                                    fragmentMust.EmissionDirection[ii].Theta());
+            fragmentMust.Ex[ii] = reactionIt->second->Set_Ek_Theta(fragmentMust.E[ii],
+                                                                   fragmentMust.EmissionDirection[ii].Theta());
 
-            fragmentMust.Ex_uncentered[ii].reserve(beam_positions.size());
-            for(unsigned int jj=0; jj<beam_positions.size(); ++jj){
-                fragmentMust.Ex_uncentered[ii].push_back(reaction_it->second->Set_Ek_Theta(fragmentMust.E_uncentered[ii][jj],
-                                                                                           fragmentMust.EmissionDirection_uncentered[ii][jj].Theta()));
+            fragmentMust.Ex_uncentered[ii].reserve(beamPositions.size());
+            fragmentMust.Ex_corrected[ii].reserve(focusScale.size());
+            if (1 || ii == 0) {
+                for (unsigned int jj = 0; jj < beamPositions.size(); ++jj) {
+                    fragmentMust.Ex_uncentered[ii].push_back(reactionIt->second->Set_Ek_Theta(fragmentMust.E_uncentered[ii][jj],
+                                                                                          fragmentMust.EmissionDirection_uncentered[jj].Theta()));
+                }
+                for (unsigned int jj = 0; jj < focusScale.size(); ++jj) {
+                    fragmentMust.Ex_uncentered[ii].push_back(reactionIt->second->Set_Ek_Theta(fragmentMust.E_corrected[ii][jj],
+                                                                                          fragmentMust.EmissionDirection_corrected[jj].Theta()));
+                }
             }
 
-            fragmentMust.E_CM[ii] = reaction_it->second->GetReactionFragment(3).Get_Ek_cm();
+            fragmentMust.E_CM[ii] = reactionIt->second->GetReactionFragment(3).Get_Ek_cm();
         } else {
-            if ((reaction_it = reaction.find(fragmentMust.Particle[ii])) != reaction.end()) {
+            if ((reactionIt = reaction.find(fragmentMust.Particle[ii])) != reaction.end()) {
                 //Only Must2 fragment found
-                fragmentMust.Ex[ii] = reaction_it->second->Set_Ek_Theta(fragmentMust.E[ii],
-                                                                        fragmentMust.EmissionDirection[ii].Theta());
-                fragmentMust.E_CM[ii] = reaction_it->second->GetReactionFragment(3).Get_Ek_cm();
+                fragmentMust.Ex[ii] = reactionIt->second->Set_Ek_Theta(fragmentMust.E[ii],
+                                                                       fragmentMust.EmissionDirection[ii].Theta());
+                fragmentMust.E_CM[ii] = reactionIt->second->GetReactionFragment(3).Get_Ek_cm();
             }else
                 fragmentMust.Ex[ii] = -2000;
         }
@@ -669,21 +702,21 @@ bool MugastIdentification::reconstructEnergyMust2() {
 
 void MugastIdentification::identifyIceThickness(){
     DEBUG("------------>Started: MugastIdentification::identifyIceThickness()", "");
-    DEBUG("Final beam energy : " , final_beam_energy);
-    DEBUG("Computed initial beam energy : " , initial_beam_energy);
+    DEBUG("Final beam energy : " , finalBeamEnergy);
+    DEBUG("Computed initial beam energy : " , initialBeamEnergy);
     DEBUG(" With thickness : " , currentIceThickness.first);
     DEBUG(" With brho : " , brho);
-    DEBUG(" and mass : " , beam_ref->Get_M2());
+    DEBUG(" and mass : " , beamRef->Get_M2());
 
-    if (abs(beam_energy - initial_beam_energy) > beam_energy_match_threashold){
+    if (abs(beamEnergy - initialBeamEnergy) > beamEnergyMatchThreashold){
         DEBUG("Before minimizer call, ice_thickness.first = ", currentIceThickness.first);
         double tmp_threashold{2E-4*UNITS::mm};
         double tmp_precision{0.1*UNITS::MeV};
 
         iceThicknessMinimizer.reset(new Minimizer([this](const double &tck) {
-                                                      return pow(this->beam_energy
-                                                                 - this->InitialBeamEnergy(this->final_beam_energy, tck), 2)
-                                                             /(this->beam_energy*this->beam_energy);
+                                                      return pow(this->beamEnergy
+                                                                 - this->InitialBeamEnergy(this->finalBeamEnergy, tck), 2)
+                                                             /(this->beamEnergy * this->beamEnergy);
                                                   },
                                                   currentIceThickness.first,        //starting value
                                                   2E-4 * currentIceThickness.first, //learning rate
@@ -693,15 +726,15 @@ void MugastIdentification::identifyIceThickness(){
                                                   1.E-4 * currentIceThickness.first)  //h
         );
 
-        while (fabs(beam_energy - InitialBeamEnergy(final_beam_energy, currentIceThickness.first)) > tmp_precision){
+        while (fabs(beamEnergy - InitialBeamEnergy(finalBeamEnergy, currentIceThickness.first)) > tmp_precision){
             tmp_threashold/=2;
             iceThicknessMinimizer->SetThreashold(tmp_threashold);
             currentIceThickness.first = iceThicknessMinimizer->Minimize();
-            currentIceThickness.second = currentIceThickness.first * ice_percentage_second;
+            currentIceThickness.second = currentIceThickness.first * icePercentageSecond;
         }
 
         DEBUG("After minimizer call, ice_thickness.first = ", currentIceThickness.first);
-        DEBUG(" energy difference : ", beam_energy - InitialBeamEnergy(final_beam_energy, currentIceThickness.first));
+        DEBUG(" energy difference : ", beamEnergy - InitialBeamEnergy(finalBeamEnergy, currentIceThickness.first));
     }
     DEBUG("------------>Finished: MugastIdentification::identifyIceThickness()", "");
 }
@@ -711,7 +744,7 @@ double MugastIdentification::InitialBeamEnergy(double beam_energy_from_brho, dou
     beam_energy_from_brho =
             energyLoss["beam"]["ice_back"]
                     ->EvaluateInitialEnergy(beam_energy_from_brho,
-                                            tck * ice_percentage_second,
+                                            tck * icePercentageSecond,
                                             0);
 
     beam_energy_from_brho =
@@ -723,7 +756,7 @@ double MugastIdentification::InitialBeamEnergy(double beam_energy_from_brho, dou
     beam_energy_from_brho =
             energyLoss["beam"]["he3_front"]
                     ->EvaluateInitialEnergy(beam_energy_from_brho,
-                                            average_beam_thickness,
+                                            averageBeamThickness,
                                             0);
 
     beam_energy_from_brho =
@@ -757,7 +790,7 @@ double MugastIdentification::MiddleTargetBeamEnergy(double beam_energy_from_brho
     beam_energy_from_brho =
             energyLoss["beam"]["he3_front"]
                     ->EvaluateInitialEnergy(beam_energy_from_brho,
-                                            average_beam_thickness / 2.,
+                                            averageBeamThickness / 2.,
                                             0);
 
     return beam_energy_from_brho;
@@ -770,7 +803,7 @@ double MugastIdentification::computeDistanceInGas(TVector3 vectDet, const TVecto
     if (vectDet.Z()>0){
         distanceMinimizer.reset(new Minimizer([&,this](double x) {
                                                   auto vectTmp = x*vectDet+incidentPos;
-                                                  return pow(vectTmp.Z()-this->gas_thickness_cartesian->Evaluate(sqrt(pow(vectTmp.X(), 2)+pow(vectTmp.Y(), 2))),
+                                                  return pow(vectTmp.Z()-this->gasThicknessCartesian->Evaluate(sqrt(pow(vectTmp.X(), 2) + pow(vectTmp.Y(), 2))),
                                                              2);
                                               },
                                               1.5*UNITS::mm/vectDet.CosTheta(),   //starting value
@@ -782,8 +815,9 @@ double MugastIdentification::computeDistanceInGas(TVector3 vectDet, const TVecto
         );
     }else{
         distanceMinimizer.reset(new Minimizer([&,this](double x) {
+                                                  //auto vectTmp = x*vectDet+incidentPos;
                                                   auto vectTmp = x*vectDet+incidentPos;
-                                                  return pow(vectTmp.Z()+this->gas_thickness_cartesian->Evaluate(sqrt(pow(vectTmp.X(), 2)+pow(vectTmp.Y(), 2))),
+                                                  return pow(vectTmp.Z()+this->gasThicknessCartesian->Evaluate(sqrt(pow(vectTmp.X(), 2) + pow(vectTmp.Y(), 2))),
                                                              2);
                                               },
                                               1.5*UNITS::mm/vectDet.CosTheta(),   //starting value
@@ -796,5 +830,9 @@ double MugastIdentification::computeDistanceInGas(TVector3 vectDet, const TVecto
     }
 
     distanceMinimizer->Minimize();
-    return ((distanceMinimizer->GetValue())*vectDet + incidentPos).Mag();
+    auto distance = ((distanceMinimizer->GetValue())*vectDet + incidentPos).Mag();
+
+    if (distance > 100*UNITS::m) throw std::runtime_error("Distance too high\n");
+
+    return distance;
 }

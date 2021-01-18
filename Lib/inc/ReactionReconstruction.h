@@ -284,7 +284,7 @@ void ReactionReconstruction2body<T>::Set_E(const T & E) {//Checked!
 template<typename T>
 void ReactionReconstruction2body<T>::Set_Ek(const T & Ek) {//Checked
     auto & fixed    = GetFixedFragment();
-    auto & free     = GetFreeFragment();
+    //auto & free     = GetFreeFragment();
     Set_E(Ek+fixed.Get_M());
 }
 

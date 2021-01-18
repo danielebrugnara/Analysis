@@ -9,6 +9,8 @@ class MugastData: public TObject{
     const unsigned int multiplicity;            //Number of particles detected
     std::vector<TVector3> Pos;                  //3D positions
     std::vector<TVector3> EmissionDirection;    //Depends on the target position
+    std::vector<TVector3> EmissionDirection_corrected;    //Depends on the target position
+    std::vector<TVector3> EmissionDirection_uncentered;//
     std::vector<TVector3> TelescopeNormal;      //
     std::vector<int> SI_X;                      //Intrinsic X
     std::vector<int> SI_Y;                      //Intrinsic Y
@@ -16,16 +18,14 @@ class MugastData: public TObject{
     std::vector<double> SI_E2;                  //Second layer energy deposition
     std::vector<double> Tot_E;                  //Energy deposition measured
     std::vector<double> E;                      //After E-Loss corrections
+    std::vector<std::vector<double>> E_corrected;                      //After E-Loss corrections
     std::vector<std::vector<double>> E_uncentered;//
-    std::vector<std::vector<TVector3>> EmissionDirection_uncentered;//
-    std::vector<std::vector<double>> EmissionDirection_uncentered_X;//
-    std::vector<std::vector<double>> EmissionDirection_uncentered_Y;//
-    std::vector<std::vector<double>> EmissionDirection_uncentered_Z;//
-    std::vector<std::vector<TVector3>> BeamPosition;//
-    std::vector<std::vector<double>> BeamPosition_X;//
-    std::vector<std::vector<double>> BeamPosition_Y;//
+    std::vector<TVector3> BeamPosition_corrected;//
+    std::vector<TVector3> BeamPosition_uncentered;//
+    std::vector<TVector3> BeamDirection_corrected;//
     std::vector<double> E_CM;                   //After E-Loss corrections
     std::vector<double> Ex;                     //Ex computed with reaction
+    std::vector<std::vector<double>> Ex_corrected;                     //Ex computed with reaction
     std::vector<std::vector<double>> Ex_uncentered;                     //Ex computed with reaction
     std::vector<double> E2;                     //Second layer
     std::vector<double> SI_T;                   //Un calibrated time
@@ -38,18 +38,16 @@ class MugastData: public TObject{
     std::vector<std::string> Particle;          //
 
     MugastData(): multiplicity(0){};
-    explicit MugastData(const unsigned int multiplicity)
+    explicit MugastData(const unsigned int multiplicity, const unsigned int options)
             : multiplicity(multiplicity)
     {
         Pos.resize(multiplicity);
         EmissionDirection.resize(multiplicity);
-        EmissionDirection_uncentered.resize(multiplicity);
-        EmissionDirection_uncentered_X.resize(multiplicity);
-        EmissionDirection_uncentered_Y.resize(multiplicity);
-        EmissionDirection_uncentered_Z.resize(multiplicity);
-        BeamPosition.resize(multiplicity);
-        BeamPosition_X.resize(multiplicity);
-        BeamPosition_Y.resize(multiplicity);
+        EmissionDirection_corrected.resize(options);
+        EmissionDirection_uncentered.resize(options);
+        BeamPosition_corrected.resize(options);
+        BeamPosition_uncentered.resize(options);
+//        BeamDirection_corrected.resize(options);
         TelescopeNormal.resize(multiplicity);
         SI_X.resize(multiplicity);
         SI_Y.resize(multiplicity);
@@ -57,10 +55,12 @@ class MugastData: public TObject{
         SI_E2.resize(multiplicity);
         Tot_E.resize(multiplicity);
         E.resize(multiplicity);
-        E_uncentered.resize(multiplicity);
+        E_corrected.resize(options);
+        E_uncentered.resize(options);
         E_CM.resize(multiplicity);
         Ex.resize(multiplicity);
-        Ex_uncentered.resize(multiplicity);
+        Ex_corrected.resize(options);
+        Ex_uncentered.resize(options);
         E2.resize(multiplicity);
         SI_T.resize(multiplicity);
         T.resize(multiplicity);
@@ -71,5 +71,5 @@ class MugastData: public TObject{
         Indentified.resize(multiplicity);
         Particle.resize(multiplicity);
     };
-    ClassDef(MugastData, 2);
-}; 
+    ClassDef(MugastData, 4);
+};

@@ -12,11 +12,11 @@ class Must2Data: public MugastData{
 
     Must2Data() = default;
 
-    explicit Must2Data(const unsigned int multiplicity)
-            :   MugastData(multiplicity)
+    explicit Must2Data(const unsigned int multiplicity, const unsigned int options)
+            :   MugastData(multiplicity, options)
     {
         CsI_E.resize(multiplicity);
         CsI_T.resize(multiplicity);
     };
-    ClassDef(Must2Data, 2);
+    ClassDef(Must2Data, 4);
 }; 

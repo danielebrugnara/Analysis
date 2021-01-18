@@ -104,7 +104,7 @@ void Selector::SlaveBegin(TTree * /*tree*/){
                                 //5000, 242, 328, 1000, 0.5, 1.5));
                                 5000, 0, 450, 1000, 0.5, 1.5));
 
-            for (const auto &particle : mugast_fragment.light_particles){
+            for (const auto &particle : mugast_fragment.lightParticles){
                 Istantiate(pData.VAMOS.mE_Theta[it_M][it_Z][particle],
                        new TH2D(Form("pData_VAMOS_mE_Theta__%i_%i_%s", it_M, it_Z, particle.c_str()),
                                 Form("Energy (Brho) vs Theta with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, particle.c_str()),
@@ -166,7 +166,7 @@ void Selector::SlaveBegin(TTree * /*tree*/){
                         1000, 0, UNITS::CONSTANTS::pi,
                         1000, -UNITS::CONSTANTS::pi, UNITS::CONSTANTS::pi));
 
-    for (const auto &it_MG : mugast_fragment.cuts_MG){
+    for (const auto &it_MG : mugast_fragment.cutsMg){
         //E TOF////////////////////////////////////////
         Istantiate(pConf.MG.mE_TOF[it_MG],
                    new TH2D(Form("pConf_MG_mE_TOF_MG%i", it_MG),
@@ -214,7 +214,7 @@ void Selector::SlaveBegin(TTree * /*tree*/){
 
     for (const auto &it_M : vamos_fragment.cutsM){
         for (const auto &it_Z : vamos_fragment.cutsZ){
-            for (const auto &particle : mugast_fragment.light_particles){
+            for (const auto &particle : mugast_fragment.lightParticles){
                 Istantiate(pData.MG.hEx[it_M][it_Z][particle],
                            new TH1D(Form("pData_MG_hEx_M%i_Z%i_%s", it_M, it_Z, particle.c_str()),
                                     Form("Excitation energy with M%i Z%i in VAMOS and %s in MUGAST", it_M, it_Z, particle.c_str()),
@@ -295,6 +295,7 @@ void Selector::SlaveBegin(TTree * /*tree*/){
 Bool_t Selector::Process(Long64_t entry){
     DEBUG("------------>Selector::Process()", "");
     fReader.SetLocalEntry(entry);
+
     if (entry % 5000 == 0)
         std::cout << "\rProcessed entries : " << entry ;
 

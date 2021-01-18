@@ -138,8 +138,8 @@ void VamosIdentification::readFpTimeShifts()
 bool VamosIdentification::identify()
 {
     fragment.BRho = **data->Brho;
-    fragment.PTPosition.Set(**data->Pf,**data->Tf);
-    fragment.FocalPlanePosition.Set(**data->Xf,**data->Yf);
+    fragment.PTPosition.SetXYZ(**data->Pf,**data->Tf, 0);
+    fragment.FocalPlanePosition.SetXYZ(**data->Xf,**data->Yf, 0);
     fragment.EmissionVersor.SetMagThetaPhi(1, **data->ThetaL, **data->PhiL);
 
     fragment.En = ((*data->IC)[0] > icThreashold) * ((*data->IC)[0] +
