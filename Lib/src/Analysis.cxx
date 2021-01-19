@@ -38,8 +38,8 @@ bool Analysis::RunAnalysis()
     system("cd Configs/Interpolations/; root -l -b -q TW_Brho_M46_Z18.C; cd -;");
 
     //Removing previous data
-    system("rm -rf ./Out");
-    system("mkdir ./Out");
+    system("rm -rf ./Out/*");
+    //system("mkdir ./Out");
 
     if (! NecessaryFilesPresent()) {
         n_threads = 1;
