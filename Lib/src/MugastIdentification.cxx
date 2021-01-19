@@ -569,7 +569,7 @@ bool MugastIdentification::reconstructEnergyMugast() {
                                                                                           fragment.EmissionDirection_uncentered[jj].Theta()));
                 }
                 for (unsigned int jj = 0; jj < focusScale.size(); ++jj) {
-                    fragment.Ex_uncentered[ii].push_back(reactionIt->second->Set_Ek_Theta(fragment.E_corrected[ii][jj],
+                    fragment.Ex_corrected[ii].push_back(reactionIt->second->Set_Ek_Theta(fragment.E_corrected[ii][jj],
                                                                                           fragment.EmissionDirection_corrected[jj].Theta()));
                 }
             }
@@ -582,6 +582,7 @@ bool MugastIdentification::reconstructEnergyMugast() {
                 fragment.Ex[ii] = reactionIt->second->Set_Ek_Theta(fragment.E[ii],
                                                                    fragment.EmissionDirection[ii].Theta());//WARNING this could be wring
                 fragment.E_CM[ii] = reactionIt->second->GetReactionFragment(3).Get_Ek_cm();
+
             }else
                 fragment.Ex[ii] = -2000;
         }
@@ -680,7 +681,7 @@ bool MugastIdentification::reconstructEnergyMust2() {
                                                                                           fragmentMust.EmissionDirection_uncentered[jj].Theta()));
                 }
                 for (unsigned int jj = 0; jj < focusScale.size(); ++jj) {
-                    fragmentMust.Ex_uncentered[ii].push_back(reactionIt->second->Set_Ek_Theta(fragmentMust.E_corrected[ii][jj],
+                    fragmentMust.Ex_corrected[ii].push_back(reactionIt->second->Set_Ek_Theta(fragmentMust.E_corrected[ii][jj],
                                                                                           fragmentMust.EmissionDirection_corrected[jj].Theta()));
                 }
             }
