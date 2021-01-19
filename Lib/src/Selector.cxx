@@ -264,6 +264,8 @@ void Selector::SlaveBegin(TTree * /*tree*/){
         }
     }
 
+    outputFile.reset(new TFile(file_name.c_str(), "recreate"));
+    outputFile->cd();
     Istantiate(tree , new TTree("AnalyzedTree", "AnalyzedTree"));
     if (tree) {
         tree->Branch("VamosData", &vamos_fragment.getData());
@@ -272,6 +274,8 @@ void Selector::SlaveBegin(TTree * /*tree*/){
         tree->Branch("CatsData", &mugast_fragment.getCatsData());
         tree->Branch("AgataData", &agata_gammas.Get_Data());
     }
+    //tree->SetAutoSave(-10000);
+    //tree->SetAutoFlush(-10000);
     //TODO: Add MUST2
 
     //Exit if the graph file was not created
@@ -339,12 +343,12 @@ Bool_t Selector::Process(Long64_t entry){
 
 void Selector::SlaveTerminate(){
     DEBUG("------------>Selector::SlaveTerminate()", "");
-    auto *top = new TFile(file_name.c_str(), "recreate");
     std::cout << "Output file : " << file_name << "\n";
+    outputFile->cd();
     for(const auto& it: Output){
         it->Write();
     }
-    top->Close();
+    outputFile->Close();
 }
 
 void Selector::Terminate(){

@@ -173,6 +173,7 @@ public:
     std::unique_ptr<TH3D> general_histo_ptr{};
 
     std::string file_name;
+    std::unique_ptr<TFile> outputFile;
 
     //Analysis classes/////////////////////////////////////////////////////////////////////////////////
     VamosIdentification vamos_fragment;
