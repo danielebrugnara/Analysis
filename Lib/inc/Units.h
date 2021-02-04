@@ -160,7 +160,7 @@ static const double newton = joule / meter; // newton = 6.24150 e+9 * MeV/mm
 // Pressure [E][L^-3]
 //
 //#define pascal hep_pascal                          // a trick to avoid warnings
-static const double hep_pascal  = newton / m2;     // pascal = 6.24150 e+3 * MeV/mm3
+//static const double hep_pascal  = newton / m2;     // pascal = 6.24150 e+3 * MeV/mm3
 static const double pascal      = newton / m2;         // pascal = 6.24150 e+3 * MeV/mm3
 static const double bar         = 100000 * pascal;        // bar    = 6.24150 e+8 * MeV/mm3
 static const double atmosphere  = 101325 * pascal; // atm    = 6.32420 e+8 * MeV/mm3

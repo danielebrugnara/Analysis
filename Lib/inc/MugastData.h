@@ -47,7 +47,7 @@ class MugastData: public TObject{
         EmissionDirection_uncentered.resize(options);
         BeamPosition_corrected.resize(options);
         BeamPosition_uncentered.resize(options);
-//        BeamDirection_corrected.resize(options);
+        BeamDirection_corrected.resize(options);
         TelescopeNormal.resize(multiplicity);
         SI_X.resize(multiplicity);
         SI_Y.resize(multiplicity);

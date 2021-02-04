@@ -58,9 +58,9 @@ public: //   Function to Slow down particle or reconstruct their initial energy
       const;
 
   //   Calculate Energy Loss of a particle inside a material
-  double EnergyLossCalculation(double Energy,          // Energy of the detected particle
-                               double TargetThickness, // Target Thickness at 0 degree
-                               double Angle)           // Particle Angle
+  double EnergyLossCalculation(double Energy,          // Energy of the detected particle in MeV
+                               double TargetThickness, // Target Thickness at 0 degree in mm
+                               double Angle)           // Particle Angle in rad
       const;
 
   //   Evaluate Initial Energy of particle before crossing material knowing Angle, final Energy

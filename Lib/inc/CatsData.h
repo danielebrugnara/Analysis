@@ -15,12 +15,12 @@ public:
     CatsData(): multiplicity(0){};
 
     explicit CatsData(const unsigned int multiplicity, const unsigned int options)
-                    :multiplicity(multiplicity){
-        Pos.resize(multiplicity);
+                    :multiplicity(multiplicity==0 ? 1 : multiplicity){
+        Pos.resize(this->multiplicity);
         PosOnTarget.resize(options);
         Dir.resize(options);
         //Beam.resize(multiplicity);
-        Charge.resize(multiplicity);
+        Charge.resize(this->multiplicity);
     }
     ClassDef(CatsData, 4);
 }; 

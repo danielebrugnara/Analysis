@@ -52,22 +52,28 @@ public: //Data exchange  types
     };
 
 private: //Constants used internally
+    const double targetRadius{8*UNITS::mm};
     static constexpr int nDetectors{6};
     static constexpr int nStrips{128};
     const int chargeStateInterpolation{16}; //Cannot be made static constexpr because it is passed as reference
     //static constexpr double gradient_descent_normalization{1.E3};
-    static constexpr double icePercentageSecond {0.85};
+    //static constexpr double icePercentageSecond {0.85};
+    static constexpr double icePercentageSecond {1.};
     const double averageBeamThickness = 3.72109 * UNITS::mm;    //700 mbar
     const std::array<std::pair<double, double>, 16> beamPositions = {
-            std::make_pair(0.5, 0.5),std::make_pair(0.5, -0.5),std::make_pair(-0.5, -0.5),std::make_pair(-0.5, 0.5),
-            std::make_pair(1.0, 1.0),std::make_pair(1.0, -1.0),std::make_pair(-1.0, -1.0),std::make_pair(-1.0, 1.0),
-            std::make_pair(1.5, 1.5),std::make_pair(1.5, -1.5),std::make_pair(-1.5, -1.5),std::make_pair(-1.5, 1.5),
-            std::make_pair(2.0, 2.0),std::make_pair(2.0, -2.0),std::make_pair(-2.0, -2.0),std::make_pair(-2.0, 2.0)
+            std::make_pair( 0.5*UNITS::mm,  0.5*UNITS::mm),std::make_pair( 0.5*UNITS::mm, -0.5*UNITS::mm),
+            std::make_pair(-0.5*UNITS::mm, -0.5*UNITS::mm),std::make_pair(-0.5*UNITS::mm,  0.5*UNITS::mm),
+            std::make_pair( 1.0*UNITS::mm,  1.0*UNITS::mm),std::make_pair( 1.0*UNITS::mm, -1.0*UNITS::mm),
+            std::make_pair(-1.0*UNITS::mm, -1.0*UNITS::mm),std::make_pair(-1.0*UNITS::mm,  1.0*UNITS::mm),
+            std::make_pair( 1.5*UNITS::mm,  1.5*UNITS::mm),std::make_pair( 1.5*UNITS::mm, -1.5*UNITS::mm),
+            std::make_pair(-1.5*UNITS::mm, -1.5*UNITS::mm),std::make_pair(-1.5*UNITS::mm,  1.5*UNITS::mm),
+            std::make_pair( 2.0*UNITS::mm,  2.0*UNITS::mm),std::make_pair( 2.0*UNITS::mm, -2.0*UNITS::mm),
+            std::make_pair(-2.0*UNITS::mm, -2.0*UNITS::mm),std::make_pair(-2.0*UNITS::mm,  2.0*UNITS::mm)
     };
-    const std::array<double, 16> focusScale = {1.3, 1.2, 1.1, 1.,
-                                               0.9, 0.8, 0.7, 0.6,
-                                               0.5, 0.4, 0.3, 0.2,
-                                               0.1, 0.05, 0.025, 0.001};
+    const std::array<double, 16> focusScale = {-1.2, -1.0, -0.9, -0.8,
+                                               -0.6, -0.4, -0.2, -0.1,
+                                                0.1,  0.2,  0.4,  0.6,
+                                                0.8,  0.9,  1.0,  1.2};
 
 public:
     std::array<std::string, 5> lightParticles;
@@ -124,13 +130,15 @@ private: //Internal initialization methods
 
 private: //Functions used internally during analysis
     void    identifyIceThickness();
-    double  computeDistanceInGas(const TVector3 vectDet, const TVector3& incident_pos);
+    double  computeDistanceInGas(TVector3, const TVector3&);
     double  InitialBeamEnergy(double, double);
     double  MiddleTargetBeamEnergy(double);
     bool identifyMugast();
     bool identifyMust2();
-    bool reconstructEnergyMugast();
-    bool reconstructEnergyMust2();
+    bool reconstructEnergy(MugastData&);
+
+    template<class D>
+    bool fillInitialData(MugastData&, const D*);
 
 public: //Functions called by selector
     bool Identify();

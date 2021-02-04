@@ -16,6 +16,7 @@ public:
     explicit Interpolation(TFile *);     //Opens existing Spline in ROOT file
     void SetUnits(const double& x_units, const double& y_units);
     inline double Evaluate(const double &x) { return spline->Eval(x*x_unit)*y_unit; };
+    inline void Draw(const std::string& opt) { spline->Draw(opt.c_str()); };
     TSpline *GetSpline();
     ~Interpolation();
 
