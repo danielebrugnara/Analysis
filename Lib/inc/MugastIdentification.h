@@ -27,7 +27,7 @@ class MugastIdentification : public Identification
 public:
     MugastIdentification();
     ~MugastIdentification();
-    bool Initialize(const double &, const TVector3 &); //Beam energy in MeV
+    bool initialize(const double &beamEnergy, const TVector3 &targetPos); //Beam energy in MeV
 
 public: //Data exchange  types
     struct Data
@@ -96,6 +96,7 @@ private: //Variables used internally
     //Interpolations
     Interpolation *gasThickness{};
     Interpolation *gasThicknessCartesian{};
+    Interpolation *gasThicknessDerivativeCartesian{};
     Interpolation *havarAngle{};
     Interpolation *TW_Brho_M46_Z18{};
     std::vector<std::pair<double, double>> TW_vs_ice;
@@ -130,9 +131,11 @@ private: //Internal initialization methods
 
 private: //Functions used internally during analysis
     void    identifyIceThickness();
-    double  computeDistanceInGas(TVector3, const TVector3&);
+    TVector3 computeCollision(TVector3, const TVector3&);
+    //double  computeDistanceInGas(TVector3, const TVector3&);
+    double  computeAngleOfIncidence(const TVector3&, const TVector3&);
     double  InitialBeamEnergy(double, double);
-    double  MiddleTargetBeamEnergy(double);
+    double  middleTargetBeamEnergy(double);
     bool identifyMugast();
     bool identifyMust2();
     bool reconstructEnergy(MugastData&);
@@ -141,7 +144,7 @@ private: //Functions used internally during analysis
     bool fillInitialData(MugastData&, const D*);
 
 public: //Functions called by selector
-    bool Identify();
+    bool identify();
     //Getter methods
     inline unsigned int getMult()             const { return fragment.multiplicity; };
     inline TVector3*    getPos(const int &i)        { return &(fragment.Pos[i]); };
