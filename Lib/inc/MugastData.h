@@ -24,6 +24,7 @@ class MugastData: public TObject{
     std::vector<TVector3> BeamPosition_uncentered;//
     std::vector<TVector3> BeamDirection_corrected;//
     std::vector<double> E_CM;                   //After E-Loss corrections
+    std::vector<double> Theta_CM;                   //After E-Loss corrections
     std::vector<double> Ex;                     //Ex computed with reaction
     std::vector<std::vector<double>> Ex_corrected;                     //Ex computed with reaction
     std::vector<std::vector<double>> Ex_uncentered;                     //Ex computed with reaction
@@ -58,6 +59,7 @@ class MugastData: public TObject{
         E_corrected.resize(options);
         E_uncentered.resize(options);
         E_CM.resize(multiplicity);
+        Theta_CM.resize(multiplicity);
         Ex.resize(multiplicity);
         Ex_corrected.resize(options);
         Ex_uncentered.resize(options);
@@ -71,5 +73,5 @@ class MugastData: public TObject{
         Indentified.resize(multiplicity);
         Particle.resize(multiplicity);
     };
-    ClassDef(MugastData, 4);
+    ClassDef(MugastData, 5);
 };

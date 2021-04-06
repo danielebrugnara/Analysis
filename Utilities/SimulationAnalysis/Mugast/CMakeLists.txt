@@ -36,6 +36,8 @@ link_directories($ENV{NPTOOL}/NPLib/lib)
 
 include_directories("${CMAKE_BINARY_DIR}/../../Lib/inc/")
 link_directories("${CMAKE_BINARY_DIR}/../../Build/Lib/bin/")
+link_directories("${CMAKE_BINARY_DIR}/../../build/Lib/bin/")
+link_directories("${CMAKE_BINARY_DIR}")
 
 
 get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)

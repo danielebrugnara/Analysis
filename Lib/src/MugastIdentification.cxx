@@ -557,18 +557,18 @@ bool MugastIdentification::reconstructEnergy(MugastData & localFragment) {
                 std::cerr   << "-------------------------------\n"
                             << "should be thickness : " << gasThickness->Evaluate(theta)*UNITS::mm << std::endl
                             << "instead thickness is : " << collisionVec.Mag() << std::endl;
-                throw std::runtime_error("Something wrong in computing the collision\n");
+                //throw std::runtime_error("Something wrong in computin the collision\n");
             }
             if (abs(havarAngle->Evaluate(theta)-tentativeAngle)>1E-3){
                 std::cerr   << "-------------------------------\n"
                             << "should be angle : " << havarAngle->Evaluate(theta) << std::endl
                             << "instead angle is : " << tentativeAngle << std::endl;
-                throw std::runtime_error("Something wrong in computing the angle\n");
+                //throw std::runtime_error("Something wrong in computing the angle\n");
             }
         }
 
-        if (ii==0) {//loop over positions
-            for (unsigned int jj = 0; jj < beamPositions.size(); ++jj) {
+        if (ii==0) {
+            for (unsigned int jj = 0; jj < beamPositions.size(); ++jj) {//loop over positions
                 try {
                     TVector3 collisionVec = computeCollision(localFragment.EmissionDirection_uncentered[jj],
                                                              localFragment.BeamPosition_uncentered[jj]);
@@ -627,7 +627,10 @@ bool MugastIdentification::reconstructEnergy(MugastData & localFragment) {
                                         "_" +
                                         localFragment.Particle[ii])) != reaction.end()){
             //Vamos and mugast localFragment found
-            localFragment.Ex[ii] = reactionIt->second->Set_Ek_Theta(localFragment.E[ii], localFragment.EmissionDirection[ii].Theta());//WARNING this could be wring
+            localFragment.Ex[ii] = reactionIt->second->Set_Ek_Theta_Phi(localFragment.E[ii], 
+                                                                        localFragment.EmissionDirection[ii].Theta(), 
+                                                                        localFragment.EmissionDirection[ii].Phi());//WARNING this could be wring
+
             localFragment.Ex_uncentered[ii].reserve(beamPositions.size());
             localFragment.Ex_corrected[ii].reserve(focusScale.size());
             if (ii == 0) {
@@ -642,13 +645,16 @@ bool MugastIdentification::reconstructEnergy(MugastData & localFragment) {
             }
 
             localFragment.E_CM[ii] = reactionIt->second->GetReactionFragment(3).Get_Ek_cm();
+            localFragment.Theta_CM[ii] = reactionIt->second->GetReactionFragment(3).Get_P_cm().Vect().Theta();
         }
         else{
             if ((reactionIt = reaction.find(localFragment.Particle[ii])) != reaction.end()) {
                 //Only mugast localFragment found
-                localFragment.Ex[ii] = reactionIt->second->Set_Ek_Theta(localFragment.E[ii],
-                                                                        localFragment.EmissionDirection[ii].Theta());//WARNING this could be wring
+                localFragment.Ex[ii] = reactionIt->second->Set_Ek_Theta_Phi(localFragment.E[ii],
+                                                                            localFragment.EmissionDirection[ii].Theta(),
+                                                                            localFragment.EmissionDirection[ii].Phi());//WARNING this could be wring
                 localFragment.E_CM[ii] = reactionIt->second->GetReactionFragment(3).Get_Ek_cm();
+                localFragment.Theta_CM[ii] = reactionIt->second->GetReactionFragment(3).Get_P_cm().Vect().Theta();
 
             }else
                 localFragment.Ex[ii] = -2000;
@@ -767,35 +773,23 @@ TVector3 MugastIdentification::computeCollision(TVector3 emissionDirection, cons
     DEBUG("emissionDirection theta:", emissionDirection.Theta())
     DEBUG("emissionDirection phi:", emissionDirection.Phi())
 
-    if (emissionDirection.Z() > 0) {
-        distanceMinimizer.reset(new Minimizer([&, this](double x) {
-                                                  emissionDirection.SetMag(x);
-                                                  auto vec = beamPosition + emissionDirection;
-                                                  return pow(vec.Z() / UNITS::mm - this->gasThicknessCartesian->Evaluate(
-                                                          sqrt(pow(vec.X() / UNITS::mm, 2) + pow(vec.Y() / UNITS::mm, 2))), 2);
-                                              },
-                                              1.5 * UNITS::mm / abs(emissionDirection.CosTheta()),   //starting value
-                                              6E-4 * UNITS::mm,                  //learning rate
-                                              tmpThreashold,                     //threashold
-                                              100,                               //max_steps
-                                              0.98,                              //quenching
-                                              1E-2 * UNITS::mm)                  //h
-        );
-    } else {
-        distanceMinimizer.reset(new Minimizer([&, this](double x) {
-                                                  emissionDirection.SetMag(x);
-                                                  auto vec = beamPosition + emissionDirection;
-                                                  return pow(vec.Z() / UNITS::mm + this->gasThicknessCartesian->Evaluate(
-                                                          sqrt(pow(vec.X() / UNITS::mm, 2) + pow(vec.Y() / UNITS::mm, 2))), 2);
-                                              },
-                                              1.5 * UNITS::mm / abs(emissionDirection.CosTheta()),   //starting value
-                                              6E-4 * UNITS::mm,                  //learning rate
-                                              tmpThreashold,                     //threashold
-                                              100,                               //max_steps
-                                              0.98,                              //quenching
-                                              1E-2 * UNITS::mm)                  //h
-        );
-    }
+    distanceMinimizer.reset(new Minimizer([&, this](double x) {
+                                              emissionDirection.SetMag(x);
+                                              auto vec = beamPosition + emissionDirection;
+                                              if (emissionDirection.Z()>0)
+                                                return pow(vec.Z() / UNITS::mm - this->gasThicknessCartesian->Evaluate(
+                                                      sqrt(pow(vec.X() / UNITS::mm, 2) + pow(vec.Y() / UNITS::mm, 2))), 2);
+                                              else
+                                                return pow(vec.Z() / UNITS::mm + this->gasThicknessCartesian->Evaluate(
+                                                      sqrt(pow(vec.X() / UNITS::mm, 2) + pow(vec.Y() / UNITS::mm, 2))), 2);
+                                          },
+                                          1.5 * UNITS::mm / abs(emissionDirection.CosTheta()),   //starting value
+                                          3E-4 * UNITS::mm,                  //learning rate
+                                          tmpThreashold,                     //threashold
+                                          200,                               //max_steps
+                                          0.98,                              //quenching
+                                          1E-2 * UNITS::mm)                  //h
+    );
 
     distanceMinimizer->Minimize();
     if (emissionDirection.Mag() > 15*UNITS::mm || isnan(emissionDirection.X())) {
