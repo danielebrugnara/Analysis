@@ -105,6 +105,11 @@ bool MugastIdentification::initialize(const double &beamEnergy,
                                                                                  ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
                                                                                  ReactionFragment::FragmentSettings(46, 18, 0,0, 0)})));
 
+    for (const auto& it: reaction){
+        it.second->ChooseFixed(3);
+        it.second->ChooseExFixed(4);
+    }
+
     beamRef = &reaction.at("M47_Z19_m2_z1")->GetReactionFragment(1);
 
     //Setting up interpolations for target deformation//////
@@ -552,7 +557,7 @@ bool MugastIdentification::reconstructEnergy(MugastData & localFragment) {
                 std::cerr   << "-------------------------------\n"
                             << "should be thickness : " << gasThickness->Evaluate(theta)*UNITS::mm << std::endl
                             << "instead thickness is : " << collisionVec.Mag() << std::endl;
-                throw std::runtime_error("Something wrong in computin the collision\n");
+                throw std::runtime_error("Something wrong in computing the collision\n");
             }
             if (abs(havarAngle->Evaluate(theta)-tentativeAngle)>1E-3){
                 std::cerr   << "-------------------------------\n"
@@ -586,6 +591,7 @@ bool MugastIdentification::reconstructEnergy(MugastData & localFragment) {
                 } catch (std::runtime_error &e) {
                     std::cerr << "Unable to find correct un-centered distance (Mugast) : " << e.what() << std::endl;
                     localFragment.E_uncentered[ii].push_back(tmpEn);
+                    localFragment.BeamPosition_uncentered[jj] = TVector3(0,0,0);
                 }
             }
             for (unsigned int jj = 0; jj < focusScale.size(); ++jj) {//loop over different focus coefficients
@@ -611,6 +617,7 @@ bool MugastIdentification::reconstructEnergy(MugastData & localFragment) {
                 } catch (std::runtime_error &e) {
                     std::cerr << "Unable to find correct un-centered distance (Mugast) : " << e.what() << std::endl;
                     localFragment.E_corrected[ii].push_back(tmpEn);
+                    localFragment.BeamPosition_corrected[jj] = TVector3(0,0,0);
                 }
             }
         }
@@ -749,7 +756,7 @@ double MugastIdentification::middleTargetBeamEnergy(double beamEnergyFromBrho){
 }
 
 TVector3 MugastIdentification::computeCollision(TVector3 emissionDirection, const TVector3& beamPosition) {
-    double tmpThreashold{1E-5 * UNITS::mm};
+    double tmpThreashold{5E-6 * UNITS::mm};
     emissionDirection.SetMag(1);
 
     DEBUG("ComputeCollision","")

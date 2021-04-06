@@ -68,7 +68,8 @@ int main(int argc, char* argv[]){
             int nevts = readsimu(file_name, file_name + ".root", smearing, it_max, is_gun);
             file_name += ".root";
             root_files.push_back(file_name);
-            std::cout << "\nnNumber of events read by readimu: " << nevts << std::endl;
+            std::cout << "\nConverted to root file" << root_files.back() << std::endl;
+            std::cout << "\nNumber of events read by readimu: " << nevts << std::endl;
         } else {
             root_files.push_back(file_name);
         }
@@ -76,11 +77,14 @@ int main(int argc, char* argv[]){
 
     if (sum_all) {
         TChain chain("SimulatedAgata");
+        std::string file_out_name = root_files[0];
+        std::cout << "Number of root files: " << root_files.size() << std::endl;
         for (const auto &it: root_files) {
-            std::cout << "Running selector for chain" << std::endl;
+            std::cout << "Adding to chain : " << it << std::endl;
             chain.Add(it.c_str());
         }
-        RunSelector run(chain, "spectra_sum_all.root");
+        file_out_name.insert(0, "spectra_");
+        RunSelector run(chain, file_out_name);
         run.Run(fit_energies, fit_histogram_name);
     }else{
         for (const auto &it: root_files) {

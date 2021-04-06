@@ -266,6 +266,9 @@ void Selector::SlaveBegin(TTree * /*tree*/)
             threasholds.emplace(it.second, (TH1*)threashold_file->Get(Form("probability_%i", it.second)));
         }
     }
+
+    if (use_intrinsic_efficiencies)
+        ReadEfficiencyMap();
 }
 
 Bool_t Selector::Process(Long64_t entry) {
@@ -355,6 +358,15 @@ Bool_t Selector::Process(Long64_t entry) {
     std::unordered_map<int, Hit> cores;
     for (const auto &it: max_keys_map) {
         auto max = hits_analyzed.find(std::make_pair(it.first, it.second));
+        auto found = crystalEfficiency.find(it.first);
+        if (use_intrinsic_efficiencies) {
+            if (found != crystalEfficiency.end()) {
+                if (rand.Uniform() > crystalEfficiency.at(it.first)) continue;
+            } else {
+                if (rand.Uniform() > averageCrystalEfficiency) continue;
+            }
+        }
+
         cores.emplace(it.first,
                       Hit(it.first,
                           etot_cores_map.at(it.first),
@@ -423,19 +435,19 @@ Bool_t Selector::Process(Long64_t entry) {
     double core_tot_en = 0;
     for (const auto &it: cores) {
         core_tot_en += it.second.GetEnergy();
-        if (it.second.GetEnergy() > ecal + energy_check_tolerance)
+        if (it.second.GetEnergy() > ecal + energy_check_tolerance && !use_intrinsic_efficiencies)
             throw std::runtime_error("Something wrong in cores energy\n");
     }
-    if (!use_threasholds && abs(core_tot_en - ecal) > energy_check_tolerance)
+    if (!use_threasholds && abs(core_tot_en - ecal) > energy_check_tolerance && !use_intrinsic_efficiencies)
         throw std::runtime_error("Something wrong in cores energy\n");
 
     double addback_tot_en = 0;
     for (const auto &it: addback) {
         addback_tot_en += it.second.GetEnergy();
-        if (it.second.GetEnergy() > ecal + energy_check_tolerance)
+        if (it.second.GetEnergy() > ecal + energy_check_tolerance && !use_intrinsic_efficiencies)
             throw std::runtime_error("Something wrong in addback energy\n");
     }
-    if (!use_threasholds && abs(addback_tot_en - ecal) > energy_check_tolerance)
+    if (!use_threasholds && abs(addback_tot_en - ecal) > energy_check_tolerance && !use_intrinsic_efficiencies)
         throw std::runtime_error("Something wrong in addback energy\n");
 
     //Filling histograms
@@ -502,8 +514,8 @@ Bool_t Selector::Process(Long64_t entry) {
         }
 
         cal_spec->Fill(ecal);
-        return kTRUE;
     }
+    return kTRUE;
 }
 
 void Selector::SlaveTerminate()
@@ -524,19 +536,19 @@ void Selector::Terminate()
     ComputeThreasholds();
 }
 
-double Selector::ComputeDoppler(const TVector3 & vec, const double & en){
+double Selector::ComputeDoppler(const TVector3 & vec, const double & en) const{
     return en/(sqrt(1-beta*beta)*(1. + beta*vec.CosTheta()));
 }
 
-double Selector::ComputeDoppler(const TVector3 & vec,const TVector3 & pos, const double & en){
+double Selector::ComputeDoppler(const TVector3 & vec,const TVector3 & pos, const double & en) const{
     return en/(sqrt(1-beta*beta)*(1. + beta*(vec-pos).CosTheta()));
 }
 
-double Selector::ComputeDoppler(const TVector3 & vec,const TVector3 & pos, const double & en, const double& beta){
+double Selector::ComputeDoppler(const TVector3 & vec,const TVector3 & pos, const double & en, const double& beta) const{
     return en/(sqrt(1-beta*beta)*(1. + beta*(vec-pos).CosTheta()));
 }
 
-double Selector::ComputeDoppler(const TVector3 & vec,const double & pos, const double & en){
+double Selector::ComputeDoppler(const TVector3 & vec,const double & pos, const double & en) const{
     return en/(sqrt(1-beta*beta)*(1. + beta*(vec-TVector3(0., 0., pos)).CosTheta()));
 }
 
@@ -667,5 +679,30 @@ void Selector::ComputeThreasholds() {
     output_file.Write();
     output_file.Close();
 
+}
+
+void Selector::ReadEfficiencyMap() {
+    std::ifstream infile("Configs/efficiencies.txt");
+    std::string line;
+    std::map<char, int> color = {{'a',0},{'b',1},{'c',2}};
+    averageCrystalEfficiency = 0;
+    averageDeclaredCrystalEfficiency = 0;
+    int cnt{0};
+
+    while(std::getline(infile, line)){
+        std::istringstream linestr(line);
+        double declared;
+        double measured;
+        std::string crystal;
+        while( linestr >> crystal >> measured >> declared){
+            crystalEfficiency[data_to_simu[stod(crystal.substr(1))*color.size()+color[crystal[0]]]] = measured;
+            crystalEfficiencyDeclared[data_to_simu[stod(crystal.substr(1))*color.size()+color[crystal[0]]]] = declared;
+            averageCrystalEfficiency +=measured;
+            averageDeclaredCrystalEfficiency +=declared;
+            ++cnt;
+        }
+    }
+    averageCrystalEfficiency /=cnt;
+    averageDeclaredCrystalEfficiency /=cnt;
 }
 

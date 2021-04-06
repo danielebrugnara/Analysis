@@ -55,6 +55,11 @@ SpectrumAnalyzer::SpectrumAnalyzer(const std::string & file_name, const bool& de
 
     gg = *gg_ptr;
     hspec = *hspec_ptr;
+
+    for (int i=0; i<46; ++i){
+        cry_spec.push_back(*dynamic_cast<TH1D*>(file->Get(Form("crystal_spectra_%i",i))));
+    }
+
     file->Close();
 
     gamma_gamma = levelscheme.GetGammaGamma();
@@ -68,14 +73,25 @@ SpectrumAnalyzer::~SpectrumAnalyzer() = default;
 
 void SpectrumAnalyzer::Analyze() {
 
-    GenerateRelativeEffGraph();
+    GenerateRelativeEffGraph(hspec, relative_eff_graph, sigma_graph, tau_graph , 100);
     GenerateAbsoluteEffGraph();
+    //GenerateCrystalEffGraph();
+    std::cout << "nevts " << nevts << std::endl;
 
     std::string out_file_name = "eff_curve_";
     out_file_name +=file_name;
 
     TFile outfile(out_file_name.c_str(),"recreate");
     relative_eff_graph.Write();
+    int ii = 0;
+    for(auto& it: cry_relative_eff_graph) {
+        std::ofstream outfile;
+        outfile.open("test.txt", std::ios_base::app); // append instead of overwrite
+        outfile << ii++ << "\n";
+        outfile.close();
+        it->Write();
+    }
+
     FitEffCurve(relative_eff_graph).Write();
 
     if (debug_canvas) {
@@ -331,9 +347,10 @@ SpectrumAnalyzer::IntensityData SpectrumAnalyzer::ReadIntensities(const std::str
     return data;
 }
 
-void SpectrumAnalyzer::GenerateRelativeEffGraph() {
+void SpectrumAnalyzer::GenerateRelativeEffGraph(const TH1D& spectrum, TGraphErrors& relative_eff_graph, TGraphErrors& sigma_graph, TGraphErrors& tau_graph, int nbr) {
     //TH1D projx  = *gg.ProjectionX();
-    TH1D spect = hspec;
+    //TH1D spect = hspec;
+    TH1D spect = spectrum;
     spect.Sumw2();
 
     std::vector<std::vector<int>> seen_transitions;
@@ -428,6 +445,7 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
 
         }
 
+        std::cout << "Writing graphs!!!\n";
         relative_eff_graph = TGraphErrors(X.size(), &X[0], &Y_eff[0], &X_err[0], &Y_eff_err[0]);
         relative_eff_graph.SetName("relative_eff_graph");
         relative_eff_graph.SetTitle("Relative eff graph");
@@ -465,6 +483,20 @@ void SpectrumAnalyzer::GenerateRelativeEffGraph() {
         relative_eff_graph.SetPointError(ii,
                                         0,
                                         relative_eff_graph.GetErrorY(ii)/nevts);
+    }
+    std::cout << "number of events : " << nevts << std::endl;
+    relative_eff_graph.SaveAs(Form("data_%i.root", nbr));
+}
+
+void SpectrumAnalyzer::GenerateCrystalEffGraph() {
+    for (int i=0; i<cry_spec.size(); ++i){
+        //if (it.GetEntries() == 0 ) continue;
+
+        TGraphErrors rel;
+        TGraphErrors sig;
+        TGraphErrors tau;
+        GenerateRelativeEffGraph(cry_spec[i], rel, sig, tau, i);
+        cry_relative_eff_graph.push_back(&rel);
     }
 }
 

@@ -88,10 +88,16 @@ public :
    virtual void    SlaveTerminate();
    virtual void    Terminate();
 
-    double ComputeDoppler(const TVector3 &, const double &);
-    double ComputeDoppler(const TVector3 &, const TVector3 &, const double &);
-    double ComputeDoppler(const TVector3 &, const TVector3 &, const double &, const double&);
-    double ComputeDoppler(const TVector3 &, const double &, const double &);
+    double ComputeDoppler(const TVector3 &, const double &) const;
+    double ComputeDoppler(const TVector3 &, const TVector3 &, const double &) const;
+    double ComputeDoppler(const TVector3 &, const TVector3 &, const double &, const double&) const;
+    double ComputeDoppler(const TVector3 &, const double &, const double &) const;
+
+    std::map<int, double> crystalEfficiency;
+    double averageCrystalEfficiency{0};
+    std::map<int, double> crystalEfficiencyDeclared;
+    double averageDeclaredCrystalEfficiency{0};
+    void ReadEfficiencyMap();
    //ClassDef(Selector,0);
 
     TH3D * geom;
@@ -121,9 +127,9 @@ public :
     const double velocity; //mm/ns
     const double t12_1; //ns
     const double t12_2; //ns
-    const TVector3 agata_shift; //mm/ns
     const TVector3 em_position_1; //mm/ns
     const TVector3 em_position_2; //mm/ns
+    const TVector3 agata_shift; //mm
 
     struct Crystal{
         int ID;
@@ -142,6 +148,7 @@ public :
     std::unordered_map<int, int> simu_to_data;
     std::unordered_map<int, int> data_to_simu;
     bool use_threasholds{false};
+    bool use_intrinsic_efficiencies{true};
     bool compute_threasholds{false};
     std::unordered_map<int,TH1*> threasholds;
     TRandom rand;
