@@ -13,7 +13,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
-#set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 #Verbose option for debugging cmake .. -DVERBOSE_DEBUG=ON
@@ -28,23 +28,25 @@ list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 find_package(ROOT REQUIRED)
 include(${ROOT_USE_FILE})
 
-#include_directories(${CMAKE_SOURCE_DIR}/../../Lib/inc ${ROOT_INCLUDE_DIRS})
+include_directories(${CMAKE_SOURCE_DIR}/../../Lib/inc ${ROOT_INCLUDE_DIRS})
 add_definitions(${ROOT_CXX_FLAGS})
 
-add_library(Units SHARED Units.cxx)
-set_target_properties(Units PROPERTIES PUBLIC_HEADER ${analysis_SOURCE_DIR}/Lib/inc)
-
-ROOT_GENERATE_DICTIONARY(G__ReactionFragment ReactionFragment.h LINKDEF ReactionFragmentLinkDef.h)
-add_library(ReactionFragment SHARED ReactionFragment.cxx G__ReactionFragment.cxx)
-target_link_libraries(ReactionFragment ${ROOT_LIBRARIES})
-
-ROOT_GENERATE_DICTIONARY(G__ReactionReconstruction ReactionReconstruction.h LINKDEF ReactionReconstructionLinkDef.h)
-add_library(ReactionReconstruction SHARED ReactionReconstruction.cxx G__ReactionReconstruction.cxx)
-target_link_libraries(ReactionReconstruction ${ROOT_LIBRARIES} ReactionFragment)
-
-#include_directories(${CMAKE_SOURCE_DIR}/../../Lib/inc)
+include_directories(${CMAKE_SOURCE_DIR}/../../Lib/inc)
 include_directories(${CMAKE_SOURCE_DIR})
 link_directories(${CMAKE_SOURCE_DIR})
+link_directories(${CMAKE_SOURCE_DIR}/../../build/Lib/bin)
+
+
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+foreach(dir ${dirs})
+      message(STATUS "selected include dir='${dir}'")
+endforeach()
+
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY LINK_DIRECTORIES)
+foreach(dir ${dirs})
+      message(STATUS "selected linking dir='${dir}'")
+endforeach()
+
 #link_directories(${CMAKE_SOURCE_DIR}/../../cmake-build-debug/Lib/bin)
 add_executable(Tester Tester.cpp)
 target_link_libraries(Tester ReactionReconstruction ReactionFragment Units ${ROOT_LIBRARIES})

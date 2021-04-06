@@ -46,11 +46,13 @@ private:
     bool simulation;
     TH2D gg;
     TH1D hspec;
+    std::vector<TH1D> cry_spec;
     TVector2 start_stop;
     double nevts;
     Plotter plotter;
 
     TGraphErrors relative_eff_graph;
+    std::vector<TGraphErrors*> cry_relative_eff_graph;
     TGraphErrors absolute_eff_graph;
     TGraphErrors sigma_graph;
     TGraphErrors tau_graph;
@@ -64,8 +66,9 @@ private:
 
     double GetPeakIntegral(TH1D &, const double &);
     static IntensityData ReadIntensities(const std::string&);
-    void GenerateRelativeEffGraph();
+    void GenerateRelativeEffGraph(const TH1D&, TGraphErrors&, TGraphErrors&, TGraphErrors&, int);
     void GenerateAbsoluteEffGraph();
+    void GenerateCrystalEffGraph();
 
     static TF1 FitEffCurve(TGraphErrors&);
 

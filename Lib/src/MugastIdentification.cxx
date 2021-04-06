@@ -105,6 +105,11 @@ bool MugastIdentification::initialize(const double &beamEnergy,
                                                                                  ReactionFragment::FragmentSettings(3, 2, 0, 0, 0),
                                                                                  ReactionFragment::FragmentSettings(46, 18, 0,0, 0)})));
 
+    for (const auto& it: reaction){
+        it.second->ChooseFixed(3);
+        it.second->ChooseExFixed(4);
+    }
+
     beamRef = &reaction.at("M47_Z19_m2_z1")->GetReactionFragment(1);
 
     //Setting up interpolations for target deformation//////
@@ -586,6 +591,7 @@ bool MugastIdentification::reconstructEnergy(MugastData & localFragment) {
                 } catch (std::runtime_error &e) {
                     std::cerr << "Unable to find correct un-centered distance (Mugast) : " << e.what() << std::endl;
                     localFragment.E_uncentered[ii].push_back(tmpEn);
+                    localFragment.BeamPosition_uncentered[jj] = TVector3(0,0,0);
                 }
             }
             for (unsigned int jj = 0; jj < focusScale.size(); ++jj) {//loop over different focus coefficients
@@ -611,6 +617,7 @@ bool MugastIdentification::reconstructEnergy(MugastData & localFragment) {
                 } catch (std::runtime_error &e) {
                     std::cerr << "Unable to find correct un-centered distance (Mugast) : " << e.what() << std::endl;
                     localFragment.E_corrected[ii].push_back(tmpEn);
+                    localFragment.BeamPosition_corrected[jj] = TVector3(0,0,0);
                 }
             }
         }
