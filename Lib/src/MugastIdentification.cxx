@@ -542,17 +542,26 @@ bool MugastIdentification::reconstructEnergy(MugastData & localFragment) {
 
         localFragment.E[ii] = tmpEn;
 
-        if (abs(gasThickness->Evaluate(theta) - computeDistanceInGas(localFragment.EmissionDirection[ii], TVector3(0, 0, 0))) > 0.01 * UNITS::mm)
-        {
-            std::cout << "-----------------------------\n";
-            std::cout << "should be thickness : " << gasThickness->Evaluate(theta) * UNITS::mm << std::endl;
-            std::cout << "instead thickness : " << computeDistanceInGas(localFragment.EmissionDirection[ii], TVector3(0, 0, 0)) << std::endl;
-            std::cout << " with theta : " << theta << std::endl;
-            //throw std::runtime_error("Not matching distance in gas!!\n");
+        bool checlCollision{true};
+        if(checlCollision){
+            TVector3 collisionVec = computeCollision(localFragment.EmissionDirection[ii],TVector3(0,0,0));
+            double tentativeAngle = computeAngleOfIncidence(collisionVec, TVector3(0, 0, 0));
+            if (abs(gasThickness->Evaluate(theta)*UNITS::mm-collisionVec.Mag())>0.05*UNITS::mm){
+                std::cerr   << "-------------------------------\n"
+                            << "should be thickness : " << gasThickness->Evaluate(theta)*UNITS::mm << std::endl
+                            << "instead thickness is : " << collisionVec.Mag() << std::endl;
+                //throw std::runtime_error("Something wrong in computin the collision\n");
+            }
+            if (abs(havarAngle->Evaluate(theta)-tentativeAngle)>1E-3){
+                std::cerr   << "-------------------------------\n"
+                            << "should be angle : " << havarAngle->Evaluate(theta) << std::endl
+                            << "instead angle is : " << tentativeAngle << std::endl;
+                //throw std::runtime_error("Something wrong in computing the angle\n");
+            }
         }
 
-        if (ii==0) {//loop over positions
-            for (unsigned int jj = 0; jj < beamPositions.size(); ++jj) {
+        if (ii==0) {
+            for (unsigned int jj = 0; jj < beamPositions.size(); ++jj) {//loop over positions
                 try {
                     localFragment.E_uncentered[ii].push_back(elossIt->second["he3_front"]->
                             EvaluateInitialEnergy(energyAfterGas,
@@ -583,7 +592,10 @@ bool MugastIdentification::reconstructEnergy(MugastData & localFragment) {
                                         "_" +
                                         localFragment.Particle[ii])) != reaction.end()){
             //Vamos and mugast localFragment found
-            localFragment.Ex[ii] = reactionIt->second->Set_Ek_Theta(localFragment.E[ii], localFragment.EmissionDirection[ii].Theta());//WARNING this could be wring
+            localFragment.Ex[ii] = reactionIt->second->Set_Ek_Theta_Phi(localFragment.E[ii], 
+                                                                        localFragment.EmissionDirection[ii].Theta(), 
+                                                                        localFragment.EmissionDirection[ii].Phi());//WARNING this could be wring
+
             localFragment.Ex_uncentered[ii].reserve(beamPositions.size());
             localFragment.Ex_corrected[ii].reserve(focusScale.size());
             if (ii == 0) {
@@ -598,13 +610,16 @@ bool MugastIdentification::reconstructEnergy(MugastData & localFragment) {
             }
 
             localFragment.E_CM[ii] = reactionIt->second->GetReactionFragment(3).Get_Ek_cm();
+            localFragment.Theta_CM[ii] = reactionIt->second->GetReactionFragment(3).Get_P_cm().Vect().Theta();
         }
         else{
             if ((reactionIt = reaction.find(localFragment.Particle[ii])) != reaction.end()) {
                 //Only mugast localFragment found
-                localFragment.Ex[ii] = reactionIt->second->Set_Ek_Theta(localFragment.E[ii],
-                                                                        localFragment.EmissionDirection[ii].Theta());//WARNING this could be wring
+                localFragment.Ex[ii] = reactionIt->second->Set_Ek_Theta_Phi(localFragment.E[ii],
+                                                                            localFragment.EmissionDirection[ii].Theta(),
+                                                                            localFragment.EmissionDirection[ii].Phi());//WARNING this could be wring
                 localFragment.E_CM[ii] = reactionIt->second->GetReactionFragment(3).Get_Ek_cm();
+                localFragment.Theta_CM[ii] = reactionIt->second->GetReactionFragment(3).Get_P_cm().Vect().Theta();
 
             }else
                 localFragment.Ex[ii] = -2000;
@@ -711,42 +726,35 @@ double MugastIdentification::MiddleTargetBeamEnergy(double beam_energy_from_brho
     return beam_energy_from_brho;
 }
 
-double MugastIdentification::computeDistanceInGas(TVector3 emissionDirection, const TVector3& beamPosition) {
-
-    double tmp_threashold{1E-4*UNITS::mm};
+TVector3 MugastIdentification::computeCollision(TVector3 emissionDirection, const TVector3& beamPosition) {
+    double tmpThreashold{5E-6 * UNITS::mm};
     emissionDirection.SetMag(1);
 
-    if (emissionDirection.Z() > 0) {
-        distanceMinimizer.reset(new Minimizer([&, this](double x) {
-                                                  emissionDirection.SetMag(x);
-                                                  auto vec = beamPosition + emissionDirection;
-                                                  return pow(vec.Z() / UNITS::mm - this->gasThicknessCartesian->Evaluate(
-                                                          sqrt(pow(vec.X() / UNITS::mm, 2) + pow(vec.Y() / UNITS::mm, 2))), 2);
-                                              },
-                                              1.5 * UNITS::mm / abs(emissionDirection.CosTheta()),   //starting value
-                //1E-2*UNITS::mm,                     //learning rate
-                                              6E-4 * UNITS::mm,                     //learning rate
-                                              tmp_threashold,                     //threashold
-                                              100,                                //max_steps
-                                              0.98,                                  //quenching
-                                              1E-2 * UNITS::mm)                     //h
-        );
-    } else {
-        distanceMinimizer.reset(new Minimizer([&, this](double x) {
-                                                  emissionDirection.SetMag(x);
-                                                  auto vec = beamPosition + emissionDirection;
-                                                  return pow(vec.Z() / UNITS::mm + this->gasThicknessCartesian->Evaluate(
-                                                          sqrt(pow(vec.X() / UNITS::mm, 2) + pow(vec.Y() / UNITS::mm, 2))), 2);
-                                              },
-                                              1.5 * UNITS::mm / abs(emissionDirection.CosTheta()),   //starting value
-                //1E-2*UNITS::mm,                     //learning rate
-                                              6E-4 * UNITS::mm,                     //learning rate
-                                              tmp_threashold,                     //threashold
-                                              100,                                //max_steps
-                                              0.98,                                  //quenching
-                                              1E-2 * UNITS::mm)                     //h
-        );
-    }
+    DEBUG("ComputeCollision","")
+    DEBUG("beamPosition mag:", beamPosition.Mag())
+    DEBUG("beamPosition theta:", beamPosition.Theta())
+    DEBUG("beamPosition phi:", beamPosition.Phi())
+    DEBUG("emissionDirection mag:", emissionDirection.Mag())
+    DEBUG("emissionDirection theta:", emissionDirection.Theta())
+    DEBUG("emissionDirection phi:", emissionDirection.Phi())
+
+    distanceMinimizer.reset(new Minimizer([&, this](double x) {
+                                              emissionDirection.SetMag(x);
+                                              auto vec = beamPosition + emissionDirection;
+                                              if (emissionDirection.Z()>0)
+                                                return pow(vec.Z() / UNITS::mm - this->gasThicknessCartesian->Evaluate(
+                                                      sqrt(pow(vec.X() / UNITS::mm, 2) + pow(vec.Y() / UNITS::mm, 2))), 2);
+                                              else
+                                                return pow(vec.Z() / UNITS::mm + this->gasThicknessCartesian->Evaluate(
+                                                      sqrt(pow(vec.X() / UNITS::mm, 2) + pow(vec.Y() / UNITS::mm, 2))), 2);
+                                          },
+                                          1.5 * UNITS::mm / abs(emissionDirection.CosTheta()),   //starting value
+                                          3E-4 * UNITS::mm,                  //learning rate
+                                          tmpThreashold,                     //threashold
+                                          200,                               //max_steps
+                                          0.98,                              //quenching
+                                          1E-2 * UNITS::mm)                  //h
+    );
 
     distanceMinimizer->Minimize();
     auto distance = emissionDirection.Mag();
@@ -757,4 +765,25 @@ double MugastIdentification::computeDistanceInGas(TVector3 emissionDirection, co
         throw std::runtime_error("Distance too high\n");
     }
     return distance;
+}
+
+double MugastIdentification::computeAngleOfIncidence(const TVector3 &collisionVec, const TVector3 &beamPosition) {
+    TVector3 vec = beamPosition + collisionVec;
+    DEBUG("Angle of Incidence", "")
+    DEBUG("collisionVec mag:", collisionVec.Mag())
+    DEBUG("collisionVec theta:", collisionVec.Theta())
+    DEBUG("collisionVec phi:", collisionVec.Phi())
+
+    double x = sqrt(pow(vec.X() / UNITS::mm, 2) + pow(vec.Y() / UNITS::mm, 2));
+    double derivative = gasThicknessDerivativeCartesian->Evaluate(x);//There should be no need to scale with UNITS::mm
+    double angleFromDirection{0};
+    double angleFromDerivative{0};
+    if (collisionVec.Z() > 0){
+        angleFromDirection = collisionVec.Angle(TVector3(0, 0, 1));
+    }else{
+        angleFromDirection = collisionVec.Angle(TVector3(0, 0, -1));
+    }
+    angleFromDerivative = atan(derivative);
+
+    return angleFromDirection+angleFromDerivative;
 }
