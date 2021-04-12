@@ -1,0 +1,143 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 12.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[      5045,        135]
+NotebookOptionsPosition[      4756,        122]
+NotebookOutlinePosition[      5091,        137]
+CellTagsIndexPosition[      5048,        134]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[
+ RowBox[{"\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"axisFlip", "=", 
+     RowBox[{
+      RowBox[{"#", "/.", 
+       RowBox[{"{", "\[IndentingNewLine]", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"x_Line", "|", "x_GraphicsComplex"}], "\[RuleDelayed]", 
+          RowBox[{"MapAt", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"#", "~", "Reverse", "~", "2"}], "&"}], ",", "x", ",", 
+            "1"}], "]"}]}], ",", 
+         RowBox[{
+          RowBox[{"x", ":", 
+           RowBox[{"(", 
+            RowBox[{"PlotRange", "\[Rule]", "_"}], ")"}]}], "\[RuleDelayed]", 
+          
+          RowBox[{"x", "~", "Reverse", "~", "2"}]}]}], "\[IndentingNewLine]", 
+        "}"}]}], "&"}]}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"ener", "[", 
+      RowBox[{"m_", ",", " ", "t_", ",", " ", "x_"}], "]"}], " ", "=", 
+     RowBox[{"m", "*", 
+      RowBox[{"(", 
+       RowBox[{
+        FractionBox["1", 
+         SqrtBox[
+          RowBox[{"1", "-", 
+           FractionBox[
+            SuperscriptBox["x", "2"], 
+            SuperscriptBox[
+             RowBox[{"(", "t", ")"}], "2"]]}]]], "-", "1"}], ")"}]}]}], ";"}],
+    "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"dd", " ", "=", " ", "5"}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"xx", " ", "=", " ", "0.01"}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{"scale", " ", "=", " ", 
+    RowBox[{"1", "*", 
+     SuperscriptBox["10", "8"]}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"plot", "  ", "=", " ", 
+     RowBox[{"Plot", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"ener", "[", 
+          RowBox[{
+           RowBox[{"scale", "*", "1"}], ",", " ", 
+           RowBox[{"dd", "-", "t"}], ",", " ", "xx"}], "]"}], ",", " ", 
+         RowBox[{"ener", "[", 
+          RowBox[{
+           RowBox[{"scale", "*", "2"}], ",", " ", 
+           RowBox[{"dd", "-", "t"}], ",", " ", "xx"}], "]"}], ",", " ", 
+         RowBox[{"ener", "[", 
+          RowBox[{
+           RowBox[{"scale", "*", "3"}], ",", " ", 
+           RowBox[{"dd", "-", "t"}], ",", " ", "xx"}], "]"}], ",", " ", 
+         RowBox[{"ener", "[", 
+          RowBox[{
+           RowBox[{"scale", "*", "4"}], ",", " ", 
+           RowBox[{"dd", "-", "t"}], ",", " ", "xx"}], "]"}]}], "}"}], ",", 
+       " ", 
+       RowBox[{"{", 
+        RowBox[{"t", ",", " ", "0", ",", " ", "dd"}], "}"}], ",", " ", 
+       RowBox[{"Frame", "\[Rule]", "True"}], ",", " ", 
+       RowBox[{"FrameLabel", "\[Rule]", 
+        RowBox[{"{", 
+         RowBox[{
+         "\"\<Energy [arb. units]\>\"", ",", "\"\<TOF [arb. units]\>\""}], 
+         "}"}]}], ",", " ", 
+       RowBox[{"PlotLegends", "\[Rule]", 
+        RowBox[{"Placed", "[", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{
+           "\"\<m=1\>\"", ",", " ", "\"\<m=2\>\"", ",", " ", "\"\<m=3\>\"", 
+            ",", " ", "\"\<m=4\>\""}], "}"}], ",", " ", "Above"}], "]"}]}]}], 
+      "]"}]}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{"Rasterize", "[", 
+    RowBox[{"plot", " ", "//", "axisFlip"}], "]"}]}]}]], "Input",
+ CellChangeTimes->{{3.8251587761250887`*^9, 3.825158945166658*^9}, {
+   3.825159698524806*^9, 3.8251597446529016`*^9}, 3.825159926498652*^9, {
+   3.825159968436062*^9, 3.825159983569262*^9}, {3.825160057292513*^9, 
+   3.825160351457325*^9}, {3.825160413621068*^9, 3.825160454802209*^9}, {
+   3.8251604927515793`*^9, 3.8251605573094893`*^9}, {3.825160596519807*^9, 
+   3.825160655867627*^9}, {3.82516069007588*^9, 3.8251607833079348`*^9}, 
+   3.82516083119418*^9, {3.825160883762445*^9, 3.825160915917914*^9}, {
+   3.8251609708714247`*^9, 3.825161111292972*^9}, {3.825161185153648*^9, 
+   3.82516121372744*^9}, {3.825161369808238*^9, 3.825161417891041*^9}, {
+   3.825161483655302*^9, 3.8251615083267736`*^9}, {3.8251615464952803`*^9, 
+   3.8251615826524773`*^9}, {3.825161638083544*^9, 3.825161680321514*^9}, {
+   3.825162281112528*^9, 3.82516231063684*^9}, {3.8251623455164757`*^9, 
+   3.8251623458915863`*^9}, {3.825162505867342*^9, 3.825162510563821*^9}},
+ CellLabel->
+  "In[393]:=",ExpressionUUID->"1f0b50f3-e8b6-4eba-9a4c-3e012a703ff0"]
+},
+WindowSize->{808, 911},
+WindowMargins->{{556, Automatic}, {29, Automatic}},
+FrontEndVersion->"12.0 for Linux x86 (64-bit) (April 8, 2019)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 4194, 100, 444, "Input",ExpressionUUID->"1f0b50f3-e8b6-4eba-9a4c-3e012a703ff0"]
+}
+]
+*)
+

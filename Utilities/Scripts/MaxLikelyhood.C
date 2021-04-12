@@ -8,6 +8,7 @@
 #include <TObjArray.h>
 #include <stdio.h>
 #include <TMath.h>
+#include <TLine.h>
 #include <math.h>
 
 double binomial(int N, int k, double p);
@@ -17,8 +18,10 @@ void drawSigmas(TH2D* histo, double, double);
 void computeChiSquared(TH1D* data, TH1D* simu);
 
 struct LhResults{
-    TH2D* histo{nullptr};
+    TH2D* lhHisto{nullptr};
+    TH2D* chi2Histo{nullptr};
     TH1D* fit{nullptr};
+    TH1D* discrepancy{nullptr};
     TH1D* dataWithErrors{nullptr};
     double maxVal{-1E10};
     double maxX{0};
@@ -28,6 +31,7 @@ struct LhResults{
 struct LhInputs{
     TH1D* data{nullptr};
     std::vector<TH1D*> simu;
+    std::vector<double> sigmasRatio;
     int nX{500};
     int nY{500};
     double startX{0};
@@ -59,25 +63,27 @@ void MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu){
         for(const auto&it: excludedBins) {
             simu[i]->SetBinContent(it, 0);//too many counts in empty bin??!!
         }
-        double integral{0};
-        for (int j = 0; j < simu[i]->GetNbinsX(); ++j) {
-            integral += simu[i]->GetBinContent(j);
-        }
-        //std::cout << "before integral " << integral << std::endl;
-        for (int j = 0; j < simu[i]->GetNbinsX(); ++j) {
-            simu[i]->SetBinContent(j, simu[i]->GetBinContent(j)/integral);
-        }
-        integral = 0;
-        for (int j = 0; j < simu[i]->GetNbinsX(); ++j) {
-            integral += simu[i]->GetBinContent(j);
-        }
+        //double integral{0};
+        //for (int j = 0; j < simu[i]->GetNbinsX(); ++j) {
+        //    integral += simu[i]->GetBinContent(j);
+        //}
+        ////std::cout << "before integral " << integral << std::endl;
+        //for (int j = 0; j < simu[i]->GetNbinsX(); ++j) {
+        //    simu[i]->SetBinContent(j, simu[i]->GetBinContent(j)/integral);
+        //}
+        //integral = 0;
+        //for (int j = 0; j < simu[i]->GetNbinsX(); ++j) {
+        //    integral += simu[i]->GetBinContent(j);
+        //}
     }
+
+    std::vector<double> sigmasRatio{1./2.48, 1./2.65, 1./3.2};
 
     LhInputs inputs(N);
     inputs.tsf.resize(2, nullptr);
     inputs.tsf[0] = [](double x, double y)->double { return x;};
     inputs.tsf[1] = [](double x, double y)->double { return y;};
-    //inputs.tsf[2] = [](double x, double y)->double { return 1-x-y;};
+    inputs.sigmasRatio = sigmasRatio;
     inputs.data = data;
     inputs.simu = simu;
     LhResults results = gridSearch(inputs);
@@ -90,9 +96,15 @@ void MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu){
     results.fit->SetMarkerColor(kRed);
     results.dataWithErrors->Draw("");
     results.fit->Draw("histo, same");
-    drawSigmas(results.histo, results.maxX, results.maxY);
+    drawSigmas(results.lhHisto, results.maxX, results.maxY);
     computeChiSquared(results.dataWithErrors, results.fit);
 
+    auto* tmpCv = new TCanvas();
+    results.discrepancy->Draw();
+
+    std::cout << "Expected gammas @360 from L2: " << N*results.maxY*0.027  << std::endl;
+    std::cout << "Expected gammas @360 from L3: " << N*(1-results.maxX-results.maxY)*0.013  << std::endl;
+    std::cout << "Expected gammas @1660 from L3: " << N*(1-results.maxX-results.maxY)*0.0099  << std::endl;
 
     LhInputs inputsPartial(N);
     inputsPartial.tsf.resize(2, nullptr);
@@ -102,12 +114,9 @@ void MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu){
     inputsPartial.endX = centerX*1.7;
     inputsPartial.startY = centerY*0.7;
     inputsPartial.endY = centerY*1.3;
-    //inputsPartial.tsf[0] = [](double x, double y)->double { return x*(y-1);};
-    //inputsPartial.tsf[1] = [](double x, double y)->double { return (x-1)*(y-1);};
-    //inputsPartial.tsf[2] = [](double x, double y)->double { return y;};
+    inputsPartial.sigmasRatio = sigmasRatio;
     inputsPartial.tsf[0] = [](double x, double y)->double { return -y*(x-1);};//WHY is htis negative??!?!!?!?!??!!?!?!?
     inputsPartial.tsf[1] = [](double x, double y)->double { return x*y;};
-    //inputsPartial.tsf[2] = [](double x, double y)->double { return 1-2*x-2*y;};
     inputsPartial.data = data;
     inputsPartial.simu = simu;
 
@@ -116,13 +125,13 @@ void MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu){
     std::cout << "ymin : " << resultsPartial.maxY << std::endl;
     std::cout << "max : " << resultsPartial.maxVal << std::endl;
     resultsPartial.histo->SetTitle("-Log LH; L=2 vs L=0+2; L=1+3");
-    drawSigmas(resultsPartial.histo, resultsPartial.maxX, resultsPartial.maxY);
+    drawSigmas(resultsPartial.lhHisto, resultsPartial.maxX, resultsPartial.maxY);
 }
 
 LhResults gridSearch(LhInputs& inputs) {
     LhResults results;
     TH1D* pVals = (TH1D*)inputs.data->Clone("pVals");
-    results.histo = new TH2D("logLhPlot","- Log L;percent of L=0; percent of L=2", inputs.nX, inputs.startX, inputs.endX, inputs.nY, inputs.startY, inputs.endY);
+    results.lhHisto = new TH2D("logLhPlot","- Log L;percent of L=0; percent of L=2", inputs.nX, inputs.startX, inputs.endX, inputs.nY, inputs.startY, inputs.endY);
     std::vector<double> coeffs;
     coeffs.resize(3, 0);
     for (int x = 0; x < inputs.nX; ++x) {
@@ -131,45 +140,39 @@ LhResults gridSearch(LhInputs& inputs) {
             double yval = inputs.startY + (inputs.endY - inputs.startY) / (inputs.nY - 1) * y;
             coeffs[0] = inputs.tsf[0](xval, yval);
             coeffs[1] = inputs.tsf[1](xval, yval);
-            //std::cout << "------------\n";
-            //std::cout  << "coeff 0 " << coeffs[0] << std::endl;
-            //std::cout  << "xval " << xval << std::endl;
-            //std::cout  << "coeff 1 " << coeffs[1] << std::endl;
-            //std::cout  << "yval " << yval << std::endl;
-            //coeffs[2] = inputs.tsf[2](xval, yval);
             coeffs[2] = 1-coeffs[0]-coeffs[1];
             if (coeffs[0]<0 || coeffs[1] < 0 || coeffs[2] < 0) {
-                results.histo->SetBinContent(results.histo->FindBin(xval, yval), 1);
+                results.lhHisto->SetBinContent(results.lhHisto->FindBin(xval, yval), 1);
                 continue;
             }
             long double logLh{0};
+            long double chi2{0};
 
             for (int j = 0; j < pVals->GetNbinsX(); ++j) {
                 pVals->SetBinContent(j, 0);
             }
 
+            double normalization{0};
             for (int j = 0; j < pVals->GetNbinsX(); ++j) {
-                if (isinf(logLh)) {
-                    results.histo->SetBinContent(results.histo->FindBin(xval, yval), 1);
-                    break;
-                }
                 for (int k = 0; k < coeffs.size(); ++k) {
                     if (isinf(logLh)) {
-                        results.histo->SetBinContent(results.histo->FindBin(xval, yval), 1);
+                        results.lhHisto->SetBinContent(results.lhHisto->FindBin(xval, yval), 1);
                         break;
                     }
 
-                    pVals->SetBinContent(j, pVals->GetBinContent(j) + coeffs[k] * inputs.simu[k]->GetBinContent(j));
-                    if (pVals->GetBinContent(j) > 1) {
-                        std::cerr << "error in probability\n";
-                    }
+                    //Sigma ration changes normalization
+                    pVals->SetBinContent(j, pVals->GetBinContent(j) + inputs.sigmasRatio[k] * coeffs[k] * inputs.simu[k]->GetBinContent(j));
                 }
+                normalization +=pVals->GetBinContent(j);
+            }
+            for (int j = 0; j < pVals->GetNbinsX(); ++j) {
+                pVals->SetBinContent(j, 1./normalization*pVals->GetBinContent(j));
             }
 
             for (int j = 0; j < pVals->GetNbinsX(); ++j) {
                 logLh += logl((long double) binomial(inputs.N, inputs.data->GetBinContent(j), pVals->GetBinContent(j)));
             }
-            results.histo->SetBinContent(results.histo->FindBin(xval, yval), -logLh);
+            results.lhHisto->SetBinContent(results.lhHisto->FindBin(xval, yval), -logLh);
             if (logLh > results.maxVal) {
                 results.maxVal = logLh;
                 results.maxX = xval;
@@ -190,7 +193,13 @@ LhResults gridSearch(LhInputs& inputs) {
             }
         }
     }
-    return results;
+    results.discrepancy = (TH1D*) results.dataWithErrors->Clone("discrepancies");
+    for (int i = 0; i < results.discrepancy->GetNbinsX(); ++i) {
+        results.discrepancy->SetBinContent(i, results.dataWithErrors->GetBinContent(i)-results.fit->GetBinContent(i));
+        results.discrepancy->SetBinError(i, results.dataWithErrors->GetBinError(i));
+    }
+
+        return results;
 }
 
 void drawSigmas(TH2D* histo, double minx, double miny){

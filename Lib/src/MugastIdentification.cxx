@@ -107,7 +107,8 @@ bool MugastIdentification::initialize(const double &beamEnergy,
 
     for (const auto& it: reaction){
         it.second->ChooseFixed(3);
-        it.second->ChooseExFixed(4);
+        //it.second->ChooseExFixed(4);
+        it.second->ChooseExFixed(3);
     }
 
     beamRef = &reaction.at("M47_Z19_m2_z1")->GetReactionFragment(1);
