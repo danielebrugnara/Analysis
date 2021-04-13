@@ -1,12 +1,15 @@
 //////////////////////////////////////////////////////////
 // This class has been automatically generated on
-// Wed Apr 29 12:46:37 2020 by ROOT version 6.20/04
+// Tue Apr 13 16:23:12 2021 by ROOT version 6.20/00
 // from TTree PhysicsTree/Data created / analysed with the NPTool package
-// found on file: simu_ana.root
+// found on file: Data/anaout/tmp_all.root
 //////////////////////////////////////////////////////////
 
 #ifndef Selector_h
 #define Selector_h
+
+#include <unordered_map>
+#include <map>
 
 #include <TROOT.h>
 #include <TChain.h>
@@ -16,13 +19,7 @@
 #include <TTreeReaderValue.h>
 #include <TTreeReaderArray.h>
 
-#include <TVector3.h>
-#include <TH1D.h>
-#include <TH2D.h>
-
 // Headers needed by this particular selector
-#include "TCATSPhysics.h"
-
 #include "TMust2Physics.h"
 
 #include "TMugastPhysics.h"
@@ -35,7 +32,6 @@ public :
    TTree          *fChain = 0;   //!pointer to the analyzed TTree or TChain
 
    // Readers to access the data (delete the ones you do not need).
-   TTreeReaderValue<TCATSPhysics> CATS = {fReader, "CATS"};
    TTreeReaderValue<TMust2Physics> MUST2 = {fReader, "MUST2"};
    TTreeReaderValue<TMugastPhysics> Mugast = {fReader, "Mugast"};
    TTreeReaderValue<Int_t> Nev = {fReader, "Nev"};
@@ -43,6 +39,7 @@ public :
    TTreeReaderArray<Double_t> ELab = {fReader, "ELab"};
    TTreeReaderArray<Double_t> EDep = {fReader, "EDep"};
    TTreeReaderArray<Double_t> ThetaLab = {fReader, "ThetaLab"};
+   TTreeReaderArray<Double_t> PhiLab = {fReader, "PhiLab"};
    TTreeReaderArray<Double_t> ThetaCM = {fReader, "ThetaCM"};
    TTreeReaderValue<Int_t> Run = {fReader, "Run"};
    TTreeReaderArray<Double_t> X = {fReader, "X"};
@@ -50,16 +47,31 @@ public :
    TTreeReaderArray<Double_t> Z = {fReader, "Z"};
    TTreeReaderArray<Double_t> dE = {fReader, "dE"};
    TTreeReaderArray<Double_t> dTheta = {fReader, "dTheta"};
+   TTreeReaderArray<Double_t> DSSD_X = {fReader, "DSSD_X"};
+   TTreeReaderArray<Double_t> DSSD_Y = {fReader, "DSSD_Y"};
+   TTreeReaderArray<Double_t> TelescopeNr = {fReader, "TelescopeNr"};
 
-   //Needed for this particular selector
-   TH1D* angdistr;
-   TH1D* ex;
-   TH2D* ex_theta;
-   TH1D* theta_cm;
-   TH2D* kinematicline;
-   TVector3 position;
-   std::vector<int> MG_nr = {1, 3, 4, 5, 7, 11};
-   std::map<int, TH2D *> strip_E;
+   struct Id{
+    int x;
+    int y;
+    int mg;
+   };
+
+   struct PosN{
+    struct Pos{
+      double x;
+      double y;
+      double z;
+    };
+    Pos pos;
+    int n;
+   };
+
+   typedef std::map<Id, std::map<PosN::Pos, int>> Transform;
+ 
+   Transform transform;
+
+   Transform GetTsf(){return transform; };
 
 
    Selector(TTree * /*tree*/ =0) { }
@@ -85,28 +97,6 @@ public :
 #endif
 
 #ifdef Selector_cxx
-void Selector::Init(TTree *tree)
-{
-   // The Init() function is called when the selector needs to initialize
-   // a new tree or chain. Typically here the reader is initialized.
-   // It is normally not necessary to make changes to the generated
-   // code, but the routine can be extended by the user if needed.
-   // Init() will be called many times when running on PROOF
-   // (once per file to be processed).
-
-   fReader.SetTree(tree);
-}
-
-Bool_t Selector::Notify()
-{
-   // The Notify() function is called when a new file is opened. This
-   // can be either for a new TTree in a TChain or when when a new TTree
-   // is started when using PROOF. It is normally not necessary to make changes
-   // to the generated code, but the routine can be extended by the
-   // user if needed. The return value is currently not used.
-
-   return kTRUE;
-}
 
 
 #endif // #ifdef Selector_cxx
