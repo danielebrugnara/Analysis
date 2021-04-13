@@ -31,97 +31,99 @@
 
 void Selector::Begin(TTree * /*tree*/)
 {
-	// The Begin() function is called at the start of the query.
-	// When running with PROOF Begin() is only called on the client.
-	// The tree argument is deprecated (on PROOF 0 is passed).
+   // The Begin() function is called at the start of the query.
+   // When running with PROOF Begin() is only called on the client.
+   // The tree argument is deprecated (on PROOF 0 is passed).
 
-	TString option = GetOption();
+   TString option = GetOption();
 }
 
 void Selector::SlaveBegin(TTree * /*tree*/)
 {
-	// The SlaveBegin() function is called after the Begin() function.
-	// When running with PROOF SlaveBegin() is called on each slave server.
-	// The tree argument is deprecated (on PROOF 0 is passed).
+   // The SlaveBegin() function is called after the Begin() function.
+   // When running with PROOF SlaveBegin() is called on each slave server.
+   // The tree argument is deprecated (on PROOF 0 is passed).
 
-	TString option = GetOption();
-
-	angdistr = new TH1D("angdistr", "Angular distribution", 1000, 0, 3.1415);
-	fOutput->Add(angdistr);
-	ex = new TH1D("ex", "ex", 1000, -10, 10);
-	fOutput->Add(ex);
-	ex_theta = new TH2D("ex_theta", "ex vs theta", 1000, 0, 3.1415, 1000, -10, 10);
-	fOutput->Add(ex_theta);
-	theta_cm = new TH1D("theta_cm", "theta_cm", 1000, 0, 3.1415);
-	fOutput->Add(theta_cm);
-	kinematicline = new TH2D("kinematicline", "Kinematic line", 1000, 0, 3.1415, 1000, -20, 20);
-	fOutput->Add(kinematicline);
-
-	for (const auto & it: MG_nr){
-		strip_E[it] = new TH2D(Form("MG%i_strip_E", it), Form("MG%i_strip_E", it), 129, 0, 129, 1000, 0, 30);
-	}
+   TString option = GetOption();
 
 }
 
 Bool_t Selector::Process(Long64_t entry)
 {
-	// The Process() function is called for each entry in the tree (or possibly
-	// keyed object in the case of PROOF) to be processed. The entry argument
-	// specifies which entry in the currently loaded tree is to be processed.
-	// When processing keyed objects with PROOF, the object is already loaded
-	// and is available via the fObject pointer.
-	//
-	// This function should contain the \"body\" of the analysis. It can contain
-	// simple or elaborate selection criteria, run algorithms on the data
-	// of the event and typically fill histograms.
-	//
-	// The processing can be stopped by calling Abort().
-	//
-	// Use fStatus to set the return value of TTree::Process().
-	//
-	// The return value is currently not used.
+   // The Process() function is called for each entry in the tree (or possibly
+   // keyed object in the case of PROOF) to be processed. The entry argument
+   // specifies which entry in the currently loaded tree is to be processed.
+   // When processing keyed objects with PROOF, the object is already loaded
+   // and is available via the fObject pointer.
+   //
+   // This function should contain the \"body\" of the analysis. It can contain
+   // simple or elaborate selection criteria, run algorithms on the data
+   // of the event and typically fill histograms.
+   //
+   // The processing can be stopped by calling Abort().
+   //
+   // Use fStatus to set the return value of TTree::Process().
+   //
+   // The return value is currently not used.
 
-	fReader.SetLocalEntry(entry);
-	//std::cout << *Nev << std::endl;
-	//
-	//
-	//if (Ex[0]>-100)
-	//	std::cout << Ex[0] << std::endl;
-	for (int ii=0; ii<20;++ii){
-		if (X[ii]>-100){
-			position.SetXYZ(X[ii],Y[ii], Z[ii]);
-			angdistr->Fill(position.Theta());
-			ex->Fill(Ex[ii]);
-			ex_theta->Fill(position.Theta(),Ex[ii]);
-            theta_cm->Fill(ThetaCM[ii]);
-			kinematicline->Fill(position.Theta(),ELab[ii]);
-		}
-	}
+   fReader.SetLocalEntry(entry);
 
 
-	return kTRUE;
+   for (int i=0; i<Mugast.EventMultiplicity; ++i){
+   Id id_tmp(Mugast.DSSD_X[i], Mugast.DSSD_Y[i], Mugast.TelescopeNumber[i]);
+    
+   PosN::Pos pos_tmp (Mugast.PosX[i], Mugast.PosY[i], Mugast.PosZ[i]);
+
+   auto it = transform.find(id_tmp);
+   if (it == transform.end()){
+      transform[id_tmp][pos_tmp] = 1;
+   }else{
+     auto it2 = it.second.find(pos_tmp);
+     if (it2 == it.second.end()){
+        it[pos_tmp] = 1;
+     }else{
+        it2.second++;
+     } 
+   }
+
+   return kTRUE;
 }
 
 void Selector::SlaveTerminate()
 {
-	// The SlaveTerminate() function is called after all entries or objects
-	// have been processed. When running with PROOF SlaveTerminate() is called
-	// on each slave server.
-	TFile *top = new TFile("output.root", "recreate");
-	TIter iter(fOutput);
-	TObject *obj;
-	while ((obj = iter()))
-	{
-		obj->Write();
-	}
-	top->Close();
+   // The SlaveTerminate() function is called after all entries or objects
+   // have been processed. When running with PROOF SlaveTerminate() is called
+   // on each slave server.
 
 }
 
 void Selector::Terminate()
 {
-	// The Terminate() function is the last function to be called during
-	// a query. It always runs on the client, it can be used to present
-	// the results graphically or save the results to file.
+   // The Terminate() function is the last function to be called during
+   // a query. It always runs on the client, it can be used to present
+   // the results graphically or save the results to file.
 
+}
+
+void Selector::Init(TTree *tree)
+{
+   // The Init() function is called when the selector needs to initialize
+   // a new tree or chain. Typically here the reader is initialized.
+   // It is normally not necessary to make changes to the generated
+   // code, but the routine can be extended by the user if needed.
+   // Init() will be called many times when running on PROOF
+   // (once per file to be processed).
+
+   fReader.SetTree(tree);
+}
+
+Bool_t Selector::Notify()
+{
+   // The Notify() function is called when a new file is opened. This
+   // can be either for a new TTree in a TChain or when when a new TTree
+   // is started when using PROOF. It is normally not necessary to make changes
+   // to the generated code, but the routine can be extended by the
+   // user if needed. The return value is currently not used.
+
+   return kTRUE;
 }
