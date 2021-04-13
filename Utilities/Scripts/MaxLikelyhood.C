@@ -17,6 +17,8 @@ void drawSigmas(TH2D* histo, double, double);
 
 void computeChiSquared(TH1D* data, TH1D* simu);
 
+long double factorial(int n, std::vector<long double>& mem);
+
 struct LhResults{
     TH2D* lhHisto{nullptr};
     TH2D* chi2Histo{nullptr};
@@ -63,18 +65,6 @@ void MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu){
         for(const auto&it: excludedBins) {
             simu[i]->SetBinContent(it, 0);//too many counts in empty bin??!!
         }
-        //double integral{0};
-        //for (int j = 0; j < simu[i]->GetNbinsX(); ++j) {
-        //    integral += simu[i]->GetBinContent(j);
-        //}
-        ////std::cout << "before integral " << integral << std::endl;
-        //for (int j = 0; j < simu[i]->GetNbinsX(); ++j) {
-        //    simu[i]->SetBinContent(j, simu[i]->GetBinContent(j)/integral);
-        //}
-        //integral = 0;
-        //for (int j = 0; j < simu[i]->GetNbinsX(); ++j) {
-        //    integral += simu[i]->GetBinContent(j);
-        //}
     }
 
     std::vector<double> sigmasRatio{1./2.48, 1./2.65, 1./3.2};
@@ -110,8 +100,8 @@ void MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu){
     inputsPartial.tsf.resize(2, nullptr);
     double centerX = results.maxY/(results.maxX+results.maxY);
     double centerY = (results.maxX+results.maxY);
-    inputsPartial.startX = centerX*0.3;
-    inputsPartial.endX = centerX*1.7;
+    inputsPartial.startX = centerX*0.01;
+    inputsPartial.endX = centerX*4;
     inputsPartial.startY = centerY*0.7;
     inputsPartial.endY = centerY*1.3;
     inputsPartial.sigmasRatio = sigmasRatio;
@@ -124,11 +114,16 @@ void MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu){
     std::cout << "xmin : " << resultsPartial.maxX << std::endl;
     std::cout << "ymin : " << resultsPartial.maxY << std::endl;
     std::cout << "max : " << resultsPartial.maxVal << std::endl;
-    resultsPartial.histo->SetTitle("-Log LH; L=2 vs L=0+2; L=1+3");
+    resultsPartial.lhHisto->SetTitle("-Log LH;Percent of L=2 vs L=0+2; Percent of L=1+2");
     drawSigmas(resultsPartial.lhHisto, resultsPartial.maxX, resultsPartial.maxY);
+    std::vector<double> sf {0.24, 0.4};
+
+    TLine* theoricValue = new TLine(sf[1]/(sf[1]+sf[0]), inputsPartial.startY,sf[1]/(sf[1]+sf[0]), inputsPartial.endY);
+    theoricValue->Draw();
 }
 
 LhResults gridSearch(LhInputs& inputs) {
+    std::vector<long double> factorialMem;
     LhResults results;
     TH1D* pVals = (TH1D*)inputs.data->Clone("pVals");
     results.lhHisto = new TH2D("logLhPlot","- Log L;percent of L=0; percent of L=2", inputs.nX, inputs.startX, inputs.endX, inputs.nY, inputs.startY, inputs.endY);
@@ -169,9 +164,13 @@ LhResults gridSearch(LhInputs& inputs) {
                 pVals->SetBinContent(j, 1./normalization*pVals->GetBinContent(j));
             }
 
+            logLh += logl((long double) factorial(inputs.N, factorialMem));
+            //std::cout <<  "loglh : " <<logLh << std::endl;
             for (int j = 0; j < pVals->GetNbinsX(); ++j) {
-                logLh += logl((long double) binomial(inputs.N, inputs.data->GetBinContent(j), pVals->GetBinContent(j)));
+                //logLh += logl((long double) binomial(inputs.N, inputs.data->GetBinContent(j), pVals->GetBinContent(j)));
+                logLh += logl((long double) powl(pVals->GetBinContent(j),inputs.data->GetBinContent(j))/factorial((int)inputs.data->GetBinContent(j), factorialMem));
             }
+            //std::cout <<  "loglh : " <<logLh << std::endl;
             results.lhHisto->SetBinContent(results.lhHisto->FindBin(xval, yval), -logLh);
             if (logLh > results.maxVal) {
                 results.maxVal = logLh;
@@ -208,7 +207,7 @@ void drawSigmas(TH2D* histo, double minx, double miny){
 
     std::vector<double> contours;
     for (int i=0; i<100; ++i){
-        contours.push_back(val+(double)i);
+        contours.push_back(val+(double)i*i/2.);
     }
     histo->SetContour(contours.size(), &contours[0]);
 
@@ -306,4 +305,21 @@ void computeChiSquared(TH1D* data, TH1D* simu) {
     std::cout << "reduced x squared : " << xsq/ndof << std::endl;
     std::cout << "prob : " << TMath::Prob(xsq, ndof) << std::endl;
 
+}
+
+//using double for large numbers
+long double factorial(int n, std::vector<long double>& mem){
+    if (n == 1 || n == 0)
+        return 1;
+
+    if (mem.size()<2)
+        mem.resize(2, 1);
+
+    if (mem.size() == n)
+        mem.push_back(mem[n-1]*n);
+
+    if (mem.size() > n)
+        return mem[n];
+
+    return n*factorial(n-1, mem);
 }
