@@ -49,5 +49,5 @@ class VamosData: public TObject{
                  id_Z(0),
                  id_Q(0){};
 
-    ClassDef(VamosData, 1);
+    ClassDef(VamosData, 2);
 }; 
