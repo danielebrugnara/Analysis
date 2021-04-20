@@ -282,7 +282,7 @@ public:
 
     Conf pConf;
     Data pData;
-    std::unique_ptr<TTree> tree;
+    TTree* tree;
 
 private:
     //struct HistogramSettings{
@@ -314,6 +314,23 @@ private:
         }else{
             delete ptr_value;
             ptr.reset();
+        }
+        return true;
+    };
+
+    template <class T>
+    bool Istantiate(T*& ptr, T *ptr_value){
+        if (enabled_histograms.find(ptr_value->GetName()) != enabled_histograms.end()){
+            ptr = ptr_value;
+            Output.push_back(ptr);
+        }else if (new_graph_file != nullptr){
+            *new_graph_file << ptr_value->GetName()
+                            << "\t\t\t\t\t"
+                            << "false"
+                            << std::endl;
+        }else{
+            delete ptr_value;
+            delete ptr;
         }
         return true;
     };

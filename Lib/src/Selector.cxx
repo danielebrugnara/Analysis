@@ -267,7 +267,7 @@ void Selector::SlaveBegin(TTree * /*tree*/){
     outputFile.reset(new TFile(file_name.c_str(), "recreate"));
     outputFile->cd();
     Istantiate(tree , new TTree("AnalyzedTree", "AnalyzedTree"));
-    if (tree) {
+    if (tree != nullptr) {
         tree->Branch("VamosData", &vamos_fragment.getData());
         tree->Branch("MugastData", &mugast_fragment.getMgData());
         tree->Branch("Must2Data", &mugast_fragment.getMmData());
@@ -337,7 +337,7 @@ Bool_t Selector::Process(Long64_t entry){
             general_histo_ptr->Fill(mugast_fragment.getSiE(ii), mugast_fragment.getT(ii), mugast_fragment.getMg(ii) );
     }
 
-    Fill(tree.get());
+    Fill(tree);
     return kTRUE;
 }
 

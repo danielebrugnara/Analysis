@@ -11,13 +11,20 @@
 #include <unordered_map>
 #include <map>
 
+#include <MugastData.h>
+
 #include <TROOT.h>
 #include <TChain.h>
+#include <TFile.h>
+#include <TH2D.h>
 #include <TFile.h>
 #include <TSelector.h>
 #include <TTreeReader.h>
 #include <TTreeReaderValue.h>
 #include <TTreeReaderArray.h>
+
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
 
 // Headers needed by this particular selector
 #include "TMust2Physics.h"
@@ -39,7 +46,7 @@ public :
    TTreeReaderArray<Double_t> ELab = {fReader, "ELab"};
    TTreeReaderArray<Double_t> EDep = {fReader, "EDep"};
    TTreeReaderArray<Double_t> ThetaLab = {fReader, "ThetaLab"};
-   TTreeReaderArray<Double_t> PhiLab = {fReader, "PhiLab"};
+   //TTreeReaderArray<Double_t> PhiLab = {fReader, "PhiLab"};
    TTreeReaderArray<Double_t> ThetaCM = {fReader, "ThetaCM"};
    TTreeReaderValue<Int_t> Run = {fReader, "Run"};
    TTreeReaderArray<Double_t> X = {fReader, "X"};
@@ -47,32 +54,85 @@ public :
    TTreeReaderArray<Double_t> Z = {fReader, "Z"};
    TTreeReaderArray<Double_t> dE = {fReader, "dE"};
    TTreeReaderArray<Double_t> dTheta = {fReader, "dTheta"};
-   TTreeReaderArray<Double_t> DSSD_X = {fReader, "DSSD_X"};
-   TTreeReaderArray<Double_t> DSSD_Y = {fReader, "DSSD_Y"};
-   TTreeReaderArray<Double_t> TelescopeNr = {fReader, "TelescopeNr"};
+   TTreeReaderArray<Int_t> DSSD_X = {fReader, "DSSD_X"};
+   TTreeReaderArray<Int_t> DSSD_Y = {fReader, "DSSD_Y"};
+   TTreeReaderArray<Int_t> TelescopeNr = {fReader, "TelescopeNr"};
 
    struct Id{
+   public:
     int x;
     int y;
     int mg;
+   public:
+    Id(int x=0, int y=0, int mg=0): x(x), y(y), mg(mg){};
+    bool operator ==  (const Id& rhs)const{
+        return x == rhs.x && y == rhs.y && mg == rhs.mg;
+    }
+    bool operator !=  (const Id& rhs)const{
+        return ! (*this == rhs);
+    }
+    bool operator <  (const Id& rhs)const{
+        if(x != rhs.x) return x < rhs.x;
+        if(y != rhs.y) return y < rhs.y;
+        if(mg != rhs.mg) return mg < rhs.mg;
+        return false;
+    }
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        ar & x;
+        ar & y;
+        ar & mg;
+    }
    };
 
-   struct PosN{
     struct Pos{
+    public:
       double x;
       double y;
       double z;
-    };
-    Pos pos;
-    int n;
-   };
+    public:
+      Pos(double x=0, double y=0, double z=0):x(x), y(y), z(z){};
+      bool operator == (const Pos& rhs)const{
+          return x == rhs.x && y == rhs.y && z == rhs.z;
+      }
+        bool operator != (const Pos& rhs)const{
+            return ! (*this == rhs);
+        }
+      bool operator <  (const Pos& rhs)const{
+          if(x != rhs.x) return x < rhs.x;
+          if(y != rhs.y) return y < rhs.y;
+          if(z != rhs.z) return z < rhs.z;
+          return false;
+      }
+      double dist(const Pos& other, const double& scale)const{
+          return sqrt(pow(x-other.x*scale, 2)+pow(y-other.y*scale, 2)+pow(z-other.z*scale, 2));
+      }
+        friend class boost::serialization::access;
 
-   typedef std::map<Id, std::map<PosN::Pos, int>> Transform;
- 
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int version)
+        {
+            ar & x;
+            ar & y;
+            ar & z;
+        }
+    };
+
+   typedef std::map<Id, std::map<Pos, int>> Transform;
+
    Transform transform;
+   std::map<Id, double> threasholdStripT;
+    std::map<Id, double> threasholdStripE;
 
    Transform GetTsf(){return transform; };
+   void SetThreasholds(const std::map<Id, double> thrT, const std::map<Id, double> thrE){threasholdStripE = thrE; threasholdStripT = thrT;};
 
+   TTree* tree;
+   TFile* outfile;
+   MugastData mugastData;
 
    Selector(TTree * /*tree*/ =0) { }
    virtual ~Selector() { }
