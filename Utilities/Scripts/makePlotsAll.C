@@ -12,6 +12,7 @@ std::mutex mtx;
 std::mutex mtx_fork;
 
 void job(const std::string&);
+void jobAna(const std::string&);
 void getJob();
 void findJob();
 
@@ -31,7 +32,7 @@ void makePlotsAll() {
         threads.at(i).join();
         std::cout << "joined " << i << std::endl;
     }
-    system("hadd outFinished.root out_*.root");
+    //system("hadd outFinished.root out_*.root");
 }
 
 int main(){
@@ -61,27 +62,41 @@ void getJob() {
                 break;
             case 0:
                 job(val);
+                jobAna(val);
                 exit(0);
             default:
                 mtx_fork.unlock();
-                wait(&status);
+                waitpid(pid, &status, 0);
         }
     }
-    std::cout << "Finished job!!!\n";
 }
 
 void job(const std::string& val) {
     std::string command;
     command += "npsimulation -E ";  //./Reaction/46Ar3Hed47K_0keV_s12_franco.reaction
-    command += "./Reaction/";      
+    command += "./Reaction/";  //./Reaction/46Ar3Hed47K_0keV_s12_franco.reaction
     command += val;
     command += " -D ./Detector/MUGAST_cryotarget_franco.detector -O ";
     command += val.substr(val.find_last_of("/") + 1, val.find_last_of(".") - val.find_last_of("/") - 1);
-    command += ".root ";  //franco_0keV.root";
+    command += ".root "; 
     command += " -B 46Ar_single.mac";
 
     std::cout << "Launching job : " << command << std::endl;
     //system(command.c_str());
+}
+
+void jobAna(const std::string& val) {
+    std::string command;
+    command += "npanalysis -T ./simout/";
+    command += val.substr(val.find_last_of("/") + 1, val.find_last_of(".") - val.find_last_of("/") - 1);
+    command += ".root SimulatedTree"; 
+    command += " -D ./Detector/MUGAST_cryotarget_franco.detector -O ";
+    command += val.substr(val.find_last_of("/") + 1, val.find_last_of(".") - val.find_last_of("/") - 1);
+    command += ".root ";  
+
+    std::cout << "Launching job : " << command << std::endl;
+    system(command.c_str());
+
 }
 
 void findJob() {
