@@ -141,7 +141,7 @@ bool Analysis::Job(const int ind, int* exit_status)
                 }
                 if (fork_enabled)
                     exit(0);
-                [[ fallthrough ]]
+                [[ fallthrough ]];
                 //break;
             default:
                 threads_pid[ind] = pid;
@@ -193,18 +193,18 @@ Analysis::Data_partial *Analysis::RunSelector(const std::string& run) const
     auto *selector = new Selector();
 
     tree->Process(selector, ("analyzed_" + run.substr(run.find_last_of('/') + 1)).c_str());
-    if (generate_TW_ice_interpolation)
-    {
-        auto *partial_data = new Data_partial(selector->GetTWvsIce());
-        delete selector;
-        return partial_data;
-    }
-    else
-    {
-        delete selector;
-        Data_partial *dummy_data = nullptr;
-        return dummy_data;
-    }
+    //if (generate_TW_ice_interpolation)
+    //{
+    //    auto *partial_data = new Data_partial(selector->GetTWvsIce());
+    //    delete selector;
+    //    return partial_data;
+    //}
+    //else
+    //{
+    delete selector;
+    Data_partial *dummy_data = nullptr;
+    return dummy_data;
+    //}
 }
 
 std::string Analysis::GetRun()

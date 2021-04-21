@@ -273,6 +273,9 @@ void Selector::SlaveBegin(TTree * /*tree*/){
         tree->Branch("Must2Data", &mugast_fragment.getMmData());
         tree->Branch("CatsData", &mugast_fragment.getCatsData());
         tree->Branch("AgataData", &agata_gammas.Get_Data());
+        tree->Branch("Time", &time);
+        tree->Branch("IceThicknessFront", &iceThicknessFront);
+        tree->Branch("IceThicknessBack", &iceThicknessBack);
     }
     //tree->SetAutoSave(-10000);
     //tree->SetAutoFlush(-10000);
@@ -329,13 +332,17 @@ Bool_t Selector::Process(Long64_t entry){
     PlotMugastGraphs();
     DEBUG("------------>Finished: Analysis of one event", "");
 
-    if (entry % 10000 == 0)
-        mugast_fragment.storeTWvsIce();
+    //if (entry % 10000 == 0)
+    //    mugast_fragment.storeTWvsIce();
 
     for (unsigned int ii = 0; ii < mugast_fragment.getMult(); ++ii) {
         if (mugast_fragment.getEx(ii) < -2.)
             general_histo_ptr->Fill(mugast_fragment.getSiE(ii), mugast_fragment.getT(ii), mugast_fragment.getMg(ii) );
     }
+
+    time = *TW;
+    iceThicknessFront = mugast_fragment.getIceThicknessFront();
+    iceThicknessBack = mugast_fragment.getIceThicknessBack();
 
     Fill(tree);
     return kTRUE;
@@ -652,9 +659,9 @@ bool Selector::GetSettings(){
     return true;
 }
 
-std::vector<std::pair<double, double>> Selector::GetTWvsIce(){
-    return mugast_fragment.getTWvsIce();
-}
+//std::vector<std::pair<double, double>> Selector::GetTWvsIce(){
+//    return mugast_fragment.getTWvsIce();
+//}
 
 inline bool Selector::Fill(TH1D* histo, const double &data1){
     if (histo == nullptr){

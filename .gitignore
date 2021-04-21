@@ -33,3 +33,5 @@ serialization.txt
 Utilities/FemulCalibrations/Configs/ConfVAMOS/Calibs
 Utilities/FemulCalibrations/ConfVAMOS/Calibs
 
+
+*.log
