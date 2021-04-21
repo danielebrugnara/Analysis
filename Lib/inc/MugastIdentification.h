@@ -117,7 +117,7 @@ private: //Variables used internally
     Interpolation *gasThicknessDerivativeCartesian{};
     Interpolation *havarAngle{};
     Interpolation *TW_Brho_M46_Z18{};
-    std::vector<std::pair<double, double>> TW_vs_ice;
+    //std::vector<std::pair<double, double>> TW_vs_ice;
 
     //Minimizer for ice thickness estimation
     std::unique_ptr<Minimizer> iceThicknessMinimizer;
@@ -164,38 +164,40 @@ private: //Functions used internally during analysis
 public: //Functions called by selector
     bool identify();
     //Getter methods
-    inline unsigned int getMult()             const { return fragment.multiplicity; };
-    inline TVector3*    getPos(const int &i)        { return &(fragment.Pos[i]); };
-    inline int          getSiX(const int &i) const { return fragment.SI_X[i]; };
-    inline int          getSiY(const int &i) const { return fragment.SI_Y[i]; };
-    inline double       getSiE(const int &i) const { return fragment.SI_E[i]; };
-    inline double       getT2(const int &i)   const { return fragment.T2[i]; };
-    inline double       getMg(const int &i)   const { return fragment.MG[i]; };
-    inline double       getM(const int &i)    const { return fragment.M[i]; };
-    inline double       getZ(const int &i)    const { return fragment.Z[i]; };
-    inline double       getE(const int &i)    const { return fragment.E[i]; };
-    inline double       getEx(const int &i)   const { return fragment.Ex[i]; };
-    inline double       getT(const int &i)    const { return fragment.T[i]; }
-    inline std::string  getParticle(const int &i) const { return fragment.Particle[i]; }
-    inline double       getThetaCm(const int &i)  const {return fragment.E_CM[i];};
+    inline unsigned int getMult()                   const { return fragment.multiplicity;   };
+    inline TVector3*    getPos(const int &i)        { return &(fragment.Pos[i]);            };
+    inline int          getSiX(const int &i)        const { return fragment.SI_X[i];        };
+    inline int          getSiY(const int &i)        const { return fragment.SI_Y[i];        };
+    inline double       getSiE(const int &i)        const { return fragment.SI_E[i];        };
+    inline double       getT2(const int &i)         const { return fragment.T2[i];          };
+    inline double       getMg(const int &i)         const { return fragment.MG[i];          };
+    inline double       getM(const int &i)          const { return fragment.M[i];           };
+    inline double       getZ(const int &i)          const { return fragment.Z[i];           };
+    inline double       getE(const int &i)          const { return fragment.E[i];           };
+    inline double       getEx(const int &i)         const { return fragment.Ex[i];          };
+    inline double       getT(const int &i)          const { return fragment.T[i];           };
+    inline std::string  getParticle(const int &i)   const { return fragment.Particle[i];    };
+    inline double       getThetaCm(const int &i)    const { return fragment.E_CM[i];        };
     inline TVector3*    getEmissionDirection(const int &i)
         { return &(fragment.EmissionDirection[i]); };
     inline double       getThetaLab(const int &i) const
         {return fragment.EmissionDirection[i].Angle(TVector3(0, 0, 1));};
     inline double       getPhi(const int &i) const
         {return fragment.EmissionDirection[i].Phi();};
+    inline double       getIceThicknessFront()      const { return currentIceThickness.first;};
+    inline double       getIceThicknessBack()       const { return currentIceThickness.second;};
 
     inline MugastData&  getMgData()                   {return  fragment;}
     inline Must2Data&  getMmData()                    {return  fragmentMust;}
     inline CatsData&  getCatsData()                   {return  fragmentCats;}
 
     //Other methods
-    std::vector<std::pair<double, double>> getTWvsIce();
+    //std::vector<std::pair<double, double>> getTWvsIce();
 
-    inline void storeTWvsIce(){
-            TW_vs_ice.emplace_back(**(data->TW),
-                                   currentIceThickness.first);
-    };
+    //inline void storeTWvsIce(){
+    //        TW_vs_ice.emplace_back(**(data->TW),
+    //                               currentIceThickness.first);
+    //};
 
     inline void setData(Data const *data){
         delete this->data;

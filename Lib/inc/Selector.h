@@ -152,7 +152,7 @@ public:
     virtual void SlaveTerminate();
     virtual void Terminate();
 
-    std::vector<std::pair<double, double>> GetTWvsIce();
+    //std::vector<std::pair<double, double>> GetTWvsIce();
     std::vector<TObject*> Output;
 
     //My methods
@@ -179,6 +179,9 @@ public:
     VamosIdentification vamos_fragment;
     MugastIdentification mugast_fragment;
     AgataProcessing agata_gammas;
+    double time{0};
+    double iceThicknessFront{0};
+    double iceThicknessBack{0};
 
     struct VamosConf{ //Configuration spectra
         std::unique_ptr<TH2D> mdE_E;

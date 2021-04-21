@@ -129,6 +129,8 @@ public :
 
    Transform GetTsf(){return transform; };
    void SetThreasholds(const std::map<Id, double> thrT, const std::map<Id, double> thrE){threasholdStripE = thrE; threasholdStripT = thrT;};
+   void SetOutputName(const std::string& name){outputFileName = name;};
+    std::string outputFileName{"out.root"};
 
    TTree* tree;
    TFile* outfile;

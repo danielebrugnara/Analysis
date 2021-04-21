@@ -261,7 +261,7 @@ bool MugastIdentification::initializeELoss(){
     currentIceThickness.second = currentIceThickness.first * icePercentageSecond;
     beamEnergyMatchThreashold = 0.3 * UNITS::MeV; //In MeV
 
-    TW_vs_ice.reserve(100);
+    //TW_vs_ice.reserve(100);
     return true;
 }
 
@@ -286,9 +286,9 @@ bool MugastIdentification::initializeInterpolations() {
     return true;
 }
 
-std::vector<std::pair<double, double>> MugastIdentification::getTWvsIce(){
-    return TW_vs_ice;
-}
+//std::vector<std::pair<double, double>> MugastIdentification::getTWvsIce(){
+//    return TW_vs_ice;
+//}
 
 template<class D>
 bool MugastIdentification::fillInitialData(MugastData & localFragment, const D* nplData) {

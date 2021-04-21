@@ -46,7 +46,7 @@ void Selector::SlaveBegin(TTree * /*tree*/)
 
     TString option = GetOption();
 
-    outfile = new TFile("outfile.root", "recreate");
+    outfile = new TFile(outputFileName.c_str(), "recreate");
     outfile->cd();
     tree = new TTree("AnalyzedTree", "AnalyzedTree");
     tree->Branch("MugastData", &mugastData);
@@ -106,6 +106,7 @@ Bool_t Selector::Process(Long64_t entry)
         auto itE = threasholdStripE.find(idE_tmp);
         auto itT = threasholdStripT.find(idT_tmp);
         if(itE != threasholdStripE.end() && itT != threasholdStripT.end() && EDep[i] > itE->second){
+            mugastData.MG[i]      = TelescopeNr[i];
             mugastData.Pos[i]      = TVector3(X[i], Y[i], Z[i]);
             mugastData.SI_X[i]     = DSSD_X[i];
             mugastData.SI_Y[i]     = DSSD_Y[i];
