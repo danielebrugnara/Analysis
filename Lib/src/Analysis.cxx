@@ -141,7 +141,7 @@ bool Analysis::Job(const int ind, int* exit_status)
                 }
                 if (fork_enabled)
                     exit(0);
-                /* fall through */
+                [[ fallthrough ]]
                 //break;
             default:
                 threads_pid[ind] = pid;

@@ -1,7 +1,7 @@
 #include "RunSelector.h"
 
-RunSelector::RunSelector(std::string simu_file_name, std::string data_file_name){
-
+RunSelector::RunSelector(std::string simu_file_name, std::string data_file_name, const std::vector<std::string>& files):
+    filesToAnalyze(files){
     std::string serialization_name = "serialization.txt";
     std::ifstream infile(serialization_name);
     if (!infile.is_open()) {
@@ -57,6 +57,20 @@ RunSelector::RunSelector(std::string simu_file_name, std::string data_file_name)
         std::cout << "Starting selector\n";
         treeSimu->Process(selectorSimu, "option");
     }
+    for(const auto& it: filesToAnalyze){
+        TFile *fileSimu = new TFile(it.c_str(), "read");
+        if (fileSimu == nullptr) std::cout << "File simu:" << it << " not found\n";
+        TTree *treeSimu = (TTree *) fileSimu->Get("PhysicsTree");
+        if (treeSimu == nullptr) std::cout << "Tree simu not found";
+        Selector *selectorSimu = new Selector();
+        selectorSimu->SetThreasholds(threashT_read, threashE_read);
+        std::string outFileName = it;
+        outFileName.insert(outFileName.find_last_of('.'), "_analyzed");
+        selectorSimu->SetOutputName(outFileName);
+        std::cout << "Starting selector\n";
+        treeSimu->Process(selectorSimu, "option");
+    }
+
 
     for (auto &itTsf: trsf_read) {
         for (auto &it: itTsf.second) {

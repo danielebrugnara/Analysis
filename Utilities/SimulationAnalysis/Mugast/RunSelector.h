@@ -20,7 +20,9 @@
 #include <fstream>
 
 class RunSelector{
-    public:
-    RunSelector(std::string, std::string);
+public:
+    RunSelector(std::string, std::string, const std::vector<std::string>&);
+private:
+    std::vector<std::string> filesToAnalyze;
 };
 #endif
