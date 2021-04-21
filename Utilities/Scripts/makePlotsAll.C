@@ -1,40 +1,52 @@
 #include <sys/wait.h>
+#include <unistd.h>
+#include <dirent.h>
 
+#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
 
-std::vector<int> jobs;
-std::vector<std::thread> threads;
+std::vector<std::string> jobs;
 std::mutex mtx;
 std::mutex mtx_fork;
 
-void run(int);
-void run2(int);
-void run3(int);
+void job(const std::string&);
+void jobAna(const std::string&);
 void getJob();
+void findJob();
 
-
-void makePlotsAll(){
+void makePlotsAll() {
     int n_threads = 10;
-    for (int i=15;i<32;++i){
-        jobs.emplace_back(i);
-    }
-    for (int i=0;i<n_threads;++i){
+    std::vector<std::thread> threads;
+    //for (int i=15;i<32;++i){
+    //    jobs.emplace_back(i);
+    //}
+    findJob();
+    for (int i = 0; i < n_threads; ++i) {
         threads.emplace_back(&getJob);
     }
 
-    for (int i=0;i<n_threads;++i){
+    for (int i = 0; i < n_threads; ++i) {
         std::cout << "try to join " << i << std::endl;
         threads.at(i).join();
         std::cout << "joined " << i << std::endl;
     }
-    system("hadd outFinished.root out_*.root");
+    //system("hadd outFinished.root out_*.root");
 }
 
+int main(){
+    makePlotsAll();
+}
 
-void getJob(){
-    while (1){
+void getJob() {
+    while (1) {
         mtx.lock();
-        if (jobs.empty()) break;
-        int val = jobs.back();
+        if (jobs.empty()) {
+            mtx.unlock();
+            break;
+        }
+        auto val = jobs.back();
         jobs.pop_back();
         mtx.unlock();
 
@@ -44,104 +56,65 @@ void getJob(){
         mtx_fork.lock();
 
         pid = fork();
-        switch(pid){
+        switch (pid) {
             case -1:
                 throw std::runtime_error("Fork error");
                 break;
             case 0:
-                //run(val);
-                //run2(val);
-                run3(val);
+                job(val);
+                jobAna(val);
                 exit(0);
             default:
                 mtx_fork.unlock();
                 waitpid(pid, &status, 0);
         }
     }
+}
+
+void job(const std::string& val) {
+    std::string command;
+    command += "npsimulation -E ";  //./Reaction/46Ar3Hed47K_0keV_s12_franco.reaction
+    command += "./Reaction/";  //./Reaction/46Ar3Hed47K_0keV_s12_franco.reaction
+    command += val;
+    command += " -D ./Detector/MUGAST_cryotarget_franco.detector -O ";
+    command += val.substr(val.find_last_of("/") + 1, val.find_last_of(".") - val.find_last_of("/") - 1);
+    command += ".root "; 
+    command += " -B 46Ar_single.mac";
+
+    std::cout << "Launching job : " << command << std::endl;
+    //system(command.c_str());
+}
+
+void jobAna(const std::string& val) {
+    std::string command;
+    command += "npanalysis -T ./simout/";
+    command += val.substr(val.find_last_of("/") + 1, val.find_last_of(".") - val.find_last_of("/") - 1);
+    command += ".root SimulatedTree"; 
+    command += " -D ./Detector/MUGAST_cryotarget_franco.detector -O ";
+    command += val.substr(val.find_last_of("/") + 1, val.find_last_of(".") - val.find_last_of("/") - 1);
+    command += ".root ";  
+
+    std::cout << "Launching job : " << command << std::endl;
+    system(command.c_str());
 
 }
 
-
-
-
-void run(int number){
-
-    TFile f("sum.root", "read");
-    TTree *tree = (TTree*)f.Get("AnalyzedTree");
-    TFile* f_out = new TFile(Form("out_%i.root", number), "recreate");
-    std::set<int> mg = {1, 3, 4, 5, 7, 11};
-    int i=number;
-    for (const auto& it: mg){
-        std::string histo_name = Form("h_corrected_%i_%i", i,it);
-        auto* histo = new TH1D(histo_name.c_str(),histo_name.c_str(),150, -15, 15);
-        std::cout << "h_corrected" << i << std::endl;
-        tree->Draw(Form("MugastData.Ex_corrected[0][%i]>>%s", i, histo_name.c_str()), Form("MugastData.M ==2 && MugastData.Z == 1 && VamosData.id_Z == 19 && VamosData.id_M == 47 && MugastData.MG == %i",it));
-        histo->Write();
-
+void findJob() {
+    DIR* dir;
+    struct dirent* ent;
+    if ((dir = opendir("./Reaction/")) != NULL) {
+        /* print all the files and directories within directory */
+        while ((ent = readdir(dir)) != NULL) {
+            std::string tmpname(ent->d_name);
+            std::string necessaryBegin = "46Ar3Hed47K_";
+            if(tmpname.compare(0, necessaryBegin.size(), necessaryBegin) != 0 ) continue;
+            printf("%s\n", ent->d_name);
+            jobs.emplace_back(tmpname);
+        }
+        closedir(dir);
+    } else {
+        /* could not open directory */
+        perror("");
+        return;
     }
-    for (const auto& it: mg){
-        std::string histo_name = Form("h_uncentered_%i_%i", i,it);
-        auto* histo = new TH1D(histo_name.c_str(), histo_name.c_str(),150, -15, 15);
-        std::cout << "h_uncentered" << i << std::endl;
-        tree->Draw(Form("MugastData.Ex_uncentered[0][%i]>>%s", i, histo_name.c_str()), Form("MugastData.M ==2 && MugastData.Z == 1 && VamosData.id_Z == 19 && VamosData.id_M == 47 && MugastData.MG == %i", it));
-        histo->Write();
-
-    }
-    f_out->Write();
-    f_out->Close();
-}
-
-void run2(int number){
-
-    TFile f("sum.root", "read");
-    TTree *tree = (TTree*)f.Get("AnalyzedTree");
-    TFile* f_out = new TFile(Form("out2_%i.root", number), "recreate");
-    std::set<int> mg = {1, 3, 4, 5, 7, 11};
-    int i=number;
-    for (const auto& it: mg){
-        std::string histo_name = Form("h_corrected_%i_%i", i,it);
-        auto* histo = new TH2D(histo_name.c_str(),histo_name.c_str(),1000, 0, TMath::Pi(), 1000, 0, 15);
-        std::cout << "h_corrected" << i << std::endl;
-        tree->Draw(Form("MugastData.E_corrected[0][%i]:MugastData.EmissionDirection_corrected[%i].Theta()>>%s", i, i, histo_name.c_str()), Form("MugastData.M ==2 && MugastData.Z == 1 && VamosData.id_Z == 19 && VamosData.id_M == 47 && MugastData.MG == %i",it));
-        histo->Write();
-
-    }
-    for (const auto& it: mg){
-        std::string histo_name = Form("h_uncentered_%i_%i", i,it);
-        auto* histo = new TH2D(histo_name.c_str(),histo_name.c_str(),1000, 0, TMath::Pi(), 1000, 0, 15);
-        std::cout << "h_uncentered" << i << std::endl;
-        tree->Draw(Form("MugastData.E_uncentered[0][%i]:MugastData.EmissionDirection_uncentered[%i].Theta()>>%s", i, i, histo_name.c_str()), Form("MugastData.M ==2 && MugastData.Z == 1 && VamosData.id_Z == 19 && VamosData.id_M == 47 && MugastData.MG == %i", it));
-        histo->Write();
-
-    }
-    f_out->Write();
-    f_out->Close();
-}
-
-void run3(int number){
-
-    TFile f("sum.root", "read");
-    TTree *tree = (TTree*)f.Get("AnalyzedTree");
-    if (tree == nullptr) std::cout << "error\n";
-    TFile* f_out = new TFile(Form("out3_%i.root", number), "recreate");
-    std::set<int> mg = {1, 3, 4, 5, 7, 11};
-    int i=number;
-    for (const auto& it: mg){
-        std::string histo_name = Form("h_corrected_%i_%i", i,it);
-        auto* histo = new TH2D(histo_name.c_str(),histo_name.c_str(),1000, 0, TMath::Pi(), 1000, -15, 15);
-        std::cout << "h_corrected" << i << std::endl;
-        tree->Draw(Form("MugastData.Ex_corrected[0][%i]:MugastData.EmissionDirection_corrected[%i].Theta()>>%s", i, i, histo_name.c_str()), Form("MugastData.M ==2 && MugastData.Z == 1 && VamosData.id_Z == 19 && VamosData.id_M == 47 && MugastData.MG == %i",it));
-        histo->Write();
-
-    }
-    for (const auto& it: mg){
-        std::string histo_name = Form("h_uncentered_%i_%i", i,it);
-        auto* histo = new TH2D(histo_name.c_str(),histo_name.c_str(),1000, 0, TMath::Pi(), 1000, -15, 15);
-        std::cout << "h_uncentered" << i << std::endl;
-        tree->Draw(Form("MugastData.Ex_uncentered[0][%i]:MugastData.EmissionDirection_uncentered[%i].Theta()>>%s", i, i, histo_name.c_str()), Form("MugastData.M ==2 && MugastData.Z == 1 && VamosData.id_Z == 19 && VamosData.id_M == 47 && MugastData.MG == %i", it));
-        histo->Write();
-
-    }
-    f_out->Write();
-    f_out->Close();
 }
