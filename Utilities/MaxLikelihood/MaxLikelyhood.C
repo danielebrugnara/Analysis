@@ -31,6 +31,9 @@ struct LhResults{
     double maxVal{-1E10};
     double maxX{0};
     double maxY{0};
+    double percentX{0};
+    double percentY{0};
+    int N;
 };
 
 struct LhInputs{
@@ -50,9 +53,9 @@ struct LhInputs{
 
 LhResults gridSearch(LhInputs& inputs);
 
-std::vector<double> MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu){
+LhResults MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu){
 
-    if (simu.size() != 3) return std::vector<double>();
+    if (simu.size() != 3) return LhResults();
     int N{0};
 
     for (int j = 0; j < data->GetNbinsX(); ++j) {
@@ -60,7 +63,8 @@ std::vector<double> MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu){
     }
     //std::vector<int> excludedBins {0, 12, 13, 14};
     //std::vector<int> excludedBins {6,7,8};
-    std::vector<int> excludedBins {0, 7, 8, 9};
+    //std::vector<int> excludedBins {0, 7, 8, 9};
+    std::vector<int> excludedBins {0};
 
     //remove not wanted bins and normalize
     for(const auto&it: excludedBins){
@@ -126,7 +130,9 @@ std::vector<double> MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu){
     TLine* theoricValue = new TLine(sf[1]/(sf[1]+sf[0]), inputsPartial.startY,sf[1]/(sf[1]+sf[0]), inputsPartial.endY);
     theoricValue->Draw();
 
-    return std::vector<double>{results.maxX, results.maxY, 1-results.maxX-results.maxY};
+    results.N = inputs.N;
+
+    return results;
 }
 
 LhResults gridSearch(LhInputs& inputs) {
@@ -199,6 +205,9 @@ LhResults gridSearch(LhInputs& inputs) {
             }
         }
     }
+    double sigmasRatioTotal = inputs.sigmasRatio[0]+inputs.sigmasRatio[1]+inputs.sigmasRatio[2];
+    results.percentX = inputs.sigmasRatio[0]/sigmasRatioTotal * results.maxX;
+    results.percentY = inputs.sigmasRatio[1]/sigmasRatioTotal * results.maxY;
     results.discrepancy = (TH1D*) results.dataWithErrors->Clone("discrepancies");
     for (int i = 0; i < results.discrepancy->GetNbinsX(); ++i) {
         results.discrepancy->SetBinContent(i, results.dataWithErrors->GetBinContent(i)-results.fit->GetBinContent(i));
@@ -284,19 +293,174 @@ double binomial(int N, int k, double p){
     return TMath::Binomial(N, k) * pow(p, k)* pow(1-p, N-k);
 }
 
+std::map<std::string, std::string> SumThicknesses(){
+    std::map<int, int> thicknessToNDeuterons{
+            {20, 10},
+            {25, 36},
+            {30, 30},
+            {35, 141},
+            {40, 108},
+            {45, 80},
+            {50, 120},
+            {55, 20}
+    };
+    int maxVal = std::max_element(thicknessToNDeuterons.begin(), thicknessToNDeuterons.end(),
+                          [](const std::pair<int, int>& p1, const std::pair<int, int>& p2){
+                                return p1.second < p2.second;
+                            }
+                        )->second;
+
+    std::map<std::string, std::string> prefixes{
+            {"s12", "selector_46Ar3Hed47K_0keV_s12"},
+            {"d32", "selector_46Ar3Hed47K_360keV_d32"},
+            {"f72", "selector_46Ar3Hed47K_2020keV_f72"},
+            {"flat0", "selector_46Ar3Hed47K_0keV_flat"},
+            {"flat2", "selector_46Ar3Hed47K_360keV_flat"},
+            {"flat3", "selector_46Ar3Hed47K_2020keV_flat"}
+    };
+
+    std::map<int, double> percentOfThickness;
+    for (const auto& it: thicknessToNDeuterons){
+        percentOfThickness.emplace(it.first, static_cast<double>(it.second)/maxVal);
+    }
+
+    std::map<std::string, std::string> outputFiles;
+    for (const auto& itReaction:prefixes){
+        std::map<std::string, double> files;
+        for (const auto& itThickness: percentOfThickness){
+            std::string filePath{"./../../DataAnalyzed/simu/"};
+            filePath += itReaction.second;
+            filePath += "_0_0_";
+            filePath += std::to_string(itThickness.first);
+            filePath += "um_analyzed.root";
+            files[filePath] = itThickness.second;
+        }
+        outputFiles.emplace(itReaction.first, itReaction.second+"sumthickness.root");
+        std::ifstream testFile(outputFiles[itReaction.first]);
+        if (!testFile.is_open())
+            CreateSimulationFile(files, outputFiles[itReaction.first]);
+    }
+    return outputFiles;
+}
+
+void SumSimulationsWithPercentages(const LhResults& results, std::map<std::string, std::string> files){
+    {
+        std::map<std::string, double> filesToSum;
+        filesToSum.emplace(files["s12"], results.percentX);
+        filesToSum.emplace(files["d32"], results.percentY);
+        filesToSum.emplace(files["f72"], 1 - results.percentX - results.percentY);
+        CreateSimulationFile(filesToSum, "simulationsum.root");
+    }
+    {
+        std::map<std::string, double> filesToSum;
+        filesToSum.emplace(files["flat0"], results.percentX);
+        filesToSum.emplace(files["flat2"], results.percentY);
+        filesToSum.emplace(files["flat3"], 1 - results.percentX - results.percentY);
+        CreateSimulationFile(filesToSum, "simulationsum.root");
+    }
+
+}
+
+void NormalizeHistograms(const std::string& fileName, const LhResults& results){
+    TFile* outFile = new TFile(fileName.c_str(),"update");
+    if (!outFile->IsOpen()) throw std::runtime_error("histofile not present!!");
+    std::cout << "Normalizing histograms\n";
+
+    double (*integral)(TH1D*) = [](TH1D* h){
+        return h->Integral(h->FindBin(1), h->FindBin(89));
+    };
+
+    void (*normalize)(TH1D*, TH1D*, double  (*)(TH1D*)) = [](TH1D* h, TH1D* data, double (*integral)(TH1D*)){
+        h->Scale(integral(data)/integral(h));
+    };
+
+    TH1D* (*cloneHisto)(const std::string&, TFile*) = [](const std::string& name, TFile* outFile){
+        return  static_cast<TH1D*>(static_cast<TH1D*>(outFile->Get(name.c_str()))->Clone((name+"Normalized").c_str()));
+    };
+
+    auto* dataCM = cloneHisto("dataCM", outFile);
+    double N = integral(dataCM);
+
+    std::vector<TH1D* > histos;
+    auto* normalizeds12CM = cloneHisto("s12CM", outFile);
+    auto* normalizedd32CM = cloneHisto("d32CM", outFile);
+    auto* normalizedf72CM = cloneHisto("f72CM", outFile);
+    auto* normalizedflat0CM = cloneHisto("flat0CM", outFile);
+    auto* normalizedflat2CM = cloneHisto("flat2CM", outFile);
+    auto* normalizedflat3CM = cloneHisto("flat3CM", outFile);
+
+    normalize(normalizeds12CM  , dataCM, integral);
+    normalize(normalizedd32CM  , dataCM, integral);
+    normalize(normalizedf72CM  , dataCM, integral);
+    normalize(normalizedflat0CM, dataCM, integral);
+    normalize(normalizedflat2CM, dataCM, integral);
+    normalize(normalizedflat3CM, dataCM, integral);
+
+    TH1D normalizationTotal = results.percentX* *normalizedflat0CM + results.percentY* *normalizedflat2CM + (1-results.percentX - results.percentY)* *normalizedflat3CM;
+    normalizationTotal.SetName("normalizationTotal");
+
+    *dataCM = *dataCM / normalizationTotal;
+    TH1D* simuCM = new TH1D((results.percentX* *normalizeds12CM + results.percentY* *normalizedd32CM + (1 - results.percentX - results.percentY)* *normalizedf72CM) / normalizationTotal);
+    simuCM->SetName("simuCM");
+
+
+    normalizeds12CM  ->Write();
+    normalizedd32CM  ->Write();
+    normalizedf72CM  ->Write();
+    normalizedflat0CM->Write();
+    normalizedflat2CM->Write();
+    normalizedflat3CM->Write();
+    dataCM->Write();
+    simuCM->Write();
+    normalizationTotal.Write();
+    outFile->Write();
+    outFile->Close();
+}
+
+void SaveTheoryDistributions(const std::string& fileName, const LhResults& results) {
+    TFile *outFile = new TFile(fileName.c_str(), "update");
+    if (!outFile->IsOpen()) throw std::runtime_error("histofile not present!!");
+    std::cout << "Normalizing histograms\n";
+
+    TGraph gs12("xsec_s12.txt");
+    gs12.SetName("gs12");
+    TGraph gd32("xsec_d32.txt");
+    gd32.SetName("gd32");
+    TGraph gf72("xsec_f72.txt");
+    gf72.SetName("gf72");
+
+    gs12.Write();
+    gd32.Write();
+    gf72.Write();
+
+    TGraph gsum;
+    gs12.SetName("gsum");
+
+    for (int i{0}; i<gs12.GetN(); ++i){
+        gsum.SetPoint(gsum.GetN(),
+                      gs12.GetPointX(i),
+                      gs12.GetPointY(i)* results.percentX
+                        + gd32.GetPointY(i)* results.percentY
+                        + gf72.GetPointY(i) *(1- results.percentX-results.percentY));
+    }
+    gsum.Write();
+    outFile->Write();
+    outFile->Close();
+}
+
 void MaxLikelyhood(){
 
-    TFile* file = new TFile("./histofile.root", "read");
-    std::map<std::string, std::string> files;
-    std::map<std::string, std::string> conditions;
+
+    std::map<std::string, std::string> files = SumThicknesses();
     files["data"]   = "./../../DataAnalyzed/sum.root";
+
+    std::map<std::string, std::string> conditions;
     conditions["data"] = "MugastData.M ==2 && MugastData.Z == 1 && VamosData.id_Z == 19 && VamosData.id_M == 47";
-    files["s12"]    = "./../../DataAnalyzed/simu/46Ar3Hed47K_0keV_s12_0_0_analyzed.root";
     conditions["s12"] = "";
-    files["d32"]    = "./../../DataAnalyzed/simu/46Ar3Hed47K_360keV_d32_0_0_analyzed.root";
     conditions["d32"] = "";
-    files["f72"]    = "./../../DataAnalyzed/simu/46Ar3Hed47K_2020keV_f72_0_0_analyzed.root";
     conditions["f72"] = "";
+
+    TFile* file = new TFile("./histofile.root", "read");
     if (!file->IsOpen()){
         TFile* outFile = new TFile("./histofile.root","recreate");
         for (const auto&it: files){
@@ -305,8 +469,15 @@ void MaxLikelyhood(){
             TH1D* histo = new TH1D(it.first.c_str(), it.first.c_str(), 45, 90, 180);
             tree->Draw(Form("MugastData.Pos.Theta()*180./TMath::Pi()>>%s", it.first.c_str()), conditions[it.first].c_str());
 
+            TH1D* histoCM = new TH1D((it.first+"CM").c_str(), (it.first+"CM").c_str(), 45, 0, 90);
+            if(it.first != "data")
+                tree->Draw(Form("MugastData.Theta_CM*180./TMath::Pi()>>%s", (it.first+"CM").c_str()), conditions[it.first].c_str());
+            else
+                tree->Draw(Form("180 - MugastData.Theta_CM*180./TMath::Pi()>>%s", (it.first+"CM").c_str()), conditions[it.first].c_str());
+
             outFile->cd();
             histo->Write();
+            histoCM->Write();
         }
         outFile->Write();
         outFile->Close();
@@ -318,16 +489,13 @@ void MaxLikelyhood(){
                             (TH1D*) file->Get("d32"),
                             (TH1D*) file->Get("f72")};
 
-    std::vector<double>results =  MaximizeLikelyhood(data, simu);
+    LhResults results =  MaximizeLikelyhood(data, simu);
 
-    bool createRootFile{true};
-    if (createRootFile){
-        std::vector<std::pair<std::string, double>> filesToSum;
-        filesToSum.emplace_back(files["s12"], results[0]);
-        filesToSum.emplace_back(files["d32"], results[1]);
-        filesToSum.emplace_back(files["f72"], results[2]);
-        CreateSimulationFile(filesToSum);
-    }
+    SumSimulationsWithPercentages(results, files);
+    NormalizeHistograms("histofile.root", results);
+    SaveTheoryDistributions("histofile.root", results);
+
+
 }
 
 void computeChiSquared(TH1D* data, TH1D* simu) {

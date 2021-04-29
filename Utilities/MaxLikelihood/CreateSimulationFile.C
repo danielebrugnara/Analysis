@@ -3,8 +3,9 @@
 #include <TTreeReaderValue.h>
 
 
-void CreateSimulationFile(std::vector<std::pair<std::string, double>> files){
-    TFile* outFile = new TFile("simulationsum.root", "recreate");
+void CreateSimulationFile(std::map<std::string, double> files, const std::string& outputName="simulationsum.root"){
+    std::cout << "Output name : " << outputName << std::endl;
+    TFile* outFile = new TFile(outputName.c_str(), "recreate");
     TTree* outTree = new TTree("AnalyzedTree", "AnalyzedTree");
     MugastData outData(1,0);
     MugastData* inData{0};
@@ -12,7 +13,9 @@ void CreateSimulationFile(std::vector<std::pair<std::string, double>> files){
 
     for(const auto& it: files){
         TFile* inFile = new TFile(it.first.c_str(), "read");
+        if (inFile == nullptr) throw std::runtime_error("file not found: "+it.first);
         TTree* inTree = (TTree*) inFile->Get("AnalyzedTree");
+        if (inTree == nullptr) throw std::runtime_error("Tree  not found in: "+it.first);
         TTreeReader reader;
         reader.SetTree(inTree);
         TTreeReaderValue<MugastData> inData{reader, "MugastData"};

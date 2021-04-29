@@ -12,7 +12,7 @@ RunSelector::RunSelector(std::string simu_file_name, std::string data_file_name,
         TTree *treeSimu = (TTree *) fileSimu->Get("PhysicsTree");
         if (treeSimu == nullptr) std::cout << "Tree simu not found";
         Selector *selectorSimu = new Selector();
-        std::cout << "Starting selector\n";
+        std::cout << "Starting selector: " << simu_file_name <<"\n";
         treeSimu->Process(selectorSimu, "option");
         trsf.emplace("simu", selectorSimu->GetTsf());
 
@@ -22,7 +22,7 @@ RunSelector::RunSelector(std::string simu_file_name, std::string data_file_name,
         TTree *treeData = (TTree *) fileData->Get("AnalyzedTree");
         if (treeData == nullptr) std::cout << "Tree data not found";
         SelectorData *selectorData = new SelectorData();
-        std::cout << "Starting selector\n";
+        std::cout << "Starting selector: " << simu_file_name <<"\n";
         treeData->Process(selectorData, "option");
         trsf.emplace("data", selectorData->GetTsf());
         std::map<Selector::Id, double> threasholdStripE = selectorData->GetThsE();
@@ -54,7 +54,7 @@ RunSelector::RunSelector(std::string simu_file_name, std::string data_file_name,
         if (treeSimu == nullptr) std::cout << "Tree simu not found";
         Selector *selectorSimu = new Selector();
         selectorSimu->SetThreasholds(threashT_read, threashE_read);
-        std::cout << "Starting selector\n";
+        std::cout << "Starting selector: " << simu_file_name <<"\n";
         treeSimu->Process(selectorSimu, "option");
     }
     for(const auto& it: filesToAnalyze){
@@ -65,9 +65,9 @@ RunSelector::RunSelector(std::string simu_file_name, std::string data_file_name,
         Selector *selectorSimu = new Selector();
         selectorSimu->SetThreasholds(threashT_read, threashE_read);
         std::string outFileName = it;
-        outFileName.insert(outFileName.find_last_of('.'), "_analyzed");
+        outFileName.insert(outFileName.find_last_of('/')+1, "selector_");
         selectorSimu->SetOutputName(outFileName);
-        std::cout << "Starting selector\n";
+        std::cout << "Starting selector: " << it <<"\n";
         treeSimu->Process(selectorSimu, "option");
     }
 
