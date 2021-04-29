@@ -434,14 +434,14 @@ void SaveTheoryDistributions(const std::string& fileName, const LhResults& resul
     gf72.Write();
 
     TGraph gsum;
-    gs12.SetName("gsum");
+    gsum.SetName("gsum");
 
     for (int i{0}; i<gs12.GetN(); ++i){
         gsum.SetPoint(gsum.GetN(),
                       gs12.GetPointX(i),
-                      gs12.GetPointY(i)* results.percentX
-                        + gd32.GetPointY(i)* results.percentY
-                        + gf72.GetPointY(i) *(1- results.percentX-results.percentY));
+                      gs12.GetPointY(i)* results.maxX
+                        + gd32.GetPointY(i)* results.maxY
+                        + gf72.GetPointY(i) *(1- results.maxX-results.maxY));
     }
     gsum.Write();
     outFile->Write();
@@ -469,7 +469,7 @@ void MaxLikelyhood(){
             TH1D* histo = new TH1D(it.first.c_str(), it.first.c_str(), 45, 90, 180);
             tree->Draw(Form("MugastData.Pos.Theta()*180./TMath::Pi()>>%s", it.first.c_str()), conditions[it.first].c_str());
 
-            TH1D* histoCM = new TH1D((it.first+"CM").c_str(), (it.first+"CM").c_str(), 45, 0, 90);
+            TH1D* histoCM = new TH1D((it.first+"CM").c_str(), (it.first+"CM").c_str(), 60, 0, 90);
             if(it.first != "data")
                 tree->Draw(Form("MugastData.Theta_CM*180./TMath::Pi()>>%s", (it.first+"CM").c_str()), conditions[it.first].c_str());
             else
