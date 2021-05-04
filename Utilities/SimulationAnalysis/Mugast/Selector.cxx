@@ -108,6 +108,7 @@ Bool_t Selector::Process(Long64_t entry)
         if(itE != threasholdStripE.end() && itT != threasholdStripT.end() && EDep[i] > itE->second){
             mugastData.MG[i]      = TelescopeNr[i];
             mugastData.Pos[i]      = TVector3(X[i], Y[i], Z[i]);
+            mugastData.EmissionDirection[i]  = mugastData.Pos[i] - targetPos;
             mugastData.SI_X[i]     = DSSD_X[i];
             mugastData.SI_Y[i]     = DSSD_Y[i];
             mugastData.SI_E[i]     = EDep[i];

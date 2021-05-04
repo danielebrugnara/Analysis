@@ -58,6 +58,8 @@ public :
    TTreeReaderArray<Int_t> DSSD_Y = {fReader, "DSSD_Y"};
    TTreeReaderArray<Int_t> TelescopeNr = {fReader, "TelescopeNr"};
 
+   TVector3 targetPos{0., 0., 25.};
+
    struct Id{
    public:
     int x;

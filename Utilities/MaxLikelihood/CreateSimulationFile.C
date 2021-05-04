@@ -29,6 +29,7 @@ void CreateSimulationFile(std::map<std::string, double> files, const std::string
             for (int j{0}; j<inData->multiplicity; ++j) {
                 outData.MG[j] = inData->MG[j];
                 outData.Pos[j] = inData->Pos[j];
+                outData.EmissionDirection[j] = inData->EmissionDirection[j];
                 outData.SI_X[j] = inData->SI_X[j];
                 outData.SI_Y[j] = inData->SI_Y[j];
                 outData.SI_E[j] = inData->SI_E[j];

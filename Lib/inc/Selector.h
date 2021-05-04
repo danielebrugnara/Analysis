@@ -180,6 +180,7 @@ public:
     MugastIdentification mugast_fragment;
     AgataProcessing agata_gammas;
     double time{0};
+    double beamEnergy{0};
     double iceThicknessFront{0};
     double iceThicknessBack{0};
 

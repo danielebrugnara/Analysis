@@ -18,6 +18,8 @@ class MugastData: public TObject{
     std::vector<double> SI_E2;                  //Second layer energy deposition
     std::vector<double> Tot_E;                  //Energy deposition measured
     std::vector<double> E;                      //After E-Loss corrections
+    std::vector<double> EFlatTarget;                      //After E-Loss corrections
+    std::vector<double> ESphericalTarget;                      //After E-Loss corrections
     std::vector<std::vector<double>> E_corrected;                      //After E-Loss corrections
     std::vector<std::vector<double>> E_uncentered;//
     std::vector<TVector3> BeamPosition_corrected;//
@@ -26,6 +28,8 @@ class MugastData: public TObject{
     std::vector<double> E_CM;                   //After E-Loss corrections
     std::vector<double> Theta_CM;                   //After E-Loss corrections
     std::vector<double> Ex;                     //Ex computed with reaction
+    std::vector<double> ExFlatTarget;                     //Ex computed with reaction
+    std::vector<double> ExSphericalTarget;                     //Ex computed with reaction
     std::vector<std::vector<double>> Ex_corrected;                     //Ex computed with reaction
     std::vector<std::vector<double>> Ex_uncentered;                     //Ex computed with reaction
     std::vector<double> E2;                     //Second layer
@@ -56,11 +60,15 @@ class MugastData: public TObject{
         SI_E2.resize(multiplicity);
         Tot_E.resize(multiplicity);
         E.resize(multiplicity);
+        EFlatTarget.resize(multiplicity);
+        ESphericalTarget.resize(multiplicity);
         E_corrected.resize(options);
         E_uncentered.resize(options);
         E_CM.resize(multiplicity);
         Theta_CM.resize(multiplicity);
         Ex.resize(multiplicity);
+        ExFlatTarget.resize(multiplicity);
+        ExSphericalTarget.resize(multiplicity);
         Ex_corrected.resize(options);
         Ex_uncentered.resize(options);
         E2.resize(multiplicity);
@@ -73,5 +81,6 @@ class MugastData: public TObject{
         Indentified.resize(multiplicity);
         Particle.resize(multiplicity);
     };
-    ClassDef(MugastData, 5);
+    ClassDef(MugastData, 6);
+    //ClassDef(MugastData, 5);
 };

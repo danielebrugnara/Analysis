@@ -104,6 +104,7 @@ private: //Variables used internally
     double finalBeamEnergy{};
     double beamEnergyMatchThreashold{};
     double brho{};
+    double currentMidTargetBeamEnergy{0};
     TVector3 targetPos;
 
     std::unordered_map<std::string, unique_ptr<ReactionReconstruction2body<long double>>> reaction;
@@ -186,6 +187,7 @@ public: //Functions called by selector
         {return fragment.EmissionDirection[i].Phi();};
     inline double       getIceThicknessFront()      const { return currentIceThickness.first;};
     inline double       getIceThicknessBack()       const { return currentIceThickness.second;};
+    inline double       getMidTargetBeamEnergy()    const { return currentMidTargetBeamEnergy;};
 
     inline MugastData&  getMgData()                   {return  fragment;}
     inline Must2Data&  getMmData()                    {return  fragmentMust;}

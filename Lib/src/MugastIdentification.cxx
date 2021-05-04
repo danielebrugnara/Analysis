@@ -405,8 +405,9 @@ bool MugastIdentification::identify() {
         identifyIceThickness();
     }
 
+    currentMidTargetBeamEnergy = middleTargetBeamEnergy(finalBeamEnergy);
     for (const auto &it : reaction) {
-        it.second->SetBeamEnergy(middleTargetBeamEnergy(finalBeamEnergy));
+        it.second->SetBeamEnergy(currentMidTargetBeamEnergy);
     }
 
     //Identification with E TOF
@@ -535,7 +536,8 @@ bool MugastIdentification::reconstructEnergy(MugastData & localFragment) {
 
         energyAfterTarget = tmpEn;
 
-        tmpEn = elossIt->second["ice_front"]->EvaluateInitialEnergy(tmpEn,
+        //Deformed Target
+        tmpEn = elossIt->second["ice_front"]->EvaluateInitialEnergy(energyAfterTarget,
                                                                     currentIceThickness.first,
                                                                     havarAngle->Evaluate(theta));
 
@@ -549,6 +551,38 @@ bool MugastIdentification::reconstructEnergy(MugastData & localFragment) {
                                                                     0.);
 
         localFragment.E[ii] = tmpEn;
+
+        //Flat Target
+        tmpEn = elossIt->second["ice_front"]->EvaluateInitialEnergy(energyAfterTarget,
+                                                                    currentIceThickness.first,
+                                                                    theta);
+
+        tmpEn = elossIt->second["havar_front"]->EvaluateInitialEnergy(tmpEn,
+                                                                      havarThickness,
+                                                                      theta);
+
+
+        tmpEn = elossIt->second["he3_front"]->EvaluateInitialEnergy(tmpEn,
+                                                                    3. * UNITS::mm,
+                                                                    theta);
+
+        localFragment.EFlatTarget[ii] = tmpEn;
+
+        //Spherical Target
+        //tmpEn = elossIt->second["ice_front"]->EvaluateInitialEnergy(energyAfterTarget,
+        //                                                            currentIceThickness.first,
+        //                                                            theta);
+
+        //tmpEn = elossIt->second["havar_front"]->EvaluateInitialEnergy(tmpEn,
+        //                                                              havarThickness,
+        //                                                              theta);
+
+
+        //tmpEn = elossIt->second["he3_front"]->EvaluateInitialEnergy(tmpEn,
+        //                                                            3. * UNITS::mm,
+        //                                                            theta);
+
+        localFragment.ESphericalTarget[ii] = tmpEn;
 
         bool checlCollision{true};
         if(checlCollision){
@@ -628,8 +662,19 @@ bool MugastIdentification::reconstructEnergy(MugastData & localFragment) {
                                         "_" +
                                         localFragment.Particle[ii])) != reaction.end()){
             //Vamos and mugast localFragment found
+            //Deformed Target
             localFragment.Ex[ii] = reactionIt->second->Set_Ek_Theta_Phi(localFragment.E[ii], 
                                                                         localFragment.EmissionDirection[ii].Theta(), 
+                                                                        localFragment.EmissionDirection[ii].Phi());//WARNING this could be wring
+
+            //Flat Target
+            localFragment.ExFlatTarget[ii] = reactionIt->second->Set_Ek_Theta_Phi(localFragment.EFlatTarget[ii],
+                                                                        localFragment.EmissionDirection[ii].Theta(),
+                                                                        localFragment.EmissionDirection[ii].Phi());//WARNING this could be wring
+
+            //Spherical Target
+            localFragment.ExSphericalTarget[ii] = reactionIt->second->Set_Ek_Theta_Phi(localFragment.ESphericalTarget[ii],
+                                                                        localFragment.EmissionDirection[ii].Theta(),
                                                                         localFragment.EmissionDirection[ii].Phi());//WARNING this could be wring
 
             localFragment.Ex_uncentered[ii].reserve(beamPositions.size());
@@ -687,7 +732,7 @@ void MugastIdentification::identifyIceThickness(){
                                                   currentIceThickness.first,        //starting value
                                                   2E-4 * currentIceThickness.first, //learning rate
                                                   tmp_threashold,                     //threashold
-                                                  100,                                //max_steps
+                                                  200,                                //max_steps
                                                   1,                                  //quenching
                                                   1.E-4 * currentIceThickness.first)  //h
         );
@@ -774,6 +819,7 @@ TVector3 MugastIdentification::computeCollision(TVector3 emissionDirection, cons
     DEBUG("emissionDirection theta:", emissionDirection.Theta())
     DEBUG("emissionDirection phi:", emissionDirection.Phi())
 
+    //try{
     distanceMinimizer.reset(new Minimizer([&, this](double x) {
                                               emissionDirection.SetMag(x);
                                               auto vec = beamPosition + emissionDirection;
@@ -802,6 +848,9 @@ TVector3 MugastIdentification::computeCollision(TVector3 emissionDirection, cons
         throw std::runtime_error("Distance too high\n");
     }
     DEBUG("finished: ComputeCollision","")
+    //}catch(...){
+    //    return TVector3();
+    //}
     return emissionDirection;
 }
 

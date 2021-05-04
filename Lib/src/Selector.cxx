@@ -48,7 +48,8 @@ void Selector::SlaveBegin(TTree * /*tree*/){
 
     //Passing beam energy in MeV, target position mm
     //mugast_fragment.initialize(379.04, TVector3(0, 0, 25.));
-    mugast_fragment.initialize(458.217 * UNITS::MeV, TVector3(0, 0, 25. * UNITS::mm));
+    //mugast_fragment.initialize(453.2 * UNITS::MeV, TVector3(0, 0, 25. * UNITS::mm));
+    mugast_fragment.initialize(453.2 * UNITS::MeV, TVector3(0, 0, 25. * UNITS::mm));
 
     DEBUG("------------>finished: vamos_fragment initialization", "");
 
@@ -274,6 +275,7 @@ void Selector::SlaveBegin(TTree * /*tree*/){
         tree->Branch("CatsData", &mugast_fragment.getCatsData());
         tree->Branch("AgataData", &agata_gammas.Get_Data());
         tree->Branch("Time", &time);
+        tree->Branch("BeamEnergy", &beamEnergy);
         tree->Branch("IceThicknessFront", &iceThicknessFront);
         tree->Branch("IceThicknessBack", &iceThicknessBack);
     }
@@ -341,6 +343,7 @@ Bool_t Selector::Process(Long64_t entry){
     }
 
     time = *TW;
+    beamEnergy = mugast_fragment.getMidTargetBeamEnergy();
     iceThicknessFront = mugast_fragment.getIceThicknessFront();
     iceThicknessBack = mugast_fragment.getIceThicknessBack();
 

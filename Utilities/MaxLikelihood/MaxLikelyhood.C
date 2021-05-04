@@ -11,6 +11,7 @@
 #include <TMath.h>
 #include <TLine.h>
 #include <math.h>
+#include <functional>
 
 #include "CreateSimulationFile.C"
 
@@ -63,8 +64,8 @@ LhResults MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu){
     }
     //std::vector<int> excludedBins {0, 12, 13, 14};
     //std::vector<int> excludedBins {6,7,8};
-    //std::vector<int> excludedBins {0, 7, 8, 9};
-    std::vector<int> excludedBins {0};
+    std::vector<int> excludedBins {0, 7, 8, 9};
+    //std::vector<int> excludedBins {0};
 
     //remove not wanted bins and normalize
     for(const auto&it: excludedBins){
@@ -162,7 +163,7 @@ LhResults gridSearch(LhInputs& inputs) {
 
             double normalization{0};
             for (int j = 0; j < pVals->GetNbinsX(); ++j) {
-                for (int k = 0; k < coeffs.size(); ++k) {
+                for (int k = 0; k < coeffs.size(); ++k) {//Loop on L transfers
                     if (isinf(logLh)) {
                         results.lhHisto->SetBinContent(results.lhHisto->FindBin(xval, yval), 1);
                         break;
@@ -173,18 +174,22 @@ LhResults gridSearch(LhInputs& inputs) {
                 }
                 normalization +=pVals->GetBinContent(j);
             }
+            if (normalization == 0 ) throw std::runtime_error("Null normalization!!!!\n");
             for (int j = 0; j < pVals->GetNbinsX(); ++j) {
                 pVals->SetBinContent(j, 1./normalization*pVals->GetBinContent(j));
             }
 
             logLh += logl((long double) factorial(inputs.N, factorialMem));
-            //std::cout <<  "loglh : " <<logLh << std::endl;
+            //std::cout <<  "NEW loglh ----------------------------------: " <<logLh << std::endl;
             for (int j = 0; j < pVals->GetNbinsX(); ++j) {
                 //logLh += logl((long double) binomial(inputs.N, inputs.data->GetBinContent(j), pVals->GetBinContent(j)));
                 logLh += logl((long double) powl(pVals->GetBinContent(j),inputs.data->GetBinContent(j))/factorial((int)inputs.data->GetBinContent(j), factorialMem));
+                //std::cout <<  "loglh : " <<logLh << std::endl;
+                //std::cout << "pval: "  << pVals->GetBinContent(j) << std::endl;
+                //std::cout << "bincnt: "  << inputs.data->GetBinContent(j) << std::endl;
             }
-            //std::cout <<  "loglh : " <<logLh << std::endl;
             results.lhHisto->SetBinContent(results.lhHisto->FindBin(xval, yval), -logLh);
+
             if (logLh > results.maxVal) {
                 results.maxVal = logLh;
                 results.maxX = xval;
@@ -208,6 +213,11 @@ LhResults gridSearch(LhInputs& inputs) {
     double sigmasRatioTotal = inputs.sigmasRatio[0]+inputs.sigmasRatio[1]+inputs.sigmasRatio[2];
     results.percentX = inputs.sigmasRatio[0]/sigmasRatioTotal * results.maxX;
     results.percentY = inputs.sigmasRatio[1]/sigmasRatioTotal * results.maxY;
+    double percentZ = inputs.sigmasRatio[2]/sigmasRatioTotal * (1-results.maxX-results.maxY);
+    double percenttotal = results.percentX + results.percentY + percentZ;
+    results.percentX /= percenttotal;
+    results.percentY /= percenttotal;
+
     results.discrepancy = (TH1D*) results.dataWithErrors->Clone("discrepancies");
     for (int i = 0; i < results.discrepancy->GetNbinsX(); ++i) {
         results.discrepancy->SetBinContent(i, results.dataWithErrors->GetBinContent(i)-results.fit->GetBinContent(i));
@@ -349,6 +359,13 @@ void SumSimulationsWithPercentages(const LhResults& results, std::map<std::strin
         filesToSum.emplace(files["s12"], results.percentX);
         filesToSum.emplace(files["d32"], results.percentY);
         filesToSum.emplace(files["f72"], 1 - results.percentX - results.percentY);
+        //double p0 = 0.40*2.48;
+        //double p2 = 0.24*2.65;
+        //double p3 = 0.7*3.2;
+        //double ptot = p0+p2+p3;
+        //filesToSum.emplace(files["s12"], p0/ptot);
+        //filesToSum.emplace(files["d32"], p2/ptot);
+        //filesToSum.emplace(files["f72"], p3/ptot);
         CreateSimulationFile(filesToSum, "simulationsum.root");
     }
     {
@@ -356,7 +373,7 @@ void SumSimulationsWithPercentages(const LhResults& results, std::map<std::strin
         filesToSum.emplace(files["flat0"], results.percentX);
         filesToSum.emplace(files["flat2"], results.percentY);
         filesToSum.emplace(files["flat3"], 1 - results.percentX - results.percentY);
-        CreateSimulationFile(filesToSum, "simulationsum.root");
+        CreateSimulationFile(filesToSum, "simulationsumflat.root");
     }
 
 }
@@ -401,7 +418,7 @@ void NormalizeHistograms(const std::string& fileName, const LhResults& results){
 
     *dataCM = *dataCM / normalizationTotal;
     TH1D* simuCM = new TH1D((results.percentX* *normalizeds12CM + results.percentY* *normalizedd32CM + (1 - results.percentX - results.percentY)* *normalizedf72CM) / normalizationTotal);
-    simuCM->SetName("simuCM");
+    simuCM->SetName("simuCMNormalized");
 
 
     normalizeds12CM  ->Write();
@@ -415,6 +432,15 @@ void NormalizeHistograms(const std::string& fileName, const LhResults& results){
     normalizationTotal.Write();
     outFile->Write();
     outFile->Close();
+}
+
+
+TGraph* gsum{nullptr};
+double func(double* x, double* p ){
+    return gsum->Eval(x[0]);
+}
+double funcSin(double* x, double* p ){
+    return sin(x[0]) * gsum->Eval(x[0]);
 }
 
 void SaveTheoryDistributions(const std::string& fileName, const LhResults& results) {
@@ -444,6 +470,35 @@ void SaveTheoryDistributions(const std::string& fileName, const LhResults& resul
                         + gf72.GetPointY(i) *(1- results.maxX-results.maxY));
     }
     gsum.Write();
+    //Correction factor
+    //std::function<double(double*, double*)> funcSin = [&gsum](double* x, double* p){return sin(x[0]) * gsum.Eval(x[0]);};
+    //std::function<double(double*, double*)> func = [&gsum](double* x, double* p){return gsum.Eval(x[0]);};
+    //TF1 fsumsin("fsum", *funcSin.target<double(*)(double*, double*)>() , 0, 180);
+    //TF1 fsum("fsum", *func.target<double(*)(double*, double*)>() , 0, 180);
+    ::gsum = &gsum;
+
+    TF1 fsumsin("fsumsim", funcSin , 0, 180);
+    TF1 fsum("fsum", func , 0, 180);
+
+    TH1D* (*cloneHisto)(const std::string&, TFile*) = [](const std::string& name, TFile* outFile){
+        return  static_cast<TH1D*>(static_cast<TH1D*>(outFile->Get(name.c_str()))->Clone((name+"Corrected").c_str()));
+    };
+
+    TH1D* data = cloneHisto("dataCMNormalized", outFile);
+    TH1D* simu = cloneHisto("simuCMNormalized", outFile);
+
+    for (auto& it: std::vector<TH1D*>{data, simu}) {
+        for (int i{0}; i < it->GetNbinsX(); ++i) {
+            if (it->GetBinContent(i) == 0) continue;
+            double theta = it->GetBinCenter(i);
+            double thetaMin = it->GetBinLowEdge(i);
+            double thetaMax = thetaMin + it->GetBinWidth(i);
+            double factor = fsum.Eval(theta) * (cos(thetaMin) - cos(thetaMax)) / fsumsin.Integral(thetaMin, thetaMax);
+            it->SetBinContent(i, it->GetBinContent(i) * factor);//NEED TO UPDATE ERRORS!!!
+        }
+        it->Write();
+    }
+
     outFile->Write();
     outFile->Close();
 }
@@ -453,6 +508,7 @@ void MaxLikelyhood(){
 
     std::map<std::string, std::string> files = SumThicknesses();
     files["data"]   = "./../../DataAnalyzed/sum.root";
+    //files["data"]   = "./../../DataAnalyzed/sumTarget23m.root";
 
     std::map<std::string, std::string> conditions;
     conditions["data"] = "MugastData.M ==2 && MugastData.Z == 1 && VamosData.id_Z == 19 && VamosData.id_M == 47";
@@ -467,7 +523,7 @@ void MaxLikelyhood(){
             TFile* file = new TFile(it.second.c_str(), "read");
             TTree* tree = (TTree*) file->Get("AnalyzedTree");
             TH1D* histo = new TH1D(it.first.c_str(), it.first.c_str(), 45, 90, 180);
-            tree->Draw(Form("MugastData.Pos.Theta()*180./TMath::Pi()>>%s", it.first.c_str()), conditions[it.first].c_str());
+            tree->Draw(Form("MugastData.EmissionDirection.Theta()*180./TMath::Pi()>>%s", it.first.c_str()), conditions[it.first].c_str());
 
             TH1D* histoCM = new TH1D((it.first+"CM").c_str(), (it.first+"CM").c_str(), 60, 0, 90);
             if(it.first != "data")
