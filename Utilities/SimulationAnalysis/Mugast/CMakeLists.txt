@@ -64,7 +64,7 @@ endforeach()
 #static library for selector
 ROOT_GENERATE_DICTIONARY(G__Selector Selector.h LINKDEF SelectorLinkDef.h)
 add_library(Selector STATIC Selector.cxx G__Selector.cxx)
-target_link_libraries(Selector ${ROOT_LIBRARIES} NPCore NPMugast NPMUST2 NPCATS NPInitialConditions NPReactionConditions NPInteractionCoordinates NPPhysics )
+target_link_libraries(Selector ${ROOT_LIBRARIES} NPCore NPMugast NPMUST2 NPCATS NPInitialConditions NPReactionConditions NPInteractionCoordinates NPPhysics ReactionReconstruction Units EnergyLoss)
 
 ROOT_GENERATE_DICTIONARY(G__SelectorData SelectorData.h LINKDEF SelectorDataLinkDef.h)
 add_library(SelectorData STATIC SelectorData.cxx G__SelectorData.cxx)

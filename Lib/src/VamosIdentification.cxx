@@ -60,6 +60,18 @@ bool VamosIdentification::initialize()
         throw std::runtime_error("Unable to find one of the dE2_E cuts\n");
     }
 
+    try
+    {
+        (*tmp)["dE_E_Z19"] = cuts.at("dE_E_Z19");
+        (*tmp)["dE_E_Z18"] = cuts.at("dE_E_Z18");
+        (*tmp)["dE_E_Z-1"] = cuts.at("dE_E_Z-1");
+    }
+    catch (const std::out_of_range &err)
+    {
+        std::cerr << err.what() << std::endl;
+        throw std::runtime_error("Unable to find one of the dE_E cuts\n");
+    }
+
     cut_type["dE2_E"] = *tmp;
 
     //Mass over Q cuts

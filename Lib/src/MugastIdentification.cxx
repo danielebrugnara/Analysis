@@ -536,19 +536,38 @@ bool MugastIdentification::reconstructEnergy(MugastData & localFragment) {
 
         energyAfterTarget = tmpEn;
 
+        if (ii==0) {
+            localFragment.EBeforeLayer[3] = tmpEn;
+            localFragment.ThickessInLayer[3] = 0.4E-3 * UNITS::mm / cos(telescopeEntranceAngle);
+        }
+
         //Deformed Target
         tmpEn = elossIt->second["ice_front"]->EvaluateInitialEnergy(energyAfterTarget,
                                                                     currentIceThickness.first,
                                                                     havarAngle->Evaluate(theta));
 
+        if (ii==0) {
+            localFragment.EBeforeLayer[2] = tmpEn;
+            localFragment.ThickessInLayer[2] = currentIceThickness.first / cos(havarAngle->Evaluate(theta));
+        }
+
         tmpEn = elossIt->second["havar_front"]->EvaluateInitialEnergy(tmpEn,
                                                                       havarThickness,
                                                                       havarAngle->Evaluate(theta));
 
+        if (ii==0) {
+            localFragment.EBeforeLayer[1] = tmpEn;
+            localFragment.ThickessInLayer[1] = havarThickness / cos(havarAngle->Evaluate(theta));
+        }
 
         tmpEn = elossIt->second["he3_front"]->EvaluateInitialEnergy(tmpEn,
                                                                     gasThickness->Evaluate(theta) * UNITS::mm,
                                                                     0.);
+
+        if (ii==0) {
+                localFragment.EBeforeLayer[0] = tmpEn;
+                localFragment.ThickessInLayer[0] = gasThickness->Evaluate(theta) * UNITS::mm / cos(0);
+        }
 
         localFragment.E[ii] = tmpEn;
 
@@ -667,6 +686,9 @@ bool MugastIdentification::reconstructEnergy(MugastData & localFragment) {
                                                                         localFragment.EmissionDirection[ii].Theta(), 
                                                                         localFragment.EmissionDirection[ii].Phi());//WARNING this could be wring
 
+            localFragment.E_CM[ii] = reactionIt->second->GetReactionFragment(3).Get_Ek_cm();
+            localFragment.Theta_CM[ii] = reactionIt->second->GetReactionFragment(3).Get_P_cm().Vect().Theta();
+
             //Flat Target
             localFragment.ExFlatTarget[ii] = reactionIt->second->Set_Ek_Theta_Phi(localFragment.EFlatTarget[ii],
                                                                         localFragment.EmissionDirection[ii].Theta(),
@@ -690,8 +712,6 @@ bool MugastIdentification::reconstructEnergy(MugastData & localFragment) {
                 }
             }
 
-            localFragment.E_CM[ii] = reactionIt->second->GetReactionFragment(3).Get_Ek_cm();
-            localFragment.Theta_CM[ii] = reactionIt->second->GetReactionFragment(3).Get_P_cm().Vect().Theta();
         }
         else{
             if ((reactionIt = reaction.find(localFragment.Particle[ii])) != reaction.end()) {

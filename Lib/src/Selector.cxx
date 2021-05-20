@@ -279,6 +279,18 @@ void Selector::SlaveBegin(TTree * /*tree*/){
         tree->Branch("IceThicknessFront", &iceThicknessFront);
         tree->Branch("IceThicknessBack", &iceThicknessBack);
     }
+    Istantiate(treeDeuterons , new TTree("AnalyzedTreeDeuterons", "AnalyzedTreeDeuterons"));
+    if (treeDeuterons != nullptr) {
+        treeDeuterons->Branch("VamosData", &vamos_fragment.getData());
+        treeDeuterons->Branch("MugastData", &mugast_fragment.getMgData());
+        treeDeuterons->Branch("Must2Data", &mugast_fragment.getMmData());
+        treeDeuterons->Branch("CatsData", &mugast_fragment.getCatsData());
+        treeDeuterons->Branch("AgataData", &agata_gammas.Get_Data());
+        treeDeuterons->Branch("Time", &time);
+        treeDeuterons->Branch("BeamEnergy", &beamEnergy);
+        treeDeuterons->Branch("IceThicknessFront", &iceThicknessFront);
+        treeDeuterons->Branch("IceThicknessBack", &iceThicknessBack);
+    }
     //tree->SetAutoSave(-10000);
     //tree->SetAutoFlush(-10000);
     //TODO: Add MUST2
@@ -314,17 +326,19 @@ Bool_t Selector::Process(Long64_t entry){
     vamos_fragment.identify();
     DEBUG("------------>Finished: Identification", "");
 
-    //Agata/////////////////////////////////////////////
-    LoadAgataData();
-    DEBUG("------------>Finished: Loading Agata data, positive exit", "");
-    agata_gammas.Process();
-    DEBUG("------------>Finished: Processing Agata data, positive exit", "");
-
     //MUGAST////////////////////////////////////////////
     LoadMugastData();
     DEBUG("------------>Finished: Loading Mugast data", "");
     mugast_fragment.identify();
     DEBUG("------------>Finished: Mugast identification, negative exit", "");
+
+    vamos_fragment.setP4MidTarget(mugast_fragment.getMidTargetBeamEnergy());
+
+    //Agata/////////////////////////////////////////////
+    LoadAgataData();
+    DEBUG("------------>Finished: Loading Agata data, positive exit", "");
+    agata_gammas.Process();
+    DEBUG("------------>Finished: Processing Agata data, positive exit", "");
 
     //Plotting histograms///////////////////////////////
     PlotVamosGraphs();
@@ -347,7 +361,13 @@ Bool_t Selector::Process(Long64_t entry){
     iceThicknessFront = mugast_fragment.getIceThicknessFront();
     iceThicknessBack = mugast_fragment.getIceThicknessBack();
 
+
     Fill(tree);
+
+
+    if(vamos_fragment.getIdZ() == 19 && vamos_fragment.getIdM() == 47 && mugast_fragment.getMult()>0 && mugast_fragment.getM(0) == 2 && mugast_fragment.getZ(0) == 1)
+        Fill(treeDeuterons);
+
     return kTRUE;
 }
 
@@ -381,6 +401,7 @@ inline void Selector::LoadMugastData(){
 }
 
 inline void Selector::LoadAgataData(){
+
     agata_gammas.SetData(new AgataProcessing::Data(&nbAdd,
                                                    &TSHit,
                                                    &AddTS,
@@ -389,7 +410,8 @@ inline void Selector::LoadAgataData(){
                                                    &AddX,
                                                    &AddY,
                                                    &AddZ,
-                                                   vamos_fragment.getP4()));
+                                                   vamos_fragment.getP4(),
+                                                   vamos_fragment.getP4MidTarget()));
 }
 
 inline void Selector::PlotVamosGraphs(){

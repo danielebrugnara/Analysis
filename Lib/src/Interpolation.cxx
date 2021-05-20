@@ -3,8 +3,8 @@
 //ClassImp(Interpolation);
 
 Interpolation::Interpolation(const std::string& input_file) : spline(nullptr){
-    if (!ReadFile(input_file))
-        throw std::runtime_error("Unable to generate interpolation from text file\n");
+    ReadFile(input_file);
+        //throw std::runtime_error("Unable to generate interpolation from text file\n");
 }
 
 Interpolation::Interpolation(TFile *file) : spline(nullptr){
@@ -34,8 +34,9 @@ Interpolation::~Interpolation(){
 
 bool Interpolation::ReadFile(const std::string& input_file_name){
     std::ifstream in_file(input_file_name);
-    if (!in_file.is_open())
-        return false;
+    if (!in_file.is_open()) {
+        throw std::runtime_error("Unable to open intermpoation file : "+input_file_name+"\n");
+    }
     std::string line;
     std::string delimiter = ", ";
     int ii = -1;

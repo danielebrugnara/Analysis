@@ -59,7 +59,8 @@ private: //Constants used internally
     //static constexpr double gradient_descent_normalization{1.E3};
     //static constexpr double icePercentageSecond {0.85};
     static constexpr double icePercentageSecond {1.};
-    const double averageBeamThickness = 3.72109 * UNITS::mm;    //700 mbar
+    const double averageBeamThickness = 3.7210 * UNITS::mm;    //700 mbar
+    //const double averageBeamThickness = 6.39 * UNITS::mm;    //70000000 mbar
     const std::array<std::pair<double, double>, 32> beamPositions = {
             //std::make_pair( 0.5*UNITS::mm,  0.5*UNITS::mm),std::make_pair( 0.5*UNITS::mm, -0.5*UNITS::mm),
             //std::make_pair(-0.5*UNITS::mm, -0.5*UNITS::mm),std::make_pair(-0.5*UNITS::mm,  0.5*UNITS::mm),
@@ -166,7 +167,7 @@ public: //Functions called by selector
     bool identify();
     //Getter methods
     inline unsigned int getMult()                   const { return fragment.multiplicity;   };
-    inline TVector3*    getPos(const int &i)        { return &(fragment.Pos[i]);            };
+    inline const TVector3*    getPos(const int &i)  const { return &(fragment.Pos[i]);      };
     inline int          getSiX(const int &i)        const { return fragment.SI_X[i];        };
     inline int          getSiY(const int &i)        const { return fragment.SI_Y[i];        };
     inline double       getSiE(const int &i)        const { return fragment.SI_E[i];        };
@@ -179,6 +180,8 @@ public: //Functions called by selector
     inline double       getT(const int &i)          const { return fragment.T[i];           };
     inline std::string  getParticle(const int &i)   const { return fragment.Particle[i];    };
     inline double       getThetaCm(const int &i)    const { return fragment.E_CM[i];        };
+    inline double       getEBeforeLayer(const int &i)       const { return fragment.EBeforeLayer[i];    };
+    inline double       getThicknessInLayer(const int &i)   const { return fragment.ThickessInLayer[i]; };
     inline TVector3*    getEmissionDirection(const int &i)
         { return &(fragment.EmissionDirection[i]); };
     inline double       getThetaLab(const int &i) const
@@ -189,9 +192,9 @@ public: //Functions called by selector
     inline double       getIceThicknessBack()       const { return currentIceThickness.second;};
     inline double       getMidTargetBeamEnergy()    const { return currentMidTargetBeamEnergy;};
 
-    inline MugastData&  getMgData()                   {return  fragment;}
-    inline Must2Data&  getMmData()                    {return  fragmentMust;}
-    inline CatsData&  getCatsData()                   {return  fragmentCats;}
+    inline MugastData&  getMgData()                   { return  fragment;}
+    inline Must2Data&   getMmData()                   { return  fragmentMust;}
+    inline CatsData&    getCatsData()                 { return  fragmentCats;}
 
     //Other methods
     //std::vector<std::pair<double, double>> getTWvsIce();

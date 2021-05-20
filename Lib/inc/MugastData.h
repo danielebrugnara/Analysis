@@ -18,6 +18,8 @@ class MugastData: public TObject{
     std::vector<double> SI_E2;                  //Second layer energy deposition
     std::vector<double> Tot_E;                  //Energy deposition measured
     std::vector<double> E;                      //After E-Loss corrections
+    std::vector<double> EBeforeLayer;                     //After E-Loss corrections
+    std::vector<double> ThickessInLayer;                      //After E-Loss corrections
     std::vector<double> EFlatTarget;                      //After E-Loss corrections
     std::vector<double> ESphericalTarget;                      //After E-Loss corrections
     std::vector<std::vector<double>> E_corrected;                      //After E-Loss corrections
@@ -60,6 +62,8 @@ class MugastData: public TObject{
         SI_E2.resize(multiplicity);
         Tot_E.resize(multiplicity);
         E.resize(multiplicity);
+        EBeforeLayer.resize(4);
+        ThickessInLayer.resize(4);
         EFlatTarget.resize(multiplicity);
         ESphericalTarget.resize(multiplicity);
         E_corrected.resize(options);
@@ -81,6 +85,6 @@ class MugastData: public TObject{
         Indentified.resize(multiplicity);
         Particle.resize(multiplicity);
     };
-    ClassDef(MugastData, 6);
+    ClassDef(MugastData, 8);
     //ClassDef(MugastData, 5);
 };

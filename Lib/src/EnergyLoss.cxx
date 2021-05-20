@@ -115,14 +115,25 @@ EnergyLoss::EnergyLoss(std::string Path, std::string Source, int NumberOfSlice =
     }
 
     fInter = new TGraph(fEnergy.size(), &fEnergy[0], &fdEdX_Total[0]);
-
     fInter->Sort();
+
+    fInterNuclear = new TGraph(fEnergy.size(), &fEnergy[0], &fdEdX_Nuclear[0]);
+    fInterNuclear->Sort();
+
+    fInterElectronic = new TGraph(fEnergy.size(), &fEnergy[0], &fdEdX_Electronic[0]);
+    fInterElectronic->Sort();
 
     fSpline = new TSpline3("Energy Loss Spline", fInter->GetX(), fInter->GetY(), fInter->GetN());
 }
 
 void EnergyLoss::Draw(const std::string& option) const{
     fInter->Draw(option.c_str());
+}
+void EnergyLoss::DrawNuclear(const std::string& option) const{
+    fInterNuclear->Draw(option.c_str());
+}
+void EnergyLoss::DrawElectronic(const std::string& option) const{
+    fInterElectronic->Draw(option.c_str());
 }
 
 double EnergyLoss::EvaluateNuclearLoss(double Energy) const{

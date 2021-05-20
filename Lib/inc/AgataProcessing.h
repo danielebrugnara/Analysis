@@ -23,8 +23,9 @@ private:
 
 public:
     inline void Process(){
-        if (**data->AddTS - **data->LTS > ref_ts - 5 &&
-            **data->AddTS - **data->LTS < ref_ts + 5)
+        gammaray.TimeDiff = **data->AddTS - **data->LTS;
+        if (gammaray.TimeDiff > ref_ts - 5 &&
+            gammaray.TimeDiff < ref_ts + 5)
             gammaray.in_coincidence = true;
         for (int ii = 0; ii < **(data->nbAdd); ++ii){
             ComputeDoppler(ii);
@@ -43,6 +44,7 @@ public:
         TTreeReaderArray<float> *AddY;
         TTreeReaderArray<float> *AddZ;
         TLorentzVector *p4;
+        TLorentzVector *p4MidTarget;
         Data(TTreeReaderValue<int> *nbAdd,
              TTreeReaderValue<unsigned long long> *TSHit,
              TTreeReaderValue<unsigned long long> *AddTS,
@@ -51,7 +53,8 @@ public:
              TTreeReaderArray<float> *AddX,
              TTreeReaderArray<float> *AddY,
              TTreeReaderArray<float> *AddZ,
-             TLorentzVector *p4) : nbAdd(nbAdd),
+             TLorentzVector *p4,
+             TLorentzVector *p4MidTarget) : nbAdd(nbAdd),
                                    TSHit(TSHit),
                                    AddTS(AddTS),
                                    LTS(LTS),
@@ -59,7 +62,8 @@ public:
                                    AddX(AddX),
                                    AddY(AddY),
                                    AddZ(AddZ),
-                                   p4(p4){};
+                                   p4(p4),
+                                   p4MidTarget(p4MidTarget){};
     };
 
     inline void SetData(Data const *data){

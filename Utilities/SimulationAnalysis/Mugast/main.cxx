@@ -9,9 +9,9 @@
 
 int main(int argc, char* argv[]){
     std::vector<std::string> files{
-        "./../../../DataAnalyzed/simu/46Ar3Hed47K_0keV_s12_0_0.root",
-        "./../../../DataAnalyzed/simu/46Ar3Hed47K_360keV_d32_0_0.root",
-        "./../../../DataAnalyzed/simu/46Ar3Hed47K_2020keV_f72_0_0.root",
+        //"./../../../DataAnalyzed/simu/46Ar3Hed47K_0keV_s12_0_0.root",
+        //"./../../../DataAnalyzed/simu/46Ar3Hed47K_360keV_d32_0_0.root",
+        //"./../../../DataAnalyzed/simu/46Ar3Hed47K_2020keV_f72_0_0.root",
     };
     DIR* dir;
     struct dirent* ent;

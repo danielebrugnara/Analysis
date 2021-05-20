@@ -42,6 +42,8 @@ private:                                //   dE/dX, slice parameter
   std::vector<double> fdEdX_Total;      // Total Stopping Power
   //Interpolator*     fInter            ; // Interpolator Used to evaluate Energy loss at given energy
   TGraph *fInter;    // Graph use to perform interpolation
+  TGraph *fInterNuclear;    // Graph use to perform interpolation
+  TGraph *fInterElectronic;    // Graph use to perform interpolation
   TSpline3 *fSpline; // Spline 3rd order used to perfom the interpolation
 
 public:                           //   General Function on dE/dX table
@@ -93,4 +95,6 @@ public: //   Usefull function
   void Print() const;
   //   Draw (CERN ROOT)
   void Draw(const std::string& option = "") const;
+  void DrawNuclear(const std::string& option = "") const;
+  void DrawElectronic(const std::string& option = "") const;
 };

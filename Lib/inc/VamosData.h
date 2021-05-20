@@ -25,6 +25,7 @@ class VamosData: public TObject{
     double BRho;       //Brho
     bool Identified;   //Positive identification
     TLorentzVector p4; //4 momentum of recoil
+    TLorentzVector p4MidTarget; //4 momentum of recoil
     int id_M;
     int id_Z;
     int id_Q;
@@ -45,9 +46,10 @@ class VamosData: public TObject{
                  BRho(0),
                  Identified(false),
                  p4(),
+                 p4MidTarget(),
                  id_M(0),
                  id_Z(0),
                  id_Q(0){};
 
-    ClassDef(VamosData, 2);
+    ClassDef(VamosData, 3);
 }; 

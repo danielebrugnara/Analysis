@@ -287,6 +287,7 @@ public:
     Conf pConf;
     Data pData;
     TTree* tree;
+    TTree* treeDeuterons;
 
 private:
     //struct HistogramSettings{

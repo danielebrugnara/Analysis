@@ -88,9 +88,20 @@ public:
     inline double getCharge()        const { return fragment.Charge; };
     inline double identified()        const { return fragment.Identified; };
     inline TLorentzVector *getP4()         { return &(fragment.p4); };
+    inline TLorentzVector *getP4MidTarget()         { return &(fragment.p4MidTarget); };
     inline unsigned int getIdZ()    const { return fragment.id_Z; };
     inline unsigned int getIdM()    const { return fragment.id_M; };
     inline unsigned int getIdQ()    const { return fragment.id_Q; };
+
+    inline void setP4MidTarget(const double& beamEnergy) {
+        fragment.p4MidTarget = *getP4();
+        if (fragment.p4MidTarget.M() > 0) {
+            TVector3 p = fragment.p4MidTarget.Vect();
+            double Etot = beamEnergy + fragment.p4MidTarget.M();
+            p.SetMag(sqrt(pow(Etot, 2) - fragment.p4MidTarget.M2()));
+            fragment.p4MidTarget.SetVectM(p, fragment.p4MidTarget.M());
+        }
+    };
 
     inline VamosData& getData()        {return fragment;};
 

@@ -50,6 +50,9 @@ void Selector::SlaveBegin(TTree * /*tree*/)
     outfile->cd();
     tree = new TTree("AnalyzedTree", "AnalyzedTree");
     tree->Branch("MugastData", &mugastData);
+
+    targetPos = TVector3(0, 0, 25.);
+
 }
 
 Bool_t Selector::Process(Long64_t entry)
