@@ -29,6 +29,7 @@ class VamosData: public TObject{
     int id_M;
     int id_Z;
     int id_Q;
+    int id2_Z;
     VamosData() : En(0),
                  D_En(0),
                  D_En2(0),
@@ -49,7 +50,8 @@ class VamosData: public TObject{
                  p4MidTarget(),
                  id_M(0),
                  id_Z(0),
-                 id_Q(0){};
+                 id_Q(0),
+                 id2_Z(0){};
 
-    ClassDef(VamosData, 3);
+ClassDef(VamosData, 5);
 }; 

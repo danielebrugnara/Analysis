@@ -38,7 +38,6 @@ bool VamosIdentification::initialize()
         }
     }
 
-    auto *tmp = new std::unordered_map<std::string, TCutG *>();
 
     //It would be possible to parse the string to make automatic
     //what follows, however this gives possibility for better fine
@@ -48,6 +47,8 @@ bool VamosIdentification::initialize()
 
     DEBUG("Starting to look for VAMOS files", "");
 
+    //De-E 2
+    auto *tmp = new std::unordered_map<std::string, TCutG *>();
     try
     {
         (*tmp)["dE2_E_Z19"] = cuts.at("dE2_E_Z19");
@@ -59,7 +60,11 @@ bool VamosIdentification::initialize()
         std::cerr << err.what() << std::endl;
         throw std::runtime_error("Unable to find one of the dE2_E cuts\n");
     }
+    cut_type["dE2_E"] = *tmp;
 
+    //De-E 1
+    delete tmp;
+    tmp = new std::unordered_map<std::string, TCutG *>();
     try
     {
         (*tmp)["dE_E_Z19"] = cuts.at("dE_E_Z19");
@@ -71,35 +76,41 @@ bool VamosIdentification::initialize()
         std::cerr << err.what() << std::endl;
         throw std::runtime_error("Unable to find one of the dE_E cuts\n");
     }
+    cut_type["dE_E"] = *tmp;
 
-    cut_type["dE2_E"] = *tmp;
 
     //Mass over Q cuts
+    std::vector<std::string> tmpCutsMQ {
+        "MQ_Q_M45_Q19",
+        "MQ_Q_M46_Q19",
+        "MQ_Q_M47_Q19",
+        "MQ_Q_M45_Q18",
+        "MQ_Q_M46_Q18",
+        "MQ_Q_M47_Q18",
+        "MQ_Q_M45_Q17",
+        "MQ_Q_M46_Q17",
+        "MQ_Q_M47_Q17",
+        "MQ_Q_M45_Q16",
+        "MQ_Q_M46_Q16",
+        "MQ_Q_M47_Q16",
+        "MQ_Q_M45_Q15",
+        "MQ_Q_M46_Q15",
+        "MQ_Q_M47_Q15",
+        "MQ_Q_M45_Q14",
+        "MQ_Q_M46_Q14",
+        "MQ_Q_M47_Q14",
+        "MQ_Q_M45_Q13",
+    };
+
+    delete tmp;
     tmp = new std::unordered_map<std::string, TCutG *>();
     try
     {
-        (*tmp)["MQ_Q_M46_Q18"] = cuts.at("MQ_Q_M46_Q18");
-        (*tmp)["MQ_Q_M47_Q18"] = cuts.at("MQ_Q_M47_Q18");
-        (*tmp)["MQ_Q_M45_Q16"] = cuts.at("MQ_Q_M45_Q16");
-        (*tmp)["MQ_Q_M46_Q17"] = cuts.at("MQ_Q_M46_Q17");
-        (*tmp)["MQ_Q_M47_Q17"] = cuts.at("MQ_Q_M47_Q17");
-        (*tmp)["MQ_Q_M45_Q15"] = cuts.at("MQ_Q_M45_Q15");
-        (*tmp)["MQ_Q_M45_Q17"] = cuts.at("MQ_Q_M45_Q17");
-        (*tmp)["MQ_Q_M46_Q19"] = cuts.at("MQ_Q_M46_Q19");
-        (*tmp)["MQ_Q_M46_Q16"] = cuts.at("MQ_Q_M46_Q16");
-        (*tmp)["MQ_Q_M47_Q16"] = cuts.at("MQ_Q_M47_Q16");
-        (*tmp)["MQ_Q_M45_Q14"] = cuts.at("MQ_Q_M45_Q14");
-        (*tmp)["MQ_Q_M46_Q15"] = cuts.at("MQ_Q_M46_Q15");
-        (*tmp)["MQ_Q_M47_Q15"] = cuts.at("MQ_Q_M47_Q15");
-        (*tmp)["MQ_Q_M45_Q13"] = cuts.at("MQ_Q_M45_Q13");
-        (*tmp)["MQ_Q_M46_Q14"] = cuts.at("MQ_Q_M46_Q14");
-        (*tmp)["MQ_Q_M47_Q14"] = cuts.at("MQ_Q_M47_Q14");
-        (*tmp)["MQ_Q_M45_Q12"] = cuts.at("MQ_Q_M45_Q12");
-        (*tmp)["MQ_Q_M45_Q18"] = cuts.at("MQ_Q_M45_Q18");
-        (*tmp)["MQ_Q_M47_Q19"] = cuts.at("MQ_Q_M47_Q19");
-        //(*tmp)["MQ_Q_M-1_Q-1"] = cuts.at("MQ_Q_M-1_Q-1");
-        (*tmp)["MQ_Q_M-2_Q-2"] = cuts.at("MQ_Q_M-2_Q-2");
+        for (const auto& it: tmpCutsMQ){
+            (*tmp)[it] = cuts.at(it);
+        }
     }
+
     catch (const std::out_of_range &err)
     {
         std::cerr << err.what() << std::endl;
@@ -107,6 +118,7 @@ bool VamosIdentification::initialize()
     }
 
     cut_type["MQ_Q"] = *tmp;
+    delete tmp;
 
     DEBUG("Found all needed cuts", "");
 
@@ -174,20 +186,35 @@ bool VamosIdentification::identify()
     fragment.M_Q = **data->Brho / 3.105 / fragment.Beta / fragment.Gamma;
     fragment.Charge = fragment.M / fragment.M_Q;
 
-    //dE - E identification
+    //dE2 - E identification
     for (const auto &z_search : cut_type.at("dE2_E"))
     {
         if (z_search.second->IsInside(fragment.En, fragment.D_En2))
         {
             //Z format dE2_E_Z18
-            if (fragment.id_Z == 0)
-                fragment.id_Z = std::stoi(
+            if (fragment.id2_Z == 0)
+                fragment.id2_Z = std::stoi(
                     z_search.first.substr(z_search.first.find_last_of("_Z") + 1));
             else
                 throw std::runtime_error("Overlapping Z gates\n");
         }
     }
-    if (fragment.id_Z == 0)
+
+    //dE - E identification
+    for (const auto &z_search : cut_type.at("dE_E"))
+    {
+        if (z_search.second->IsInside(fragment.En, fragment.D_En))
+        {
+            //Z format dE_E_Z18
+            if (fragment.id_Z == 0)
+                fragment.id_Z = std::stoi(
+                        z_search.first.substr(z_search.first.find_last_of("_Z") + 1));
+            else
+                throw std::runtime_error("Overlapping Z gates\n");
+        }
+    }
+
+    if (fragment.id2_Z == 0 && fragment.id_Z == 0)
         return false;
 
     //MQ - Q identification
@@ -210,7 +237,7 @@ bool VamosIdentification::identify()
         return false;
 
     //Lorentzvector computation
-    fragment.p4.SetT(mass[fragment.id_M][fragment.id_Z]);
+    fragment.p4.SetT(mass[fragment.id_M][fragment.id2_Z !=0 ? fragment.id2_Z : fragment.id_Z]);
     TVector3 v4(0, 0, fragment.Beta);
     v4.SetMagThetaPhi(fragment.Beta, **data->ThetaL, **data->PhiL);
     fragment.p4.Boost(v4);

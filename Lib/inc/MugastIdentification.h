@@ -57,8 +57,9 @@ private: //Constants used internally
     static constexpr int nStrips{128};
     const int chargeStateInterpolation{16}; //Cannot be made static constexpr because it is passed as reference
     //static constexpr double gradient_descent_normalization{1.E3};
-    //static constexpr double icePercentageSecond {0.85};
     static constexpr double icePercentageSecond {1.};
+    //static constexpr double icePercentageSecond {0.85};
+    //static constexpr double icePercentageSecond {0.15};
     const double averageBeamThickness = 3.7210 * UNITS::mm;    //700 mbar
     //const double averageBeamThickness = 6.39 * UNITS::mm;    //70000000 mbar
     const std::array<std::pair<double, double>, 32> beamPositions = {

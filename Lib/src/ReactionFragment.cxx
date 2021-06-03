@@ -44,7 +44,7 @@ void ReactionFragment::GetFromData(const int & A, const int & Z) {
                 return;
             }
         }
-        throw std::runtime_error( std::string("Unable to find A = ") + A + " and Z = " + Z + "\n");
+        throw std::runtime_error( "Unable to find A = " + std::to_string(A) + " and Z = " + std::to_string(Z) + "\n");
     }
     else
         throw std::runtime_error( "Unable to open file nuclear data base file\n");
@@ -214,10 +214,10 @@ void ReactionFragment::Set_P(const TLorentzVector & P) {
     if (sqrt(P*P - M2)< precision) {
         Lab.P = P;
     } else {
-        throw std::runtime_error(std::string("Lorentz vector does not match, computed M : ") +
-                                 +sqrt(P * P)
+        throw std::runtime_error("Lorentz vector does not match, computed M : "
+                                 +std::to_string(sqrt(P * P))
                                  + " instead of : "
-                                 +M
+                                 +std::to_string(M)
                                  +"\n");
     }
 }

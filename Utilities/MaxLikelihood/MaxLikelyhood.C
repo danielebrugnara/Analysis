@@ -337,14 +337,15 @@ double binomial(int N, int k, double p){
 
 std::map<std::string, std::string> SumThicknesses(){
     std::map<int, int> thicknessToNDeuterons{
-            {20, 10},
-            {25, 36},
-            {30, 30},
-            {35, 141},
-            {40, 108},
-            {45, 80},
-            {50, 120},
-            {55, 20}
+            {15, 46},
+            {20, 0},
+            {25, 134},
+            {30, 93},
+            {35, 101},
+            {40, 89},
+            {45, 108},
+            {50, 0},
+            {55, 0}
     };
     int maxVal = std::max_element(thicknessToNDeuterons.begin(), thicknessToNDeuterons.end(),
                           [](const std::pair<int, int>& p1, const std::pair<int, int>& p2){

@@ -6,8 +6,8 @@
 class AgataData: public TObject{
     public:
     const unsigned int multiplicity;
-    bool in_coincidence;
     unsigned long TimeDiff;
+    bool in_coincidence;
     std::vector<double> E;
     std::vector<double> EDC;
     std::vector<double> EDCMidTarget;

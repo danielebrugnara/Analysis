@@ -89,7 +89,7 @@ public:
     inline double identified()        const { return fragment.Identified; };
     inline TLorentzVector *getP4()         { return &(fragment.p4); };
     inline TLorentzVector *getP4MidTarget()         { return &(fragment.p4MidTarget); };
-    inline unsigned int getIdZ()    const { return fragment.id_Z; };
+    inline unsigned int getIdZ()    const { return fragment.id2_Z; };
     inline unsigned int getIdM()    const { return fragment.id_M; };
     inline unsigned int getIdQ()    const { return fragment.id_Q; };
 

@@ -15,7 +15,7 @@ int main(int argc, char* argv[]){
     };
     DIR* dir;
     struct dirent* ent;
-    std::string direct{"./../../../DataAnalyzed/simu/"};
+    std::string direct{"./../../../../DataAnalyzed/simu/"};
     if ((dir = opendir(direct.c_str())) != NULL) {
         /* print all the files and directories within directory */
         while ((ent = readdir(dir)) != NULL) {
@@ -34,7 +34,7 @@ int main(int argc, char* argv[]){
         perror("");
     }
 
-    RunSelector run("../../../DataAnalyzed/simu/sumsimu.root", "../../../DataAnalyzed/sum.root", files);
+    RunSelector run("../../../../DataAnalyzed/simu/sumsimu.root", "../../../../DataAnalyzed/sum.root", files);
     //RunSelector run("Data/anaout/anular.root", "../../../DataAnalyzed/sum.root");
     return 0;
 }
