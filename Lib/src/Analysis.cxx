@@ -12,8 +12,9 @@ Analysis::Analysis(int n_threads) : n_threads(n_threads)
 
     while (std::getline(file, line))
     {
+        //std::cout << "Read line from Runs file: " <<line << std::endl;
         std::ifstream file_check(line);
-        if (line.at(0) == '#')
+        if (line.empty() || line.at(0) == '#')
             continue;
         if (file_check.fail())
             throw std::runtime_error(std::string("File not present :") + line);

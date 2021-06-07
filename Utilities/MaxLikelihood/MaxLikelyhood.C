@@ -63,11 +63,12 @@ LhResults MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu){
     for (int j = 0; j < data->GetNbinsX(); ++j) {
         N += data->GetBinContent(j);
     }
-    //std::vector<int> excludedBins {0, 12, 13, 14};
+    std::vector<int> excludedBins {0, 11, 12, 13, 14};
     //std::vector<int> excludedBins {6,7,8};
-    //std::vector<int> excludedBins {0, 7, 8, 9};
-    std::vector<int> excludedBins {0, 13, 14, 15};
     //std::vector<int> excludedBins {0};
+    //std::vector<int> excludedBins {0, 7, 8, 9};
+    //std::vector<int> excludedBins {0, 13, 14, 15};
+    //std::vector<int> excludedBins {0, 7, 8};
 
     //remove not wanted bins and normalize
     for(const auto&it: excludedBins){
@@ -540,8 +541,7 @@ void MaxLikelyhood(){
 
 
     std::map<std::string, std::string> files = SumThicknesses();
-    //files["data"]   = "./../../DataAnalyzed/sum.root";
-    files["data"]   = "./../../DataAnalyzed/sumTarget30mm.root";
+    files["data"]   = "./../../DataAnalyzed/sum.root";
 
     std::map<std::string, std::string> conditions;
     conditions["data"] = "MugastData.M ==2 && MugastData.Z == 1 && VamosData.id_Z == 19 && VamosData.id_M == 47 ";
@@ -557,6 +557,7 @@ void MaxLikelyhood(){
             TFile* file = new TFile(it.second.c_str(), "read");
             TTree* tree = (TTree*) file->Get("AnalyzedTree");
             TH1D* histo = new TH1D(it.first.c_str(), it.first.c_str(), 45, 90, 180);
+            //TH1D* histo = new TH1D(it.first.c_str(), it.first.c_str(), 25, 90, 180);
             tree->Draw(Form("MugastData.EmissionDirection.Theta()*180./TMath::Pi()>>%s", it.first.c_str()), conditions[it.first].c_str());
 
             TH1D* histoCM = new TH1D((it.first+"CM").c_str(), (it.first+"CM").c_str(), 60, 0, 90);

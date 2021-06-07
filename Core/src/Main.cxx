@@ -1,7 +1,6 @@
 #include "Main.h"
 
 int main(int argc, char* argv[]) {
-    std::cout << "Starting Analysis\n";
     TApplication root_app("app", &argc, argv);
     Analysis* my_analysis = nullptr;
 
@@ -11,9 +10,9 @@ int main(int argc, char* argv[]) {
         std::cout << "Number of threads : " << n_threads << std::endl;
     }
     try {
+        std::cout << "Starting Analysis\n";
         my_analysis = new Analysis(n_threads);
         my_analysis->RunAnalysis();
-
     } catch (const std::runtime_error& error) {
         std::cerr << "Caught error : " << error.what() << std::endl;
         return 3;
