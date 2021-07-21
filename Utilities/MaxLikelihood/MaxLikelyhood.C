@@ -65,7 +65,7 @@ LhResults MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu){
     //std::vector<int> excludedBins {0, 11, 12, 13, 14};
     //std::vector<int> excludedBins {6,7,8};
     //std::vector<int> excludedBins {0};
-    std::vector<int> excludedBins {0, 24, 25, 26, 27, 28, 29};
+    std::vector<int> excludedBins {0, 24, 25, 26};
     //std::vector<int> excludedBins {0, 7, 8, 9};
     //std::vector<int> excludedBins {0, 13, 14, 15};
     //std::vector<int> excludedBins {0, 7, 8};
@@ -154,7 +154,7 @@ LhResults MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu){
     std::cout << "xmin : " << resultsPartial.maxX << std::endl;
     std::cout << "ymin : " << resultsPartial.maxY << std::endl;
     std::cout << "max : " << resultsPartial.maxVal << std::endl;
-    resultsPartial.lhHisto->SetTitle("-Log L; L=2 / L=0; Percent of L=1+2");
+    resultsPartial.lhHisto->SetTitle("-Log L; L=2 / L=0; Percent of L=0+2");
     resultsPartial.lhHisto->SetName("partialLH");
 
     //cv2->cd(2);
@@ -348,8 +348,8 @@ void drawSigmas(TH2D* histo, double minx, double miny, TVirtualPad* cv){
         }
     }
 
-    histoclone->SetMaximum(0);
-    //histo->SetMinimum(-100);
+    //histoclone->SetMaximum(0.3);
+    //histoclone->SetMinimum(0.01);
     histoclone->Draw("COLZ");
 
     for (const auto&it: gc){
@@ -648,8 +648,8 @@ void MaxLikelyhood(){
     conditions["f72"] = "";
 
     //for (auto& it: conditions){
-    //    if (!it.second.empty() ) it.second += " && MugastData.Ex < 1.5";
-    //    else it.second += "MugastData.Ex < 1.5";
+    //    if (!it.second.empty() ) it.second += " && MugastData.Ex < 2.7";
+    //    else it.second += "MugastData.Ex < 2.7";
     //}
 
     TFile* file = new TFile("./histofile.root", "read");
