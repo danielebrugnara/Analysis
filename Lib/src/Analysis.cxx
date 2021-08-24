@@ -36,7 +36,7 @@ bool Analysis::RunAnalysis()
     system("cd Configs/Cuts/; root -l -b -q E_TOF_cuts.cxx; cd -;");
     system("cd Configs/Cuts/; root -l -b -q DE_E_cuts.cxx; cd -;");
     system("cd Configs/Cuts/; root -l -b -q MQ_Q_cuts.cxx; cd -;");
-    system("cd Configs/Interpolations/; root -l -b -q TW_Brho_M46_Z18.C; cd -;");
+    //system("cd Configs/Interpolations/; root -l -b -q TW_Brho_M46_Z18.C; cd -;");
 
     //Removing previous data
     system("rm -rf ./Out/*");

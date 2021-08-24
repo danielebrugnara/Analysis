@@ -276,7 +276,7 @@ bool MugastIdentification::initializeInterpolations() {
 
     auto* tmpFile = new TFile("./Configs/Interpolations/TW_Brho_M46_Z18.root");
     if (tmpFile->IsOpen()){
-        TW_Brho_M46_Z18 = new Interpolation(tmpFile);
+        TW_Brho_M46_Z18 = new Interpolation(tmpFile, true);
         tmpFile->Close();
         delete tmpFile;
     }else{

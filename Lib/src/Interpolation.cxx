@@ -7,7 +7,7 @@ Interpolation::Interpolation(const std::string& input_file) : spline(nullptr){
         //throw std::runtime_error("Unable to generate interpolation from text file\n");
 }
 
-Interpolation::Interpolation(TFile *file) : spline(nullptr){
+Interpolation::Interpolation(TFile *file, const bool& use_histogram) : spline(nullptr){
     if (!(file->IsOpen()))
         throw std::runtime_error("Interpolation file pointer non initialized\n");
 
@@ -17,12 +17,18 @@ Interpolation::Interpolation(TFile *file) : spline(nullptr){
     while ((key = (TKey *)contents())){
         obj = file->Get(key->GetName());
         if (obj->InheritsFrom("TSpline")){
-            auto *tmp = (TSpline *)obj;
+            auto* tmp = static_cast<TSpline *>(obj);
             spline = tmp;
             return;
         }
+        if (obj->InheritsFrom("TProfile") && use_histogram){
+            auto* tmp = static_cast<TProfile *>(obj->Clone("test"));
+            tmp->SetDirectory(0);
+            hist = tmp;
+            return;
+        }
     }
-    if (!spline)
+    if (spline== nullptr && hist== nullptr)
         throw std::runtime_error(std::string("Interpolation not found in TFile: ") +
                                  file->GetName() +
                                  "\n");
@@ -30,12 +36,13 @@ Interpolation::Interpolation(TFile *file) : spline(nullptr){
 
 Interpolation::~Interpolation(){
     delete spline;
+    delete hist;
 }
 
 bool Interpolation::ReadFile(const std::string& input_file_name){
     std::ifstream in_file(input_file_name);
     if (!in_file.is_open()) {
-        throw std::runtime_error("Unable to open intermpoation file : "+input_file_name+"\n");
+        throw std::runtime_error("Unable to open interpolation file : "+input_file_name+"\n");
     }
     std::string line;
     std::string delimiter = ", ";
