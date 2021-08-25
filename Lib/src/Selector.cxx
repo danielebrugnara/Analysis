@@ -314,7 +314,9 @@ void Selector::SlaveBegin(TTree * /*tree*/){
 
 //Processing entry//////////////////////////////////////////////////////////////////////
 Bool_t Selector::Process(Long64_t entry){
+    DEBUG("=================================================================================================================================================================", "");
     DEBUG("------------>Selector::Process()", "");
+    DEBUG("Entry nr: ", entry);
     fReader.SetLocalEntry(entry);
 
     if (entry % 5000 == 0)

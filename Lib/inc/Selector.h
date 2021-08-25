@@ -335,7 +335,7 @@ private:
                             << std::endl;
         }else{
             delete ptr_value;
-            delete ptr;
+            //delete ptr;
         }
         return true;
     };

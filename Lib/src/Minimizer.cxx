@@ -32,6 +32,7 @@ void Minimizer::SetThreashold(double threashold){
 double Minimizer::Minimize()
 {
 	double fx ;
+	bool addedQuenching{false};
 	do {
         derivative[0]=derivative[1];
 		derivative[1]=(function_ptr(x[0]+h)-function_ptr(x[0]-h))/(2*h);
@@ -55,8 +56,15 @@ double Minimizer::Minimize()
         rate[0]=rate[1];
 		rate[1]=rate[1]*quenching;
         ++n_steps;
-        if(n_steps>max_steps)
-            throw std::runtime_error("Reached max steps in minimizer\n");
+        if(n_steps>max_steps){
+            if (addedQuenching) //quenching did not solve convergence
+                throw std::runtime_error("Reached max steps in minimizer\n");
+            else{
+                quenching = 0.95;
+                n_steps = 0;
+                addedQuenching = true;
+            }
+        }
 	} while(fabs(x[1]-x[0])>threshold);
     return x[1];
 }
