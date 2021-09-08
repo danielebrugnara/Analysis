@@ -14,6 +14,7 @@
 #include <functional>
 
 #include "CreateSimulationFile.C"
+#include "AverageDistributions.C"
 
 double binomial(int N, int k, double p);
 
@@ -47,7 +48,8 @@ struct LhInputs{
     double endX{1};
     double startY{0};
     double endY{1};
-    std::vector<double (*)(double, double )> tsf;
+    //std::vector<double (*)(double, double )> tsf;
+    std::vector<std::function<double(double, double)>> tsf;
     int N;
     LhInputs(const int& N): N(N){};
 };
@@ -65,7 +67,8 @@ LhResults MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu){
     //std::vector<int> excludedBins {0, 11, 12, 13, 14};
     //std::vector<int> excludedBins {6,7,8};
     //std::vector<int> excludedBins {0};
-    std::vector<int> excludedBins {0, 24, 25, 26};
+    //std::vector<int> excludedBins {0, 24, 25, 26};
+    std::vector<int> excludedBins {0, 40, 41, 42, 43, 44, 45, 46};
     //std::vector<int> excludedBins {0, 7, 8, 9};
     //std::vector<int> excludedBins {0, 13, 14, 15};
     //std::vector<int> excludedBins {0, 7, 8};
@@ -129,13 +132,13 @@ LhResults MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu){
     std::cout << "Expected gammas @360 from L3: " << N*(1-results.maxX-results.maxY)*0.013  << std::endl;
     std::cout << "Expected gammas @1660 from L3: " << N*(1-results.maxX-results.maxY)*0.0099  << std::endl;
 
-    //Other graph
+    //2nd graph
     LhInputs inputsPartial(N);
     inputsPartial.tsf.resize(2, nullptr);
     double centerX = results.maxY/(results.maxX+results.maxY);
     double centerY = (results.maxX+results.maxY);
-    inputsPartial.startX = 0.0001;
-    inputsPartial.endX = 0.4;
+    inputsPartial.startX = 0.0;
+    inputsPartial.endX = 0.30;
     inputsPartial.startY = centerY*0.7;
     inputsPartial.endY = centerY*1.3;
 
@@ -144,7 +147,7 @@ LhResults MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu){
     //inputsPartial.tsf[1] = [](double x, double y)->double { return x*y;};
 
     ////l2/l0
-    inputsPartial.tsf[0] = [](double x, double y)->double { return y/(x+1);};//WHY is htis negative??!?!!?!?!??!!?!?!?
+    inputsPartial.tsf[0] = [](double x, double y)->double { return y/(x+1);};    
     inputsPartial.tsf[1] = [](double x, double y)->double { return x*y/(x+1);};
 
     inputsPartial.data = data;
@@ -160,13 +163,46 @@ LhResults MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu){
     //cv2->cd(2);
     TVirtualPad* pad22 = cv2->cd(2);
     drawSigmas(resultsPartial.lhHisto, resultsPartial.maxX, resultsPartial.maxY, pad22);
-    std::vector<double> sf {0.24, 0.4};
-
-    //TLine* theoricValue = new TLine(sf[1]/(sf[1]+sf[0]), inputsPartial.startY,sf[1]/(sf[1]+sf[0]), inputsPartial.endY);
-    TLine* theoricValue = new TLine(sf[1]/(sf[0]), inputsPartial.startY,sf[1]/(sf[0]), inputsPartial.endY);
-    theoricValue->Draw();
 
     results.N = inputs.N;
+
+
+    {
+        //3rd graph
+        LhInputs inputsPartial(N);
+        inputsPartial.tsf.resize(2, nullptr);
+        double centerX = results.maxY/(results.maxX+results.maxY);
+        double centerY = (results.maxX+results.maxY);
+        inputsPartial.startX = 0.0;
+        inputsPartial.endX = 0.70;
+        inputsPartial.startY = centerY*0.7;
+        inputsPartial.endY = centerY*1.3;
+
+
+        ////s2/s0
+        std::vector<double> xsec{2.388, 1.534, 2.886 };
+        std::vector<double> degeneracy{2, 4, 8};
+        inputsPartial.tsf[0] = [xsec, degeneracy](double x, double y)->double { return y*(degeneracy[0]*xsec[0])/(x*degeneracy[1]*xsec[1]+degeneracy[0]*xsec[0]);};    
+        inputsPartial.tsf[1] = [xsec, degeneracy](double x, double y)->double { return x*y*(degeneracy[1]*xsec[1])/(x*degeneracy[1]*xsec[1]+degeneracy[0]*xsec[0]);};
+
+        inputsPartial.data = data;
+        inputsPartial.simu = simu;
+
+        LhResults resultsPartial = gridSearch(inputsPartial);
+        TCanvas* cv = new TCanvas();
+        drawSigmas(resultsPartial.lhHisto, resultsPartial.maxX, resultsPartial.maxY, cv);
+
+
+        std::vector<double> sf {0.24, 0.4};
+        TLine* line = new TLine(sf[1]/(sf[0]), inputsPartial.startY,sf[1]/(sf[0]), inputsPartial.endY);
+        line->SetLineColor(kRed);
+        line->SetLineWidth(3);
+        cv->cd(1);
+        line->Draw();
+        cv->Update();
+
+    }
+
 
     return results;
 }
@@ -436,7 +472,7 @@ double binomial(int N, int k, double p){
 
 std::map<std::string, std::string> SumThicknesses(){
     std::map<int, int> thicknessToNDeuterons{
-            {15, 46},
+        {15, 46},
             {20, 0},
             {25, 134},
             {30, 93},
@@ -447,18 +483,19 @@ std::map<std::string, std::string> SumThicknesses(){
             {55, 0}
     };
     int maxVal = std::max_element(thicknessToNDeuterons.begin(), thicknessToNDeuterons.end(),
-                          [](const std::pair<int, int>& p1, const std::pair<int, int>& p2){
-                                return p1.second < p2.second;
-                            }
-                        )->second;
+            [](const std::pair<int, int>& p1, const std::pair<int, int>& p2){
+            return p1.second < p2.second;
+            }
+            )->second;
 
+    //Root files sum over different thicknesses
     std::map<std::string, std::string> prefixes{
-            {"s12", "selector_46Ar3Hed47K_0keV_s12"},
-            {"d32", "selector_46Ar3Hed47K_360keV_d32"},
-            {"f72", "selector_46Ar3Hed47K_2020keV_f72"},
-            {"flat0", "selector_46Ar3Hed47K_0keV_flat"},
-            {"flat2", "selector_46Ar3Hed47K_360keV_flat"},
-            {"flat3", "selector_46Ar3Hed47K_2020keV_flat"}
+        {"s12", "selector_46Ar3Hed47K_0keV_s12_"},
+            {"d32", "selector_46Ar3Hed47K_360keV_d32_"},
+            {"f72", "selector_46Ar3Hed47K_2020keV_f72_"},
+            {"flat0", "selector_46Ar3Hed47K_0keV_flat_"},
+            {"flat2", "selector_46Ar3Hed47K_360keV_flat_"},
+            {"flat3", "selector_46Ar3Hed47K_2020keV_flat_"}
     };
 
     std::map<int, double> percentOfThickness;
@@ -472,7 +509,9 @@ std::map<std::string, std::string> SumThicknesses(){
         for (const auto& itThickness: percentOfThickness){
             std::string filePath{"./../../DataAnalyzed/simu/"};
             filePath += itReaction.second;
-            filePath += "_0_0_";
+            //if(itReaction.second.find("flat")!=itReaction.second.npos){
+            //    filePath += "0_0_";
+            //}
             filePath += std::to_string(itThickness.first);
             filePath += "um_analyzed.root";
             files[filePath] = itThickness.second;
@@ -482,6 +521,21 @@ std::map<std::string, std::string> SumThicknesses(){
         if (!testFile.is_open())
             CreateSimulationFile(files, outputFiles[itReaction.first]);
     }
+    //Angular distributions sum over different thicknesses
+    std::string distrFolder{"./AngularDistributions/"};
+    std::vector<std::string> distrPrefixes{"l0_", "l2_", "l3_"};
+    std::string distrSuffix{"um.in"};
+
+    for(const auto& itDistr: distrPrefixes){
+        std::map<std::string, double> filesToAverage;
+        for(const auto& itThickness: thicknessToNDeuterons){
+            std::string fileName{distrFolder+itDistr+std::to_string(itThickness.first)+distrSuffix};
+            filesToAverage[fileName] = itThickness.second;
+        }
+        AverageDistributions(filesToAverage, itDistr+"averaged.txt");
+    }
+
+
     return outputFiles;
 }
 
@@ -579,11 +633,11 @@ void SaveTheoryDistributions(const std::string& fileName, const LhResults& resul
     if (!outFile->IsOpen()) throw std::runtime_error("histofile not present!!");
     std::cout << "Normalizing histograms\n";
 
-    TGraph gs12("xsec_s12.txt");
+    TGraph gs12("l0_averaged.txt");
     gs12.SetName("gs12");
-    TGraph gd32("xsec_d32.txt");
+    TGraph gd32("l2_averaged.txt");
     gd32.SetName("gd32");
-    TGraph gf72("xsec_f72.txt");
+    TGraph gf72("l3_averaged.txt");
     gf72.SetName("gf72");
 
     gs12.Write();
@@ -595,10 +649,10 @@ void SaveTheoryDistributions(const std::string& fileName, const LhResults& resul
 
     for (int i{0}; i<gs12.GetN(); ++i){
         gsum.SetPoint(gsum.GetN(),
-                      gs12.GetPointX(i),
-                      gs12.GetPointY(i)* results.maxX
-                        + gd32.GetPointY(i)* results.maxY
-                        + gf72.GetPointY(i) *(1- results.maxX-results.maxY));
+                gs12.GetPointX(i),
+                gs12.GetPointY(i)* results.maxX
+                + gd32.GetPointY(i)* results.maxY
+                + gf72.GetPointY(i) *(1- results.maxX-results.maxY));
     }
     gsum.Write();
     //Correction factor
@@ -647,10 +701,10 @@ void MaxLikelyhood(){
     conditions["d32"] = "";
     conditions["f72"] = "";
 
-    //for (auto& it: conditions){
-    //    if (!it.second.empty() ) it.second += " && MugastData.Ex < 2.7";
-    //    else it.second += "MugastData.Ex < 2.7";
-    //}
+    for (auto& it: conditions){
+        if (!it.second.empty() ) it.second += " && MugastData.Ex < 2.5";
+        else it.second += "MugastData.Ex < 2.5";
+    }
 
     TFile* file = new TFile("./histofile.root", "read");
     if (!file->IsOpen()){
@@ -658,7 +712,8 @@ void MaxLikelyhood(){
         for (const auto&it: files){
             TFile* file = new TFile(it.second.c_str(), "read");
             TTree* tree = (TTree*) file->Get("AnalyzedTree");
-            TH1D* histo = new TH1D(it.first.c_str(), it.first.c_str(), 90, 90, 180);
+            //TH1D* histo = new TH1D(it.first.c_str(), it.first.c_str(), 90, 90, 180);
+            TH1D* histo = new TH1D(it.first.c_str(), it.first.c_str(), 150, 90, 180);
             //TH1D* histo = new TH1D(it.first.c_str(), it.first.c_str(), 25, 90, 180);
             tree->Draw(Form("MugastData.EmissionDirection.Theta()*180./TMath::Pi()>>%s", it.first.c_str()), conditions[it.first].c_str());
 
@@ -679,8 +734,8 @@ void MaxLikelyhood(){
 
     TH1D* data = (TH1D*) file->Get("data");
     std::vector<TH1D*> simu{(TH1D*) file->Get("s12"),
-                            (TH1D*) file->Get("d32"),
-                            (TH1D*) file->Get("f72")};
+        (TH1D*) file->Get("d32"),
+        (TH1D*) file->Get("f72")};
 
     LhResults results =  MaximizeLikelyhood(data, simu);
 
