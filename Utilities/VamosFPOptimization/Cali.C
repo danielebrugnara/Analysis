@@ -20,13 +20,14 @@
 
 
 std::string GetCommand();
+std::string GetCommand2();
+std::string GetCommand2h();
 void SetAliases(TTree *);
 std::pair<TH2D *, TH2D*>GenerateHisto(TTree *);
 void DrawLines();
 void LoadStates();
 //void LoadProfiles();
 double h= 0.01;
-
 TSpline3* CaliTime();
 double GetTime(double );
 
@@ -34,7 +35,7 @@ double GetTime(double );
 std::map <std::string, double> states;
 std::vector<Minimizer*> minimizers;
 
-const int bins = 1000;
+const int bins = 60;
 
 std::map <std::string, TProfile *> profiles1;
 std::map <std::string, TProfile *> profiles2;
@@ -150,7 +151,7 @@ void ComputeDiscrepancies()
 void InitializeMinimizers(){
 
 	for (int ii=0; ii<bins;++ii){
-		minimizers.push_back(new Minimizer(0., 100, 0.01, 100, 1, h));
+		minimizers.push_back(new Minimizer(0., 5000, 0.01, 100, 0.99, h));
 		//else minimizers.push_back(new Minimizer(discrepancies->GetBinContent(ii), true));
 	}
 }
@@ -200,7 +201,7 @@ void Cali(const char* file_name){
 
 	unsigned int iteration = 0;
 	try{
-		while (++iteration<150)
+		while (++iteration<19)
 		{
 			std::pair<TH2D *, TH2D*> histo = GenerateHisto(tree);
 
@@ -289,29 +290,40 @@ std::string GetCommand(){
 		str >> min >> max >> shift;
 		cmd.append("+"+shift+"*"+"(Xf>"+min+")*(Xf<"+max+")");
 	}
-	cmd.append("+GetTime(Xf)");
+	//cmd.append("+GetTime(Xf)");
 
 	std::cout << cmd <<std::endl;
 	return cmd;
 }
 
+//std::string GetCommand2(){
+//	std::string cmd = "540.5*(AGAVA_VAMOSTS<104753375647998)+537.9*(AGAVA_VAMOSTS>=104753375647998) -2.*T_FPMW_CATS2_C";
+//	std::ifstream cali_file("FP_Time.cal");
+//	std::string line;
+//	std::string min;
+//	std::string max;
+//	std::string shift;
+//	if (!cali_file) std::cerr <<"Error Opening cali file\n";
+//	while (std::getline(cali_file, line)){
+//		std::stringstream str;
+//		str << line;
+//		str >> min >> max >> shift;
+//		cmd.append("+("+shift+"+"+std::to_string(h)+")*"+"(Xf>"+min+")*(Xf<"+max+")");
+//	}
+//	cmd.append("+GetTime(Xf)");
+//	return cmd;
+//}
 std::string GetCommand2(){
-	std::string cmd = "540.5*(AGAVA_VAMOSTS<104753375647998)+537.9*(AGAVA_VAMOSTS>=104753375647998) -2.*T_FPMW_CATS2_C";
-	std::ifstream cali_file("FP_Time.cal");
-	std::string line;
-	std::string min;
-	std::string max;
-	std::string shift;
-	if (!cali_file) std::cerr <<"Error Opening cali file\n";
-	while (std::getline(cali_file, line)){
-		std::stringstream str;
-		str << line;
-		str >> min >> max >> shift;
-		cmd.append("+("+shift+"+"+std::to_string(h)+")*"+"(Xf>"+min+")*(Xf<"+max+")");
-	}
+	std::string cmd = "Path/cos(Pf/1000.)+(760.-752.81)/(cos(Pf/1000.)*cos(Tf/1000.))";
 	cmd.append("+GetTime(Xf)");
 	return cmd;
 }
+std::string GetCommand2h(){
+	std::string cmd = "Path/cos(Pf/1000.)+(760.-752.81)/(cos(Pf/1000.)*cos(Tf/1000.))";
+	cmd.append("+GetTime(Xf)+"+std::to_string(h));
+	return cmd;
+}
+
 
 void SetAliases(TTree *tree){
 	tree->SetAlias("IC0", "IC[0]*1.04");
@@ -324,13 +336,16 @@ void SetAliases(TTree *tree){
 	tree->SetAlias("En", "IC0+IC1+IC2+IC3+IC4+IC5+IC6");
 	tree->SetAlias("dEn0", "IC0");
 	tree->SetAlias("dEn1", "IC1");
-	tree->SetAlias("Dis", "Path+5");
 	std::string cmd = GetCommand(); 
 	std::string cmd2 = GetCommand2(); 
+	std::string cmd2h = GetCommand2h(); 
+	//std::string cmd2 = GetCommand2(); 
    	tree->SetAlias("Time",cmd.c_str());	
-   	tree->SetAlias("Timeh",cmd2.c_str());	
+	tree->SetAlias("Dis", cmd2.c_str());
+	tree->SetAlias("Dish", cmd2h.c_str());
+   	//tree->SetAlias("Timeh",cmd2.c_str());	
 	tree->SetAlias("Vel", "Dis/Time");
-	tree->SetAlias("Velh", "Dis/Timeh");
+	tree->SetAlias("Velh", "Dish/Time");
 	tree->SetAlias("Bet", "Vel/29.9792");
 	tree->SetAlias("Beth", "Velh/29.9792");
 	tree->SetAlias("Gamm", "1./sqrt(1-Bet*Bet)");
@@ -340,11 +355,11 @@ void SetAliases(TTree *tree){
 }
 
 void LoadStates(){
-	states["18"] = 2.56;
-	states["17"] = 2.71;
-	states["16"] = 2.88;
-	states["15"] = 3.07;
-	states["14"] = 3.28;
+	states["18"] = 46./18. ;//2.56;
+	states["17"] = 46./17. ;//2.71;
+	states["16"] = 46./16. ;//2.88;
+	states["15"] = 46./15. ;//3.07;
+	states["14"] = 46./14. ;//3.28;
 }
 
 double GetTime(double Xf){

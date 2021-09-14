@@ -68,7 +68,7 @@ private:
     Data const *data;
     VamosData fragment;
 
-    Interpolation *fpTimeInterpolation;
+    Interpolation *fpPosInterpolation;
 
     const double icThreashold{0.1};
 
@@ -123,10 +123,5 @@ public:
 
 private:
     double getShift();
-
-    inline double getFpTime()
-    {
-        return 540.5 * (**data->AGAVA_VAMOSTS < 104753375647998) + 537.9 * (**data->AGAVA_VAMOSTS >= 104753375647998) - 2. * **data->T_FPMW_CATS2_C +
-                getShift();
-    }
+    double getFpTime();
 };

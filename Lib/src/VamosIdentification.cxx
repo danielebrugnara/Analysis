@@ -21,8 +21,8 @@ bool VamosIdentification::initialize()
 
     //Focal plane aligments
     readFpTimeShifts();
-    auto *tmpFile = new TFile("./Configs/Interpolations/InterpolationTimeFP.root");
-    fpTimeInterpolation = new Interpolation(tmpFile);
+    auto *tmpFile = new TFile("./Configs/Interpolations/InterpolationPosFP.root");
+    fpPosInterpolation = new Interpolation(tmpFile);
     tmpFile->Close();
 
     //Masses in MeV [M][Z] as ints
@@ -128,7 +128,7 @@ bool VamosIdentification::initialize()
 VamosIdentification::~VamosIdentification()
 {
     delete data;
-    delete fpTimeInterpolation;
+    delete fpPosInterpolation;
 }
 
 void VamosIdentification::readFpTimeShifts()
@@ -159,8 +159,7 @@ void VamosIdentification::readFpTimeShifts()
     }
 }
 
-bool VamosIdentification::identify()
-{
+bool VamosIdentification::identify(){
     fragment.BRho = **data->Brho;
     fragment.PTPosition.SetXYZ(**data->Pf,**data->Tf, 0);
     fragment.FocalPlanePosition.SetXYZ(**data->Xf,**data->Yf, 0);
@@ -177,7 +176,7 @@ bool VamosIdentification::identify()
 
     //Computing the basic identifiaction
     fragment.T = getFpTime();
-    fragment.Path = **data->Path + 5;
+    fragment.Path = **data->Path/cos(**data->Pf/1000.) + (760.-752.81)/(cos(**data->Pf/1000.)*cos(**data->Tf/1000.))+fpPosInterpolation->Evaluate(**data->Xf);
     fragment.V = fragment.Path / fragment.T;
     fragment.Beta = fragment.V / 29.9792;
     fragment.Gamma = 1. / sqrt(1.0 - fragment.Beta * fragment.Beta);
@@ -245,8 +244,7 @@ bool VamosIdentification::identify()
     return fragment.Identified = true;
 }
 
-double VamosIdentification::getShift()
-{
+double VamosIdentification::getShift(){
     double shift{timeShifts.at(0).second};
     if (**data->Xf == -1500 || **data->Xf > timeShifts.back().first)
         return 0;
@@ -260,7 +258,14 @@ double VamosIdentification::getShift()
             break;
         }
     }
-    return shift + fpTimeInterpolation->Evaluate(**data->Xf);
+    //return shift + fpPosInterpolation->Evaluate(**data->Xf);
+    return shift;
+}
+
+double VamosIdentification::getFpTime(){
+    return  540.5 * (**data->AGAVA_VAMOSTS < 104753375647998)
+            + 537.9 * (**data->AGAVA_VAMOSTS >= 104753375647998) - 2. * **data->T_FPMW_CATS2_C
+            +getShift();
 }
 
 double VamosIdentification::getEnFromBrho(){
