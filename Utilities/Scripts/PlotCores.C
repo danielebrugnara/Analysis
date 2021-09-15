@@ -55,6 +55,8 @@ void PlotCores(){
     cv->cd(1)->SetLogy();
     stackBefore->Draw("nostack");
     stackBefore->GetXaxis()->SetTitle("Energy [keV]");
+    stackBefore->GetXaxis()->SetNdivisions(505);
+    stackBefore->GetYaxis()->SetNdivisions(505);
     stackBefore->GetYaxis()->SetTitle("Counts");
     stackBefore->GetXaxis()->SetLabelSize(0.05);
     stackBefore->GetXaxis()->SetTitleSize(0.05);
