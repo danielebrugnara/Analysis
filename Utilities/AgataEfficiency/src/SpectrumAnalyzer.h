@@ -31,7 +31,7 @@
 
 class SpectrumAnalyzer {
 public:
-    explicit SpectrumAnalyzer(const std::string &, const bool&, const bool&, const bool&);
+    explicit SpectrumAnalyzer(const std::string &, const bool&, const std::string&, const bool&);
 
     ~SpectrumAnalyzer();
 

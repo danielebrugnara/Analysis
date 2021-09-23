@@ -58,6 +58,7 @@ public :
    TTreeReaderValue<Int_t> nbAdd = {fReader, "nbAdd"};
    TTreeReaderArray<Int_t> AddId = {fReader, "AddId"};
    TTreeReaderArray<Float_t> AddE = {fReader, "AddE"};
+   TTreeReaderArray<Float_t> trackE = {fReader, "trackE"};
    TTreeReaderArray<Float_t> AddX = {fReader, "AddX"};
    TTreeReaderArray<Float_t> AddY = {fReader, "AddY"};
    TTreeReaderArray<Float_t> AddZ = {fReader, "AddZ"};
@@ -86,6 +87,8 @@ public :
    TH2D* data_addb_gg;
    TH1D* data_core_spec;
    TH2D* data_core_gg;
+   TH1D* data_tracked_spec;
+   TH2D* data_tracked_gg;
    TH3D* geom;
    TH3D* geom_abovethr;
 

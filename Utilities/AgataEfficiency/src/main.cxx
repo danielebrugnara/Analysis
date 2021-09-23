@@ -16,7 +16,7 @@ int main(int argc, char* argv[]){
     bool run_selector = false;
     bool debug_canvas = false;
     bool use_main_transitions = false;
-    bool use_cores = false;
+    std::string use_spectrum = "addb";
     //std::map<int, bool> skip_argc;
     std::vector<std::string> files;
     for (int ii=1; ii<argc;++ii){
@@ -39,7 +39,12 @@ int main(int argc, char* argv[]){
             continue;
         }
         if (val.find("--use-cores") != std::string::npos) {
-            use_cores = true;
+            use_spectrum = "core";
+            //skip_argc[ii] = true;
+            continue;
+        }
+        if (val.find("--use-tracking") != std::string::npos) {
+            use_spectrum = "tracked";
             //skip_argc[ii] = true;
             continue;
         }
@@ -56,10 +61,10 @@ int main(int argc, char* argv[]){
             std::cout << "Running selector for : " << file << " \n";
             RunSelector run(file);
             std::cout << "Running analysis\n";
-            SpectrumAnalyzer analyze(run.GetFileName(), debug_canvas, true, use_main_transitions);
+            SpectrumAnalyzer analyze(run.GetFileName(), debug_canvas, use_spectrum, use_main_transitions);
         }else{
             std::cout << "Running analysis, file : " << file << "\n";
-            SpectrumAnalyzer analyze(file, debug_canvas, use_cores, use_main_transitions);
+            SpectrumAnalyzer analyze(file, debug_canvas, use_spectrum, use_main_transitions);
         }
     }
     std::cout << "Finished the analysis\n";

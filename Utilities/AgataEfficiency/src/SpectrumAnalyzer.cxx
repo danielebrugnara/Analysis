@@ -1,6 +1,6 @@
 #include "SpectrumAnalyzer.h"
 
-SpectrumAnalyzer::SpectrumAnalyzer(const std::string & file_name, const bool& debug_canvas, const bool& use_cores, const bool& use_main_transitions):
+SpectrumAnalyzer::SpectrumAnalyzer(const std::string & file_name, const bool& debug_canvas, const std::string& use_spectra, const bool& use_main_transitions):
         file_name(file_name),
         debug_canvas(debug_canvas),
         use_main_transitions(use_main_transitions),
@@ -21,12 +21,17 @@ SpectrumAnalyzer::SpectrumAnalyzer(const std::string & file_name, const bool& de
 
     std::string spect_name;
     std::string gg_name;
-    if (!use_cores) {
+    if (use_spectra=="addb") {
         gg_name = "data_addb_gg";
         spect_name = "data_addb_spec";
-    }else{
+    }else if(use_spectra=="core"){
         gg_name = "data_core_gg";
         spect_name = "data_core_spec";
+    }else if(use_spectra=="tracked"){
+        gg_name = "data_tracked_gg";
+        spect_name = "data_tracked_spec";
+    }else{
+        throw std::runtime_error("unknown specrtrum choice\n");
     }
 
     gg_ptr = dynamic_cast<TH2D*>(file->Get(gg_name.c_str()));

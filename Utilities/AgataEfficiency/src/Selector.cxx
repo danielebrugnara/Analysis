@@ -62,6 +62,14 @@ void Selector::SlaveBegin(TTree * /*tree*/)
                             4000, 0, 4000);
     fOutput->Add(data_core_gg);
 
+    data_tracked_spec = new TH1D("data_tracked_spec", "data_tracked_spec",
+                              4000, 0, 4000);
+    fOutput->Add(data_tracked_spec);
+    data_tracked_gg = new TH2D("data_tracked_gg", "data_tracked_gg",
+                            4000, 0, 4000,
+                            4000, 0, 4000);
+    fOutput->Add(data_tracked_gg);
+
     mspec_core = new TH2D("mspec_core", "mspec_core",
                           50, 0, 50,
                           4000, 0, 4000);
@@ -148,6 +156,15 @@ Bool_t Selector::Process(Long64_t entry)
     for (const auto & en1: coreE0){
         data_core_spec->Fill(en1);
         for (const auto & en2: AddE){
+            if (en1 == en2) continue;
+            data_core_gg->Fill(en1, en2);
+            data_core_gg->Fill(en2, en1);
+        }
+    }
+
+    for (const auto & en1: trackE){
+        data_core_spec->Fill(en1);
+        for (const auto & en2: trackE){
             if (en1 == en2) continue;
             data_core_gg->Fill(en1, en2);
             data_core_gg->Fill(en2, en1);
