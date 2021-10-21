@@ -32,6 +32,7 @@ public:
         TTreeReaderValue<float> *PhiL;
         TTreeReaderValue<long long unsigned int> *AGAVA_VAMOSTS;
         TTreeReaderValue<float> *T_FPMW_CATS2_C;
+        TTreeReaderValue<float> *TW;
         Data(TTreeReaderArray<float> *IC,
              TTreeReaderValue<float> *Path,
              TTreeReaderValue<float> *Brho,
@@ -42,7 +43,8 @@ public:
              TTreeReaderValue<float> *ThetaL,
              TTreeReaderValue<float> *PhiL,
              TTreeReaderValue<long long unsigned int> *AGAVA_VAMOSTS,
-             TTreeReaderValue<float> *T_FPMW_CATS2_C) : IC(IC),
+             TTreeReaderValue<float> *T_FPMW_CATS2_C,
+             TTreeReaderValue<float> *TW) : IC(IC),
                                                         Path(Path),
                                                         Brho(Brho),
                                                         Xf(Xf),
@@ -52,16 +54,18 @@ public:
                                                         ThetaL(ThetaL),
                                                         PhiL(PhiL),
                                                         AGAVA_VAMOSTS(AGAVA_VAMOSTS),
-                                                        T_FPMW_CATS2_C(T_FPMW_CATS2_C){};
+                                                        T_FPMW_CATS2_C(T_FPMW_CATS2_C),
+                                                        TW(TW){};
     };
-    std::array<int, 3> cutsZ;
+    std::vector<int> cutsZ;
     //std::array<int, 5> cutsM;
     //std::array<int, 9> cuts_Q;
-    std::array<int, 4> cutsM;
+    std::vector<int> cutsM;
     //std::array<int, 8> cuts_Q;
+    std::array<std::array<double, 2>, 7> icCalibration;
 
 private:
-    std::unordered_map<int, std::unordered_map<int, double>> mass;
+    std::unordered_map<int, std::unordered_map<int, ReactionFragment*>> mass;
     //const Double_t AMU_TO_MEV{931.4936148};
     void readFpTimeShifts();
     std::vector<std::pair<double, double>> timeShifts; //Xf-max, shift
@@ -69,6 +73,7 @@ private:
     VamosData fragment;
 
     Interpolation *fpPosInterpolation;
+    Interpolation *massInterpolation;
 
     const double icThreashold{0.1};
 
@@ -105,7 +110,7 @@ public:
 
     inline VamosData& getData()        {return fragment;};
 
-    double getEnFromBrho();
+    //double getEnFromBrho();
     //////////////////////////////////////////////////////////////////
     //Inline Functions implementation (required to be in header file)
 public:

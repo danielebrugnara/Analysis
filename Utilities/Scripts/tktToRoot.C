@@ -63,21 +63,21 @@ TH1D* readData(const std::string& fileName,
     std::ifstream spectra(fileName, std::ios::in|std::ios::binary);
     if (!spectra.is_open()) throw std::runtime_error("Unable to open file "+fileName+"\n");
 
-    std::reverse(dimensions.begin(), dimensions.end());
+    //std::reverse(dimensions.begin(), dimensions.end());
 
     unsigned int pos{0};
     for(unsigned int i{0}; i<dimensions.size(); ++i){
         int tmp = indexes[i];
-        //std::cout << "idx"<<i<<": " << indexes[i] <<std::endl;
-        for(unsigned int j{i}; j<dimensions.size()-1; ++j) {
-            //std::cout << "dimension"<<j<<" " << dimensions[j] << std::endl;
+        std::cout << "idx"<<i<<": " << indexes[i] <<std::endl;
+        for(unsigned int j{(unsigned int)dimensions.size()-1}; j>i; --j) {
+            std::cout << "dimension"<<j<<" " << dimensions[j] << std::endl;
             tmp *= dimensions[j];
         }
         pos += tmp;
     }
     pos *=sizeof(T)*size;
 
-    //std::cout << "pos: " <<  pos << std::endl;
+    std::cout << "pos: " <<  pos << std::endl;
 
 
     spectra.seekg(pos);
@@ -85,7 +85,7 @@ TH1D* readData(const std::string& fileName,
 
     TH1D* spec = new TH1D("spec", "spec", size*nspec, 0, size*nspec);
     for (int i{0}; i<size*nspec; ++i){
-        spec->SetBinContent(i, data[i]);
+        spec->SetBinContent(spec->FindBin(i), data[i]);
     }
     return spec;
 }

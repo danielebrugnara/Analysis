@@ -50,14 +50,14 @@ void PlotCores(){
         //histogramsBefore[it]->Draw("same");
     }
 
-    auto* cv = new TCanvas();
+    auto* cv = new TCanvas("cv", "cv", 1015, 837);
     cv->Divide(2,1);
     cv->cd(1)->SetLogy();
     stackBefore->Draw("nostack");
     stackBefore->GetXaxis()->SetTitle("Energy [keV]");
     stackBefore->GetXaxis()->SetNdivisions(505);
-    stackBefore->GetYaxis()->SetNdivisions(505);
-    stackBefore->GetYaxis()->SetTitle("Counts");
+    stackBefore->GetYaxis()->SetNdivisions(503);
+    stackBefore->GetYaxis()->SetTitle("Counts /1 keV");
     stackBefore->GetXaxis()->SetLabelSize(0.05);
     stackBefore->GetXaxis()->SetTitleSize(0.05);
     stackBefore->GetYaxis()->SetLabelSize(0.05);
@@ -67,7 +67,9 @@ void PlotCores(){
     stackAfter->Draw("nostack");
     stackAfter->GetXaxis()->SetRangeUser(100, 400);
     stackAfter->GetXaxis()->SetTitle("Energy [keV]");
-    stackAfter->GetYaxis()->SetTitle("Counts");
+    stackAfter->GetXaxis()->SetNdivisions(505);
+    stackAfter->GetYaxis()->SetNdivisions(503);
+    stackAfter->GetYaxis()->SetTitle("Counts/1 keV");
     stackAfter->GetXaxis()->SetLabelSize(0.05);
     stackAfter->GetXaxis()->SetTitleSize(0.05);
     stackAfter->GetYaxis()->SetLabelSize(0.05);

@@ -9,6 +9,9 @@
 class VamosData: public TObject{
     public:
     double En;         //Energy IC
+    double En_BRho;         //Energy IC
+    std::vector<double> IC;         //Energy IC
+    double En_NM;      //Not measuredEnergy IC
     double D_En;       //DE 1+2
     double D_En2;      //DE 1
     double Path;       //Reconstructed path
@@ -31,6 +34,9 @@ class VamosData: public TObject{
     int id_Q;
     int id2_Z;
     VamosData() : En(0),
+                 En_BRho(0),
+                 IC({0,0,0,0,0,0,0}),
+                 En_NM(0),
                  D_En(0),
                  D_En2(0),
                  Path(0),
@@ -53,5 +59,5 @@ class VamosData: public TObject{
                  id_Q(0),
                  id2_Z(0){};
 
-ClassDef(VamosData, 5);
+ClassDef(VamosData, 10);
 }; 

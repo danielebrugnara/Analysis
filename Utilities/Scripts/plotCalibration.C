@@ -2,6 +2,7 @@
 #include <TTree.h>
 #include <TCanvas.h>
 #include <TH2D.h>
+#include <TH1D.h>
 
 //The script must be run in the agata cloud due to root file compatibility issues
 void plotCalibration(){
@@ -18,6 +19,7 @@ void plotCalibration(){
 
     auto* h1 = new TH2D("h1", ";Strip Number; Channel", 128, 0, 128, 500, 8200, 9000);
     auto* h2 = new TH2D("h2", ";Strip Number; Energy [MeV]", 128, 0, 128, 500, 0, 6);
+    auto* h3 = new TH1D("h3", ";Energy [MeV];Counts/1 keV", 500, 0, 6);
 
     h1->GetXaxis()->SetLabelSize(0.05);
     h1->GetXaxis()->SetTitleSize(0.05);
@@ -30,16 +32,28 @@ void plotCalibration(){
     h2->GetYaxis()->SetLabelSize(0.05);
     h2->GetYaxis()->SetTitleSize(0.05);
     h2->GetYaxis()->SetTitleOffset(0.9);
+    h3->GetXaxis()->SetLabelSize(0.05);
+    h3->GetXaxis()->SetTitleSize(0.05);
+    h3->GetYaxis()->SetLabelSize(0.05);
+    h3->GetYaxis()->SetTitleSize(0.05);
+    h3->GetYaxis()->SetTitleOffset(0.9);
 
-    auto* cv1 = new TCanvas();
-    cv1->cd();
-    t1->Draw("Mugast.fMG_DSSDXE_Energy:Mugast.fMG_DSSDXE_StripNbr>>h1", "Mugast.fMG_DSSDXE_DetectorNbr==1", "col");
-    cv1->SaveAs("pre_energy_calibration.C");
-    cv1->SaveAs("pre_energy_calibration.pdf");
-    auto* cv2 = new TCanvas();
-    cv2->cd();
-    t2->Draw("Mugast.DSSD_E:Mugast.DSSD_X>>h2", "Mugast.TelescopeNumber==1", "col");
-    cv2->SaveAs("post_energy_calibration.C");
-    cv2->SaveAs("post_energy_calibration.pdf");
+    //auto* cv1 = new TCanvas();
+    //cv1->cd();
+    //cv1->SetLogz();
+    //t1->Draw("Mugast.fMG_DSSDXE_Energy:Mugast.fMG_DSSDXE_StripNbr>>h1", "Mugast.fMG_DSSDXE_DetectorNbr==1", "col");
+    //cv1->SaveAs("pre_energy_calibration.C");
+    //cv1->SaveAs("pre_energy_calibration.pdf");
+    //auto* cv2 = new TCanvas();
+    //cv2->cd();
+    //cv2->SetLogz();
+    //t2->Draw("Mugast.DSSD_E:Mugast.DSSD_X>>h2", "Mugast.TelescopeNumber==1", "col");
+    //cv2->SaveAs("post_energy_calibration.C");
+    //cv2->SaveAs("post_energy_calibration.pdf");
 
+    auto* cv3 = new TCanvas();
+    cv3->cd();
+    t2->Draw("Mugast.DSSD_E>>h3", "Mugast.TelescopeNumber==1", "");
+    cv3->SaveAs("mugat_energy_spectrum.C");
+    cv3->SaveAs("mugast_energy_spectrum.pdf");
 }

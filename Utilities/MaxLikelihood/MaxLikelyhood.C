@@ -1,6 +1,7 @@
 #include <vector>
 #include <TH1D.h>
 #include <TCanvas.h>
+#include <TLegend.h>
 #include <TFile.h>
 #include <TH2D.h>
 #include <TH1D.h>
@@ -107,15 +108,35 @@ LhResults MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu){
     results.fit->Draw("histo, same");
 
     results.fitComponents[0]->SetLineColor(kBlue);
-    results.fitComponents[1]->SetLineColor(kGreen);
+    results.fitComponents[1]->SetLineColor(kGreen+1);
     results.fitComponents[2]->SetLineColor(kBlack);
+
+    results.dataWithErrors->SetMarkerSize(3);
+    results.fit->SetMarkerSize(3);
+    results.fitComponents[0]->SetMarkerSize(3);
+    results.fitComponents[1]->SetMarkerSize(3);
+    results.fitComponents[2]->SetMarkerSize(3);
+    results.dataWithErrors->SetMarkerSize(3);
+    results.fit->SetMarkerSize(3);
+    results.fitComponents[0]->SetMarkerSize(3);
+    results.fitComponents[1]->SetMarkerSize(3);
+    results.fitComponents[2]->SetMarkerSize(3);
 
     results.fitSigmas[2].second->SetLineStyle(8);
 
     results.fitComponents[0]->Draw("same, histo");
     results.fitComponents[1]->Draw("same, histo");
     results.fitComponents[2]->Draw("same, histo");
-    results.fitSigmas[2].second->Draw("same, histo");
+    //results.fitSigmas[2].second->Draw("same, histo");
+
+    TLegend* leg = new TLegend();
+    leg->AddEntry(results.dataWithErrors, "data", "lep");
+    leg->AddEntry(results.fit, "fit", "l");
+    leg->AddEntry(results.fitComponents[0], "L=0", "l");
+    leg->AddEntry(results.fitComponents[1], "L=2", "l");
+    leg->AddEntry(results.fitComponents[2], "L=3", "l");
+    leg->Draw();
+
 
     cv1->cd(2);
     results.discrepancy->Draw();
