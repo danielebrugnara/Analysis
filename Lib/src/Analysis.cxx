@@ -40,6 +40,8 @@ bool Analysis::RunAnalysis()
     if (!(WIFEXITED(status))) throw std::runtime_error("unable to run command\n");
     status = system("cd Configs/Cuts/ && root -l -b -q MQ_Q_cuts.cxx; cd -;");
     if (!(WIFEXITED(status))) throw std::runtime_error("unable to run command\n");
+    status = system("cd Configs/Interpolations/ && root -l -b -q E_TOF_CURVE.cxx; cd -;");
+    if (!(WIFEXITED(status))) throw std::runtime_error("unable to run command\n");
     //system("cd Configs/Interpolations/ && root -l -b -q TW_Brho_M46_Z18.C; cd -;");
 
     //Removing previous data

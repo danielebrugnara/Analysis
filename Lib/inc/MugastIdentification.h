@@ -62,38 +62,43 @@ private: //Constants used internally
     //static constexpr double icePercentageSecond {0.15};
     const double averageBeamThickness = 3.7210 * UNITS::mm;    //700 mbar
     //const double averageBeamThickness = 6.39 * UNITS::mm;    //70000000 mbar
-    const std::array<std::pair<double, double>, 32> beamPositions = {
-            //std::make_pair( 0.5*UNITS::mm,  0.5*UNITS::mm),std::make_pair( 0.5*UNITS::mm, -0.5*UNITS::mm),
-            //std::make_pair(-0.5*UNITS::mm, -0.5*UNITS::mm),std::make_pair(-0.5*UNITS::mm,  0.5*UNITS::mm),
-            //std::make_pair( 1.0*UNITS::mm,  1.0*UNITS::mm),std::make_pair( 1.0*UNITS::mm, -1.0*UNITS::mm),
-            //std::make_pair(-1.0*UNITS::mm, -1.0*UNITS::mm),std::make_pair(-1.0*UNITS::mm,  1.0*UNITS::mm),
-            //std::make_pair( 1.5*UNITS::mm,  1.5*UNITS::mm),std::make_pair( 1.5*UNITS::mm, -1.5*UNITS::mm),
-            //std::make_pair(-1.5*UNITS::mm, -1.5*UNITS::mm),std::make_pair(-1.5*UNITS::mm,  1.5*UNITS::mm),
-            //std::make_pair( 2.0*UNITS::mm,  2.0*UNITS::mm),std::make_pair( 2.0*UNITS::mm, -2.0*UNITS::mm),
-            //std::make_pair(-2.0*UNITS::mm, -2.0*UNITS::mm),std::make_pair(-2.0*UNITS::mm,  2.0*UNITS::mm)
-            //Diagonal values
-            std::make_pair( 1.0*UNITS::mm,  1.0*UNITS::mm),std::make_pair( 1.0*UNITS::mm, -1.0*UNITS::mm),//0  1
-            std::make_pair(-1.0*UNITS::mm, -1.0*UNITS::mm),std::make_pair(-1.0*UNITS::mm,  1.0*UNITS::mm),//2  3
-            std::make_pair( 2.0*UNITS::mm,  2.0*UNITS::mm),std::make_pair( 2.0*UNITS::mm, -2.0*UNITS::mm),//4  5
-            std::make_pair(-2.0*UNITS::mm, -2.0*UNITS::mm),std::make_pair(-2.0*UNITS::mm,  2.0*UNITS::mm),//6  7
-            std::make_pair( 3.0*UNITS::mm,  3.0*UNITS::mm),std::make_pair( 3.0*UNITS::mm, -3.0*UNITS::mm),//8  9
-            std::make_pair(-3.0*UNITS::mm, -3.0*UNITS::mm),std::make_pair(-3.0*UNITS::mm,  3.0*UNITS::mm),//10 11
-            std::make_pair( 4.0*UNITS::mm,  4.0*UNITS::mm),std::make_pair( 4.0*UNITS::mm, -4.0*UNITS::mm),//12 13
-            std::make_pair(-4.0*UNITS::mm, -4.0*UNITS::mm),std::make_pair(-4.0*UNITS::mm,  4.0*UNITS::mm),//14 15
+//    const std::array<std::pair<double, double>, 32> beamPositions = {
+//            //std::make_pair( 0.5*UNITS::mm,  0.5*UNITS::mm),std::make_pair( 0.5*UNITS::mm, -0.5*UNITS::mm),
+//            //std::make_pair(-0.5*UNITS::mm, -0.5*UNITS::mm),std::make_pair(-0.5*UNITS::mm,  0.5*UNITS::mm),
+//            //std::make_pair( 1.0*UNITS::mm,  1.0*UNITS::mm),std::make_pair( 1.0*UNITS::mm, -1.0*UNITS::mm),
+//            //std::make_pair(-1.0*UNITS::mm, -1.0*UNITS::mm),std::make_pair(-1.0*UNITS::mm,  1.0*UNITS::mm),
+//            //std::make_pair( 1.5*UNITS::mm,  1.5*UNITS::mm),std::make_pair( 1.5*UNITS::mm, -1.5*UNITS::mm),
+//            //std::make_pair(-1.5*UNITS::mm, -1.5*UNITS::mm),std::make_pair(-1.5*UNITS::mm,  1.5*UNITS::mm),
+//            //std::make_pair( 2.0*UNITS::mm,  2.0*UNITS::mm),std::make_pair( 2.0*UNITS::mm, -2.0*UNITS::mm),
+//            //std::make_pair(-2.0*UNITS::mm, -2.0*UNITS::mm),std::make_pair(-2.0*UNITS::mm,  2.0*UNITS::mm)
+//            //Diagonal values
+//            std::make_pair( 1.0*UNITS::mm,  1.0*UNITS::mm),std::make_pair( 1.0*UNITS::mm, -1.0*UNITS::mm),//0  1
+//            std::make_pair(-1.0*UNITS::mm, -1.0*UNITS::mm),std::make_pair(-1.0*UNITS::mm,  1.0*UNITS::mm),//2  3
+//            std::make_pair( 2.0*UNITS::mm,  2.0*UNITS::mm),std::make_pair( 2.0*UNITS::mm, -2.0*UNITS::mm),//4  5
+//            std::make_pair(-2.0*UNITS::mm, -2.0*UNITS::mm),std::make_pair(-2.0*UNITS::mm,  2.0*UNITS::mm),//6  7
+//            std::make_pair( 3.0*UNITS::mm,  3.0*UNITS::mm),std::make_pair( 3.0*UNITS::mm, -3.0*UNITS::mm),//8  9
+//            std::make_pair(-3.0*UNITS::mm, -3.0*UNITS::mm),std::make_pair(-3.0*UNITS::mm,  3.0*UNITS::mm),//10 11
+//            std::make_pair( 4.0*UNITS::mm,  4.0*UNITS::mm),std::make_pair( 4.0*UNITS::mm, -4.0*UNITS::mm),//12 13
+//            std::make_pair(-4.0*UNITS::mm, -4.0*UNITS::mm),std::make_pair(-4.0*UNITS::mm,  4.0*UNITS::mm),//14 15
+//            //Plane align values
+//            std::make_pair( 1.0*UNITS::mm,  0.0*UNITS::mm),std::make_pair( 0.0*UNITS::mm,  1.0*UNITS::mm),//16 17
+//            std::make_pair(-1.0*UNITS::mm,  0.0*UNITS::mm),std::make_pair( 0.0*UNITS::mm, -1.0*UNITS::mm),//18 19
+//            std::make_pair( 2.0*UNITS::mm,  0.0*UNITS::mm),std::make_pair( 0.0*UNITS::mm,  2.0*UNITS::mm),//20 21
+//            std::make_pair(-2.0*UNITS::mm,  0.0*UNITS::mm),std::make_pair( 0.0*UNITS::mm, -2.0*UNITS::mm),//22 23
+//            std::make_pair( 3.0*UNITS::mm,  0.0*UNITS::mm),std::make_pair( 0.0*UNITS::mm,  3.0*UNITS::mm),//24 25
+//            std::make_pair(-3.0*UNITS::mm,  0.0*UNITS::mm),std::make_pair( 0.0*UNITS::mm, -3.0*UNITS::mm),//26 27
+//            std::make_pair( 4.0*UNITS::mm,  0.0*UNITS::mm),std::make_pair( 0.0*UNITS::mm,  4.0*UNITS::mm),//28 29
+//            std::make_pair(-4.0*UNITS::mm,  0.0*UNITS::mm),std::make_pair( 0.0*UNITS::mm, -4.0*UNITS::mm) //30 31
+//    };
+//    const std::array<double, 32> focusScale = {  1.10, 1.03, 0.96, 0.89, 0.82, 0.75, 0.68, 0.61, //0 - 7
+//                                                 0.54, 0.47, 0.40, 0.33, 0.26, 0.19, 0.12, 0.05, //8 - 15
+//                                                -0.02,-0.09,-0.16,-0.23,-0.30,-0.37,-0.44,-0.51, //16- 23
+//                                                -0.58,-0.65,-0.72,-0.79,-0.86,-0.93,-1.00,-1.07};//24- 31
+    const std::array<std::pair<double, double>, 2> beamPositions = {
             //Plane align values
             std::make_pair( 1.0*UNITS::mm,  0.0*UNITS::mm),std::make_pair( 0.0*UNITS::mm,  1.0*UNITS::mm),//16 17
-            std::make_pair(-1.0*UNITS::mm,  0.0*UNITS::mm),std::make_pair( 0.0*UNITS::mm, -1.0*UNITS::mm),//18 19
-            std::make_pair( 2.0*UNITS::mm,  0.0*UNITS::mm),std::make_pair( 0.0*UNITS::mm,  2.0*UNITS::mm),//20 21
-            std::make_pair(-2.0*UNITS::mm,  0.0*UNITS::mm),std::make_pair( 0.0*UNITS::mm, -2.0*UNITS::mm),//22 23
-            std::make_pair( 3.0*UNITS::mm,  0.0*UNITS::mm),std::make_pair( 0.0*UNITS::mm,  3.0*UNITS::mm),//24 25
-            std::make_pair(-3.0*UNITS::mm,  0.0*UNITS::mm),std::make_pair( 0.0*UNITS::mm, -3.0*UNITS::mm),//26 27
-            std::make_pair( 4.0*UNITS::mm,  0.0*UNITS::mm),std::make_pair( 0.0*UNITS::mm,  4.0*UNITS::mm),//28 29
-            std::make_pair(-4.0*UNITS::mm,  0.0*UNITS::mm),std::make_pair( 0.0*UNITS::mm, -4.0*UNITS::mm) //30 31
     };
-    const std::array<double, 32> focusScale = {  1.10, 1.03, 0.96, 0.89, 0.82, 0.75, 0.68, 0.61, //0 - 7
-                                                 0.54, 0.47, 0.40, 0.33, 0.26, 0.19, 0.12, 0.05, //8 - 15
-                                                -0.02,-0.09,-0.16,-0.23,-0.30,-0.37,-0.44,-0.51, //16- 23
-                                                -0.58,-0.65,-0.72,-0.79,-0.86,-0.93,-1.00,-1.07};//24- 31
+    const std::array<double, 2> focusScale = {  1.0, -1.0};
 
 public:
     std::array<std::string, 5> lightParticles;
@@ -128,6 +133,7 @@ private: //Variables used internally
 
     //Calibrations
     std::unordered_map<int, Calibration *> calibrationsTy;
+    std::unordered_map<int, Interpolation *> TOFProton;
 
     //Energy Loss
     std::unordered_map<std::string, std::unordered_map<std::string, EnergyLoss *>> energyLoss;

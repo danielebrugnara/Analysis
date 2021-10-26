@@ -37,6 +37,7 @@ class MugastData: public TObject{
     std::vector<double> E2;                     //Second layer
     std::vector<double> SI_T;                   //Un calibrated time
     std::vector<double> T;                      //Calibrated time
+    std::vector<double> T_proton;               //Calibrated time for proton
     std::vector<double> T2;                     //
     std::vector<double> MG;                     //
     std::vector<int> M;                         //Mass number
@@ -78,6 +79,7 @@ class MugastData: public TObject{
         E2.resize(multiplicity);
         SI_T.resize(multiplicity);
         T.resize(multiplicity);
+        T_proton.resize(multiplicity);
         T2.resize(multiplicity);
         MG.resize(multiplicity);
         M.resize(multiplicity);
@@ -85,6 +87,6 @@ class MugastData: public TObject{
         Indentified.resize(multiplicity);
         Particle.resize(multiplicity);
     };
-    ClassDef(MugastData, 8);
+    ClassDef(MugastData, 9);
     //ClassDef(MugastData, 5);
 };

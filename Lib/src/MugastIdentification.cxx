@@ -25,6 +25,7 @@ MugastIdentification::~MugastIdentification()
     for (const auto &MG : cutsMg)
     {
         delete calibrationsTy[MG];
+        delete TOFProton[MG];
     }
     for (const auto &particle : lightParticles)
     {
@@ -195,6 +196,17 @@ bool MugastIdentification::initializeCalibration(){
         std::cout << "Calibration :" + file_name + " found\n";
         calibrationsTy[MG] = new Calibration(file_name, 1, nStrips);
     }
+    for (const auto &MG : cutsMg){
+        std::string file_name = "./Configs/Interpolations/E_TOF_CURVE_MG" + to_string(MG) + ".root";
+        ifstream file(file_name);
+        if (!file){
+            TOFProton[MG] = nullptr;
+            continue;
+        }
+        std::cout << "Interpolation :" + file_name + " found\n";
+        TFile tmpF(file_name.c_str(), "read");
+        TOFProton[MG] = new Interpolation(&tmpF, false, true);
+    }
     return true;
 }
 
@@ -325,6 +337,17 @@ bool MugastIdentification::fillInitialData(MugastData & localFragment, const D* 
             localFragment.SI_Y[ii]  = mugast->DSSD_Y[ii];
             localFragment.SI_T[ii]  = mugast->DSSD_T[ii];
             localFragment.T2[ii]    = mugast->SecondLayer_T[ii];
+
+            //Time recalibration
+            if (calibrationsTy[localFragment.MG[ii]] == nullptr)
+                localFragment.T[ii] = localFragment.SI_T[ii];
+            else
+                localFragment.T[ii] = calibrationsTy[localFragment.MG[ii]]
+                        ->Evaluate(localFragment.SI_T[ii], localFragment.SI_Y[ii]);
+
+            localFragment.T_proton[ii] = localFragment.T[ii]
+                                            - TOFProton[localFragment.MG[ii]]->Evaluate(localFragment.SI_E[ii]);
+
         }else if (mugast == nullptr && must2 != nullptr){
             localFragment.TelescopeNormal[ii] = TVector3(0, 0, 0);
             localFragment.SI_E[ii]  = must2->Si_E[ii]*UNITS::MeV;
@@ -334,20 +357,11 @@ bool MugastIdentification::fillInitialData(MugastData & localFragment, const D* 
             localFragment.SI_Y[ii]  = must2->Si_Y[ii];
             localFragment.SI_T[ii]  = must2->Si_T[ii];
             localFragment.T2[ii]    = must2->Si_TY[ii];//TODO: check if second layers are different
+            localFragment.T_proton[ii] = localFragment.T[ii];
         }else{
             throw std::runtime_error("Something wrong with pointers\n");
         }
     }
-    DEBUG("------------>starting: recalibrations", "");
-    //Applying (time) re-calibrations
-    for (unsigned int ii = 0; ii < localFragment.multiplicity; ++ii) {
-        if (calibrationsTy[localFragment.MG[ii]] == nullptr)
-            localFragment.T[ii] = localFragment.SI_T[ii];
-        else
-            localFragment.T[ii] = calibrationsTy[localFragment.MG[ii]]
-                    ->Evaluate(localFragment.SI_T[ii], localFragment.SI_Y[ii]);
-    };
-    DEBUG("------------>finished: calibrations\n", "");
     return true;
 }
 
@@ -429,7 +443,7 @@ bool MugastIdentification::identifyMugast() {
 
             if (foundCut == cut_type["E_TOF"].end()) continue;
 
-            if (foundCut->second->IsInside(fragment.Tot_E[ii], fragment.T[ii])) {
+            if (foundCut->second->IsInside(fragment.Tot_E[ii], fragment.T_proton[ii])) {
                 if (fragment.Indentified[ii])
                     throw std::runtime_error("Overlapping MUGAST E TOF gates :" +
                                              cut_it +

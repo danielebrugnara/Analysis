@@ -7,7 +7,7 @@ Interpolation::Interpolation(const std::string& input_file) : spline(nullptr){
         //throw std::runtime_error("Unable to generate interpolation from text file\n");
 }
 
-Interpolation::Interpolation(TFile *file, const bool& use_histogram) : spline(nullptr){
+Interpolation::Interpolation(TFile *file, const bool& use_histogram, const bool& useGraph) : spline(nullptr){
     if (!(file->IsOpen()))
         throw std::runtime_error("Interpolation file pointer non initialized\n");
 
@@ -27,6 +27,11 @@ Interpolation::Interpolation(TFile *file, const bool& use_histogram) : spline(nu
             hist = tmp;
             return;
         }
+        if (obj->InheritsFrom("TGraph") && useGraph){
+            auto* tmp = static_cast<TGraph *>(obj);
+            graph = tmp;
+            return;
+        }
     }
     if (spline== nullptr && hist== nullptr)
         throw std::runtime_error(std::string("Interpolation not found in TFile: ") +
@@ -37,6 +42,7 @@ Interpolation::Interpolation(TFile *file, const bool& use_histogram) : spline(nu
 Interpolation::~Interpolation(){
     delete spline;
     delete hist;
+    delete graph;
 }
 
 bool Interpolation::ReadFile(const std::string& input_file_name){

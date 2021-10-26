@@ -493,7 +493,7 @@ double binomial(int N, int k, double p){
 
 std::map<std::string, std::string> SumThicknesses(){
     std::map<int, int> thicknessToNDeuterons{
-        {15, 46},
+            {15, 46},
             {20, 0},
             {25, 134},
             {30, 93},
@@ -716,16 +716,16 @@ void MaxLikelyhood(){
     files["data"]   = "./../../DataAnalyzed/sum.root";
 
     std::map<std::string, std::string> conditions;
-    conditions["data"] = "MugastData.M ==2 && MugastData.Z == 1 && VamosData.id_Z == 19 && VamosData.id_M == 47 ";
+    conditions["data"] = "MugastData.M ==2 && MugastData.Z == 1 && VamosData.id_Z == 19 && VamosData.id_M == 47 && (Time<313 || Time>315) && (Time<278 || Time>283) && (Time<315 || Time>318) ";
     //conditions["data"] = "MugastData.M ==2 && MugastData.Z == 1 && VamosData.id_Z == 19 && VamosData.id_M == 47";
-    conditions["s12"] = "";
-    conditions["d32"] = "";
-    conditions["f72"] = "";
+    conditions["s12"] = "VamosAcceptedph && VamosAcceptedph && VamosAccepteddelta";
+    conditions["d32"] = "VamosAcceptedph && VamosAcceptedph && VamosAccepteddelta";
+    conditions["f72"] = "VamosAcceptedph && VamosAcceptedph && VamosAccepteddelta";
 
-    for (auto& it: conditions){
-        if (!it.second.empty() ) it.second += " && MugastData.Ex < 2.5";
-        else it.second += "MugastData.Ex < 2.5";
-    }
+    //for (auto& it: conditions){
+    //    if (!it.second.empty() ) it.second += " && MugastData.Ex > -3.2";
+    //    else it.second += "MugastData.Ex > -3.2";
+    //}
 
     TFile* file = new TFile("./histofile.root", "read");
     if (!file->IsOpen()){
