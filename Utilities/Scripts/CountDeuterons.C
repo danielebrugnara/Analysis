@@ -1,4 +1,7 @@
 void CountDeuterons(){
+    //Create with: AnalyzedTreeDeuterons->Draw("BeamEnergy:IceThicknessFront", "(Time<313 || Time>315) && (Time<278 || Time>283) && (Time<315 || Time>318)")
+    //and then save the resulting graph 
+
     TFile* file = new TFile("deuterons_thickness_beam.root");
     auto* graph = (TGraph*) file->Get("Graph");
     double start{15E-6};
@@ -29,7 +32,7 @@ void CountDeuterons(){
         thickness_to_nr[val] = thickness_to_nr[val]+1;
     }
     for (const auto& it: thickness_to_nr){
-        std::cout <<"thickness: " <<it.first << " energy: " << std::round(thickness_to_energy[it.first]) << " counts: " << it.second << std::endl;
+        std::cout <<"thickness: " <<it.first << "\t\tenergy: " << std::round(thickness_to_energy[it.first]) << "\t\tcounts: " << it.second << std::endl;
     }
     
 }

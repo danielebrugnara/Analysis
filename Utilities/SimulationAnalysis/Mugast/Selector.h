@@ -45,6 +45,10 @@ public :
    TTreeReaderValue<TMust2Physics> MUST2 = {fReader, "MUST2"};
    TTreeReaderValue<TMugastPhysics> Mugast = {fReader, "Mugast"};
    TTreeReaderValue<Int_t> Nev = {fReader, "Nev"};
+   TTreeReaderValue<Int_t> ChargeState = {fReader, "ChargeState"};
+   TTreeReaderValue<Int_t> VamosAcceptedth = {fReader, "VamosAcceptedth"};
+   TTreeReaderValue<Int_t> VamosAcceptedph = {fReader, "VamosAcceptedph"};
+   TTreeReaderValue<Int_t> VamosAccepteddelta = {fReader, "VamosAccepteddelta"};
    TTreeReaderArray<Double_t> Ex = {fReader, "Ex"};
    TTreeReaderArray<Double_t> ELab = {fReader, "ELab"};
    TTreeReaderArray<Double_t> EDep = {fReader, "EDep"};

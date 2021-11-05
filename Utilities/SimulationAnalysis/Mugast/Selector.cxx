@@ -75,6 +75,9 @@ Bool_t Selector::Process(Long64_t entry)
 
     fReader.SetLocalEntry(entry);
 
+    if(     (*VamosAcceptedth == 0)
+        ||  (*VamosAcceptedph == 0)
+        ||  (*VamosAccepteddelta == 0)) return kTRUE;
 
     for (int i=0; i<Mugast->EventMultiplicity; ++i) {
         {

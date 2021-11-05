@@ -317,8 +317,8 @@ bool MugastIdentification::fillInitialData(MugastData & localFragment, const D* 
             }
             for (unsigned int jj=0; jj<focusScale.size(); ++jj) {
                 localFragment.BeamPosition_corrected[jj]        = fragmentCats.PosOnTarget[jj];
-                localFragment.EmissionDirection_corrected[jj]   = localFragment.EmissionDirection[0] - fragmentCats.PosOnTarget[jj];
-                localFragment.BeamDirection_corrected[jj]       = localFragment.BeamPosition_corrected[jj] - fragmentCats.Pos[0];
+                localFragment.EmissionDirection_corrected[jj]   = localFragment.Pos[0] - fragmentCats.PosOnTarget[jj];
+                localFragment.BeamDirection_corrected[jj]       = fragmentCats.Dir[0];
             }
         }
 
@@ -347,6 +347,8 @@ bool MugastIdentification::fillInitialData(MugastData & localFragment, const D* 
 
             localFragment.T_proton[ii] = localFragment.T[ii]
                                             - TOFProton[localFragment.MG[ii]]->Evaluate(localFragment.SI_E[ii]);
+
+            //localFragment.T_proton[ii] -= 5.; //COMMENT THIS! it's for bkg estimation
 
         }else if (mugast == nullptr && must2 != nullptr){
             localFragment.TelescopeNormal[ii] = TVector3(0, 0, 0);
@@ -379,7 +381,7 @@ bool MugastIdentification::identify() {
                                             (**(data->Cats)).PositionZ[ii]*UNITS::mm);
             if (fragmentCats.Pos[ii].X() == -1000) fragmentCats.Pos[ii].SetX(0);
             if (fragmentCats.Pos[ii].Y() == -1000) fragmentCats.Pos[ii].SetY(0);
-            if (fragmentCats.Pos[ii].Y() == -1000) fragmentCats.Pos[ii].SetZ(-2045*UNITS::mm);
+            if (fragmentCats.Pos[ii].Z() == -1000) fragmentCats.Pos[ii].SetZ(-2045*UNITS::mm);
 
             fragmentCats.Charge[ii] = TVector3((**(data->Cats)).ChargeX[ii],
                                                (**(data->Cats)).ChargeY[ii],
@@ -387,12 +389,13 @@ bool MugastIdentification::identify() {
         }
         if (ii==0){
             for (unsigned int jj=0; jj<focusScale.size(); ++jj) {
-                fragmentCats.PosOnTarget[jj] = (fragmentCats.Pos[0]*focusScale[jj]);
-                fragmentCats.PosOnTarget[jj].SetZ(0);
-                if (fragmentCats.PosOnTarget[jj].Mag()>targetRadius){
-                    fragmentCats.PosOnTarget[jj].SetMag(targetRadius);
+                fragmentCats.PosOnTarget[jj].SetX(fragmentCats.Pos[0].X()*focusScale[jj].first);
+                fragmentCats.PosOnTarget[jj].SetY(fragmentCats.Pos[0].Y()*focusScale[jj].second);
+                fragmentCats.PosOnTarget[jj].SetZ(targetPos.Z());
+                if ((fragmentCats.PosOnTarget[jj]-targetPos).Mag()>targetRadius){
+                    fragmentCats.PosOnTarget[jj].SetMag(sqrt(pow(targetRadius,2)+targetPos.Mag2()));
                 }
-                fragmentCats.Dir[jj] = fragmentCats.Pos[0]-fragmentCats.PosOnTarget[jj];
+                fragmentCats.Dir[jj] = fragmentCats.PosOnTarget[jj]-fragmentCats.Pos[0];
             }
         }
     }
@@ -538,9 +541,8 @@ bool MugastIdentification::reconstructEnergy(MugastData & localFragment) {
         //Passivation layer
         double tmpEn{0};
         double energyAfterTarget{0};
-
-
         double telescopeEntranceAngle = 0;
+
         if (abs(localFragment.TelescopeNormal[ii].Mag())> 0.001) //If vector is not zero
             telescopeEntranceAngle = localFragment.EmissionDirection[ii].Angle(localFragment.TelescopeNormal[ii]);
 
@@ -619,7 +621,7 @@ bool MugastIdentification::reconstructEnergy(MugastData & localFragment) {
 
         bool checlCollision{true};
         if(checlCollision){
-            TVector3 collisionVec = computeCollision(localFragment.EmissionDirection[ii],TVector3(0,0,0));
+            TVector3 collisionVec = computeCollision(localFragment.EmissionDirection[ii],targetPos);
             double tentativeAngle = computeAngleOfIncidence(collisionVec, TVector3(0, 0, 0));
             if (abs(gasThickness->Evaluate(theta)*UNITS::mm-collisionVec.Mag())>0.05*UNITS::mm){
                 std::cerr   << "-------------------------------\n"
@@ -638,8 +640,11 @@ bool MugastIdentification::reconstructEnergy(MugastData & localFragment) {
         if (ii==0) {
             for (unsigned int jj = 0; jj < beamPositions.size(); ++jj) {//loop over positions
                 try {
+                    DEBUG("-----------------------------------------------------------------------------", "")
+                    DEBUG("Beam position x-val: ", beamPositions[jj].first)
+                    DEBUG("Beam position y-val: ", beamPositions[jj].second)
                     TVector3 collisionVec = computeCollision(localFragment.EmissionDirection_uncentered[jj],
-                                                             localFragment.BeamPosition_uncentered[jj]);
+                                                             localFragment.BeamPosition_uncentered[jj]+targetPos);
 
                     double incidenceAngle = computeAngleOfIncidence(collisionVec,
                                                                     localFragment.BeamPosition_uncentered[jj]);
@@ -657,13 +662,16 @@ bool MugastIdentification::reconstructEnergy(MugastData & localFragment) {
                                                     collisionVec.Mag(),
                                                     0));
                 } catch (std::runtime_error &e) {
-                    std::cerr << "Unable to find correct un-centered distance (Mugast) : " << e.what() << std::endl;
+                    //std::cerr << "Unable to find correct un-centered distance (Mugast) : " << e.what() << std::endl;
                     localFragment.E_uncentered[ii].push_back(tmpEn);
                     localFragment.BeamPosition_uncentered[jj] = TVector3(0,0,0);
                 }
             }
             for (unsigned int jj = 0; jj < focusScale.size(); ++jj) {//loop over different focus coefficients
                 try {
+                    DEBUG("-----------------------------------------------------------------------------", "")
+                    DEBUG("Focus scale x-val: ", focusScale[jj].first)
+                    DEBUG("Focus scale y-val: ", focusScale[jj].second)
                     TVector3 collisionVec = computeCollision(localFragment.EmissionDirection_corrected[jj],
                                                              localFragment.BeamPosition_corrected[jj]);
 
@@ -846,12 +854,13 @@ TVector3 MugastIdentification::computeCollision(TVector3 emissionDirection, cons
     emissionDirection.SetMag(1);
 
     DEBUG("ComputeCollision","")
-    DEBUG("beamPosition mag:", beamPosition.Mag())
-    DEBUG("beamPosition theta:", beamPosition.Theta())
-    DEBUG("beamPosition phi:", beamPosition.Phi())
-    DEBUG("emissionDirection mag:", emissionDirection.Mag())
-    DEBUG("emissionDirection theta:", emissionDirection.Theta())
-    DEBUG("emissionDirection phi:", emissionDirection.Phi())
+    DEBUG("beamPosition mag: ", beamPosition.Mag())
+    DEBUG("beamPosition theta: ", beamPosition.Theta())
+    DEBUG("beamPosition phi: ", beamPosition.Phi())
+    DEBUG("emissionDirection mag: ", emissionDirection.Mag())
+    DEBUG("emissionDirection theta: ", emissionDirection.Theta())
+    DEBUG("emissionDirection phi: ", emissionDirection.Phi())
+    DEBUG("emissionDirection Z: ", emissionDirection.z())
 
     //try{
     distanceMinimizer.reset(new Minimizer([&, this](double x) {
@@ -859,10 +868,10 @@ TVector3 MugastIdentification::computeCollision(TVector3 emissionDirection, cons
                                               auto vec = beamPosition + emissionDirection;
                                               if (emissionDirection.Z()>0)
                                                 return pow(vec.Z() / UNITS::mm - this->gasThicknessCartesian->Evaluate(
-                                                      sqrt(pow(vec.X() / UNITS::mm, 2) + pow(vec.Y() / UNITS::mm, 2))), 2);
+                                                      sqrt(pow(vec.X() / UNITS::mm, 2) + pow(vec.Y() / UNITS::mm, 2)))-targetPos.z()/UNITS::mm, 2);
                                               else
                                                 return pow(vec.Z() / UNITS::mm + this->gasThicknessCartesian->Evaluate(
-                                                      sqrt(pow(vec.X() / UNITS::mm, 2) + pow(vec.Y() / UNITS::mm, 2))), 2);
+                                                      sqrt(pow(vec.X() / UNITS::mm, 2) + pow(vec.Y() / UNITS::mm, 2)))-targetPos.z()/UNITS::mm, 2);
                                           },
                                           1.5 * UNITS::mm / abs(emissionDirection.CosTheta()),   //starting value
                                           3E-4 * UNITS::mm,                  //learning rate
@@ -876,11 +885,12 @@ TVector3 MugastIdentification::computeCollision(TVector3 emissionDirection, cons
     if (emissionDirection.Mag() > 15*UNITS::mm || isnan(emissionDirection.X())) {
         std::cerr   << "Found huge distance!!!!  " << std::endl
                     << "beam Mag : " << beamPosition.Mag()
-                    << "at beam phi : " << beamPosition.Phi()<< ", theta : " << beamPosition.Theta() << std::endl;
+                    << " at beam phi : " << beamPosition.Phi()<< ", theta : " << beamPosition.Theta() << std::endl;
         std::cerr   << "and emission vector phi : " << emissionDirection.Phi() << ", theta : " << emissionDirection.Theta()  << std::endl;
 
         throw std::runtime_error("Distance too high\n");
     }
+
     DEBUG("finished: ComputeCollision","")
     //}catch(...){
     //    return TVector3();

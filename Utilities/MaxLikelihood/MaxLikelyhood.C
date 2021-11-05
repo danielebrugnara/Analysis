@@ -202,7 +202,8 @@ LhResults MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu){
 
         ////s2/s0
         std::vector<double> xsec{2.388, 1.534, 2.886 };
-        std::vector<double> degeneracy{2, 4, 8};
+        //std::vector<double> degeneracy{2, 4, 8};
+        std::vector<double> degeneracy{1, 1, 1};
         inputsPartial.tsf[0] = [xsec, degeneracy](double x, double y)->double { return y*(degeneracy[0]*xsec[0])/(x*degeneracy[1]*xsec[1]+degeneracy[0]*xsec[0]);};    
         inputsPartial.tsf[1] = [xsec, degeneracy](double x, double y)->double { return x*y*(degeneracy[1]*xsec[1])/(x*degeneracy[1]*xsec[1]+degeneracy[0]*xsec[0]);};
 
@@ -493,13 +494,13 @@ double binomial(int N, int k, double p){
 
 std::map<std::string, std::string> SumThicknesses(){
     std::map<int, int> thicknessToNDeuterons{
-            {15, 46},
+            {15, 59},
             {20, 0},
-            {25, 134},
-            {30, 93},
-            {35, 101},
-            {40, 89},
-            {45, 108},
+            {25, 220},
+            {30, 76},
+            {35, 145},
+            {40, 39},
+            {45, 53},
             {50, 0},
             {55, 0}
     };
@@ -718,13 +719,16 @@ void MaxLikelyhood(){
     std::map<std::string, std::string> conditions;
     conditions["data"] = "MugastData.M ==2 && MugastData.Z == 1 && VamosData.id_Z == 19 && VamosData.id_M == 47 && (Time<313 || Time>315) && (Time<278 || Time>283) && (Time<315 || Time>318) ";
     //conditions["data"] = "MugastData.M ==2 && MugastData.Z == 1 && VamosData.id_Z == 19 && VamosData.id_M == 47";
-    conditions["s12"] = "VamosAcceptedph && VamosAcceptedph && VamosAccepteddelta";
-    conditions["d32"] = "VamosAcceptedph && VamosAcceptedph && VamosAccepteddelta";
-    conditions["f72"] = "VamosAcceptedph && VamosAcceptedph && VamosAccepteddelta";
+    conditions["s12"] = "";
+    conditions["d32"] = "";
+    conditions["f72"] = "";
+
+    //Ex condition on data
+    conditions["data"] += " && MugastData.Ex>-3 && MugastData.Ex<3.";
 
     //for (auto& it: conditions){
-    //    if (!it.second.empty() ) it.second += " && MugastData.Ex > -3.2";
-    //    else it.second += "MugastData.Ex > -3.2";
+    //    if (!it.second.empty() ) it.second += " && MugastData.Ex > -3 && MugastData.Ex<3";
+    //    else it.second += "MugastData.Ex > -3 && MugastData.Ex <3";
     //}
 
     TFile* file = new TFile("./histofile.root", "read");

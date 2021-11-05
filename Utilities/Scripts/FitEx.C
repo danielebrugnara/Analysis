@@ -4,14 +4,14 @@
 void FitEx(){
     double min{-10};
     double max{10};
-    int nbins{65};
+    int nbins{70};
 
     TFile* f = new TFile("../../DataAnalyzed/sum.root", "read");
     TH1D* h = new TH1D("h", "h", nbins, min, max);
     
     TTree* t = (TTree*) f->Get("AnalyzedTreeDeuterons");
 
-    t->Draw("MugastData.Ex>>h", "", "");
+    t->Draw("MugastData.Ex>>h", "(Time<313 || Time>315) && (Time<278 || Time>283) && (Time<315 || Time>318)", "");
 
     double minfit{-2};
     double maxfit{5};
@@ -29,7 +29,7 @@ void FitEx(){
  
     
     h->Sumw2();
-    TFitResultPtr resptr = h->Fit(fun, "SE");
+    TFitResultPtr resptr = h->Fit(fun, "SER");
     TFitResult res = *resptr;
 
 
