@@ -2,10 +2,15 @@
 #include <map>
 #include <string>
 #include <fstream>
+#include <functional>
 
 #include <TGraph.h>
+#include <TF1.h>
+#include <Math/ParamFunctor.h>
 
-void AverageDistributions(std::map<std::string, double> files,
+TGraph* distr{nullptr};
+
+double AverageDistributions(std::map<std::string, double> files,
                             const std::string& outputFileName){
 
     //updates weights
@@ -39,4 +44,11 @@ void AverageDistributions(std::map<std::string, double> files,
         outputFile << it.first << "\t" << it.second << "\n";
     }
     outputFile.close();
+
+    distr = new TGraph(outputFileName.c_str());
+
+    TF1 integrand("integrand", [](double* x, double*p){return 2*TMath::Pi()*distr->Eval(x[0]*180./TMath::Pi())* sin(x[0]);}, 0, TMath::Pi());
+    double integral = integrand.Integral(0, TMath::Pi());
+    std::cout << "Integral of " << outputFileName << " has value: " << integral<< std::endl;
+    return integral;
 }
