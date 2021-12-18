@@ -32,3 +32,15 @@ Compile and run as follows:
 | ./Utilities/ | ./TargetThickness         | Mathematical model for target thickness and deformation (Mathematica)          |
 | ./Utilities/ | ./MaxLikelihood           | Max likelihood calculation macro to compute angular distribution deconvolution |
 | ./Utilities/ | ./Reactions               | Utilities for reaction calculations with FRESCO                                |
+
+
+
+# Documentation:
+
+Generate documentation with:
+
+``doxygen Doxyfile``
+
+Read documentation opening:
+
+``xdg-open Documentation/html/index.html``

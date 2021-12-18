@@ -5,6 +5,7 @@
 #include <TFile.h>
 #include <TH2D.h>
 #include <TH1D.h>
+#include <TF1.h>
 #include <TGraph.h>
 #include <TGraph2D.h>
 #include <TObjArray.h>
@@ -28,65 +29,127 @@ long double factorial(int n, std::vector<long double>& mem);
 struct LhResults{
     TH2D* lhHisto{nullptr};
     TH2D* chi2Histo{nullptr};
+    TH2D* lhHisto2D{nullptr};
+    TH2D* chi2Histo2D{nullptr};
     int chi2ndof;
     TH1D* fit{nullptr};
+    TH1D* fit2D{nullptr};
     std::vector<TH1D*> fitComponents;
+    std::vector<TH1D*> fitComponents2D;
     std::vector<std::pair<double, TH1D*>> fitSigmas;
     TH1D* discrepancy{nullptr};
+    TH1D* discrepancy2D{nullptr};
     TH1D* dataWithErrors{nullptr};
     double maxVal{-1E10};
     double maxX{0};
     double maxY{0};
+    double percentX{0};
+    double percentY{0};
+    double maxVal2D{-1E10};
+    double maxX2D{0};
+    double maxY2D{0};
+    double percentX2D{0};
+    double percentY2D{0};
     int N;
 };
 
 struct LhInputs{
     TH1D* data{nullptr};
+    TH2D* data2D{nullptr};
     std::vector<TH1D*> simu;
-    int nX{500};
+    int nX{40};
+    //int nX{500};
     std::vector<double> sigmas;
     std::vector<double> xsections;
-    int nY{500};
+    int nY{40};
     double startX{0};
-    double endX{1};
-    double startY{0.4};
-    double endY{1.4};
+    double endX{0.8};
+    double startY{0.6};
+    double endY{1.5};
+    //int nY{500};
+    //double startX{0};
+    //double endX{1};
+    //double startY{0.4};
+    //double endY{1.4};
     //std::vector<double (*)(double, double )> tsf;
     std::vector<std::function<double(double, double)>> tsf;
     int N;
     int NSimu;
+    bool compute2D{true};
     LhInputs(const int& N, const int& NSimu): N(N), NSimu(NSimu){};
 };
 
 LhResults gridSearch(LhInputs& inputs);
 
-LhResults MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu, std::map<std::string, double> xsections){
+LhResults MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu, TH2D* data2D, std::map<std::string, double> xsections) {
 
-    if (simu.size() != 3) return LhResults();
-    int N{0};
+    if (simu.size() != 3) throw std::runtime_error("not correct simu size\n");
 
-    for (int j = 1; j < data->GetNbinsX(); ++j) {//Start from 1 since 0 is the underflow bin!
-        N += data->GetBinContent(j);
-    }
-    int NSimu = 70000;
     //std::vector<int> excludedBins {0, 11, 12, 13, 14};
     //std::vector<int> excludedBins {6,7,8};
     //std::vector<int> excludedBins {0};
-    std::vector<int> excludedBins {0, 24, 25, 26, 27};
+    //std::vector<int> excludedBins{0, 9, 10, 11, 12, 13, 14, 15};
+    std::vector<int> excludedBins{0, 16, 17, 18, 19, 20, 21, 22};//70 bins
+    //std::vector<int> excludedBins{0,21, 22, 23, 24};//80 bins
+    //std::vector<int> excludedBins{0,21, 22, 23, 24, 25, 26, 27, 28};//90 bins
+    //std::vector<int> excludedBins{0,26, 27, 28, 29, 30, 31};//100 bins
+    //std::vector<int> excludedBins{0,26, 27, 28, 29, 30, 31, 32, 33, 34};//110 bins
+    //std::vector<int> excludedBins{0,26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37};//120 bins
+    //std::vector<int> excludedBins{0,26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40};//130 bins
+    std::vector<double> excludedBinsCenter;
     //std::vector<int> excludedBins {0, 40, 41, 42, 43, 44, 45, 46};
     //std::vector<int> excludedBins {0, 7, 8, 9};
     //std::vector<int> excludedBins {0, 13, 14, 15};
     //std::vector<int> excludedBins {0, 7, 8};
 
     //remove not wanted bins and normalize
-    for(const auto&it: excludedBins){
+
+    //Exclude from data
+    for (const auto &it: excludedBins) {
         data->SetBinContent(it, 0);
+        excludedBinsCenter.push_back(data->GetBinCenter(it));
     }
+    //Exclude from data2D
+    for (const auto &it: excludedBinsCenter) {
+        for (int i{0}; i < data2D->GetYaxis()->GetNbins()+2; ++i) {
+            data2D->SetBinContent(data2D->GetXaxis()->FindBin(it), i, 0);
+        }
+    }
+
+    //Check
+    TH1D* histoCheck = data2D->ProjectionX("histoCheck");
+    for (int j = 0; j < data->GetNbinsX(); ++j) {//Start from 1 since 0 is the underflow bin!
+        if (histoCheck->GetBinContent(j) != data->GetBinContent(j)) {
+            std::cout << "check : " << histoCheck->GetBinContent(j) << std::endl;
+            std::cout << "data : " << data->GetBinContent(j) << std::endl;
+            auto* cv = new TCanvas();
+            histoCheck->SetLineColor(kRed);
+            histoCheck->Draw();
+            data->Draw("same");
+            auto* cv2 = new TCanvas();
+            data2D->Draw("colz");
+            cv->WaitPrimitive();
+            throw std::runtime_error("FATAL ERROR in bin "+std::to_string(j)+"\n");
+        }
+    }
+
+
+    //Exclude from simu
     for(int i=0; i<simu.size(); ++i){
         for(const auto&it: excludedBins) {
             simu[i]->SetBinContent(it, 0);//too many counts in empty bin??!!
         }
     }
+
+
+
+    //Computing number of events
+    int N{0};
+    int N2D{0};
+    for (int j = 1; j < data->GetNbinsX(); ++j) {//Start from 1 since 0 is the underflow bin!
+        N += data->GetBinContent(j);
+    }
+    int NSimu = 70000;
 
     //Fist graph
     LhInputs inputs(N, NSimu);
@@ -94,104 +157,138 @@ LhResults MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu, std::map<std::
     inputs.tsf[0] = [](double x, double y)->double { return x;};
     inputs.tsf[1] = [](double x, double y)->double { return y;};
     inputs.data = data;
+    inputs.data2D = data2D;
     inputs.simu = simu;
     inputs.sigmas ={0.016, 0.058, 0.105};
     inputs.xsections = {xsections["l0_"], xsections["l2_"], xsections["l3_"]};
+    inputs.compute2D = false;
     LhResults results = gridSearch(inputs);
     std::cout << "xmin : " << results.maxX << std::endl;
     std::cout << "ymin : " << results.maxY << std::endl;
     std::cout << "max : " << results.maxVal << std::endl;
 
-    auto* cv1 = new TCanvas();
-    cv1->Divide(2,1);
-    auto* tmpPad = cv1->cd(1);
-    tmpPad->SetLogy();
+    //Fit results
+    {//1D
+        auto *fitResultsCv = new TCanvas("fitResultsCv", "fitResultsCv");
+        fitResultsCv->Divide(2, 1);
+        auto *tmpPad = fitResultsCv->cd(1);
+        tmpPad->SetLogy();
 
-    results.fit->SetLineColor(kRed);
-    results.fit->SetMarkerColor(kRed);
-    results.dataWithErrors->Draw("");
-    results.fit->Draw("histo, same");
+        results.fit->SetLineColor(kRed);
+        results.fit->SetMarkerColor(kRed);
+        results.dataWithErrors->Draw("");
+        results.fit->Draw("histo, same");
 
-    results.fitComponents[0]->SetLineColor(kBlue);
-    results.fitComponents[1]->SetLineColor(kGreen+1);
-    results.fitComponents[2]->SetLineColor(kBlack);
+        results.fitComponents[0]->SetLineColor(kBlue);
+        results.fitComponents[1]->SetLineColor(kGreen + 1);
+        results.fitComponents[2]->SetLineColor(kBlack);
 
-    results.dataWithErrors->SetMarkerSize(3);
-    results.fit->SetMarkerSize(3);
-    results.fitComponents[0]->SetMarkerSize(3);
-    results.fitComponents[1]->SetMarkerSize(3);
-    results.fitComponents[2]->SetMarkerSize(3);
-    results.dataWithErrors->SetMarkerSize(3);
-    results.fit->SetMarkerSize(3);
-    results.fitComponents[0]->SetMarkerSize(3);
-    results.fitComponents[1]->SetMarkerSize(3);
-    results.fitComponents[2]->SetMarkerSize(3);
+        results.dataWithErrors->SetMarkerSize(3);
+        results.fit->SetMarkerSize(3);
+        results.fitComponents[0]->SetMarkerSize(3);
+        results.fitComponents[1]->SetMarkerSize(3);
+        results.fitComponents[2]->SetMarkerSize(3);
+        results.dataWithErrors->SetMarkerSize(3);
+        results.fit->SetMarkerSize(3);
+        results.fitComponents[0]->SetMarkerSize(3);
+        results.fitComponents[1]->SetMarkerSize(3);
+        results.fitComponents[2]->SetMarkerSize(3);
 
-    results.fitSigmas[2].second->SetLineStyle(8);
+        results.fitSigmas[2].second->SetLineStyle(8);
 
-    results.fitComponents[0]->Draw("same, histo");
-    results.fitComponents[1]->Draw("same, histo");
-    results.fitComponents[2]->Draw("same, histo");
-    //results.fitSigmas[2].second->Draw("same, histo");
+        results.fitComponents[0]->Draw("same, histo");
+        results.fitComponents[1]->Draw("same, histo");
+        results.fitComponents[2]->Draw("same, histo");
+        //results.fitSigmas[2].second->Draw("same, histo");
 
-    TLegend* leg = new TLegend();
-    leg->AddEntry(results.dataWithErrors, "data", "lep");
-    leg->AddEntry(results.fit, "fit", "l");
-    leg->AddEntry(results.fitComponents[0], "L=0", "l");
-    leg->AddEntry(results.fitComponents[1], "L=2", "l");
-    leg->AddEntry(results.fitComponents[2], "L=3", "l");
-    leg->Draw();
+        TLegend *leg = new TLegend();
+        leg->AddEntry(results.dataWithErrors, "data", "lep");
+        leg->AddEntry(results.fit, "fit", "l");
+        leg->AddEntry(results.fitComponents[0], "L=0", "l");
+        leg->AddEntry(results.fitComponents[1], "L=2", "l");
+        leg->AddEntry(results.fitComponents[2], "L=3", "l");
+        leg->Draw();
+
+        //Discrepancy plot
+        fitResultsCv->cd(2);
+        results.discrepancy->Draw();
+    }
+    if (inputs.compute2D){//2D
+        auto *fitResultsCv2D = new TCanvas("fitResultsCv2D", "fitResultsCv2D");
+        fitResultsCv2D->Divide(2, 1);
+        auto *tmpPad = fitResultsCv2D->cd(1);
+        tmpPad->SetLogy();
+
+        results.fit2D->SetLineColor(kRed);
+        results.fit2D->SetMarkerColor(kRed);
+        results.dataWithErrors->Draw("");
+        results.fit2D->Draw("histo, same");
+
+        results.fitComponents2D[0]->SetLineColor(kBlue);
+        results.fitComponents2D[1]->SetLineColor(kGreen + 1);
+        results.fitComponents2D[2]->SetLineColor(kBlack);
+
+        results.dataWithErrors->SetMarkerSize(3);
+        results.fit2D->SetMarkerSize(3);
+        results.fitComponents2D[0]->SetMarkerSize(3);
+        results.fitComponents2D[1]->SetMarkerSize(3);
+        results.fitComponents2D[2]->SetMarkerSize(3);
+        results.dataWithErrors->SetMarkerSize(3);
+        results.fit2D->SetMarkerSize(3);
+        results.fitComponents2D[0]->SetMarkerSize(3);
+        results.fitComponents2D[1]->SetMarkerSize(3);
+        results.fitComponents2D[2]->SetMarkerSize(3);
 
 
-    cv1->cd(2);
-    results.discrepancy->Draw();
+        results.fitComponents2D[0]->Draw("same, histo");
+        results.fitComponents2D[1]->Draw("same, histo");
+        results.fitComponents2D[2]->Draw("same, histo");
 
-    auto* cv2 = new TCanvas();
-    cv2->Divide(2,1);
-    TVirtualPad* pad21 = cv2->cd(1);
+        TLegend *leg = new TLegend();
+        leg->AddEntry(results.dataWithErrors, "data", "lep");
+        leg->AddEntry(results.fit2D, "fit", "l");
+        leg->AddEntry(results.fitComponents2D[0], "L=0", "l");
+        leg->AddEntry(results.fitComponents2D[1], "L=2", "l");
+        leg->AddEntry(results.fitComponents2D[2], "L=3", "l");
+        leg->Draw();
 
-    results.lhHisto->SetName("lLH");
-    results.chi2Histo->SetName("chi2");
-    drawSigmas(results.lhHisto, results.maxX, results.maxY, pad21, 2.);
-    computeChiSquared(results.dataWithErrors, results.fit);
+        //Discrepancy plot
+        fitResultsCv2D->cd(2);
+        results.discrepancy2D->Draw();
+    }
 
-    std::cout << "Expected gammas @360 from L2: " << N*results.maxY*0.027  << std::endl;
-    std::cout << "Expected gammas @360 from L3: " << N*(1-results.maxX-results.maxY)*0.013  << std::endl;
-    std::cout << "Expected gammas @1660 from L3: " << N*(1-results.maxX-results.maxY)*0.0099  << std::endl;
+    //Likelihood plot
 
-    //2nd graph
-    //LhInputs inputsPartial(N, NSimu);
-    //inputsPartial.tsf.resize(2, nullptr);
-    //double centerX = results.maxY/(results.maxX+results.maxY);
-    //double centerY = (results.maxX+results.maxY);
-    //inputsPartial.startX = 0.0;
-    //inputsPartial.endX = 0.30;
-    //inputsPartial.startY = centerY*0.7;
-    //inputsPartial.endY = centerY*1.3;
-    //inputsPartial.xsections = {xsections["l0_"], xsections["l2_"], xsections["l3_"]};
+    {//1D
+        auto *likelihoodCv = new TCanvas("likelihoodCv", "likelihoodCv");
+        likelihoodCv->Divide(2, 1);
+        TVirtualPad *pad21 = likelihoodCv->cd(1);
 
-    ////l2/l0+l2
-    ////inputsPartial.tsf[0] = [](double x, double y)->double { return -y*(x-1);};//WHY is htis negative??!?!!?!?!??!!?!?!?
-    ////inputsPartial.tsf[1] = [](double x, double y)->double { return x*y;};
+        results.lhHisto->SetName("lLH");
+        results.chi2Histo->SetName("chi2");
+        drawSigmas(results.lhHisto, results.maxX, results.maxY, pad21, 2.);
+        computeChiSquared(results.dataWithErrors, results.fit);
 
-    //////l2/l0
-    //inputsPartial.tsf[0] = [](double x, double y)->double { return y/(x+1);};
-    //inputsPartial.tsf[1] = [](double x, double y)->double { return x*y/(x+1);};
+        TVirtualPad *pad22 = likelihoodCv->cd(2);
+        drawSigmas(results.chi2Histo, results.maxX, results.maxY, pad22, 1.);
 
-    //inputsPartial.data = data;
-    //inputsPartial.simu = simu;
+        std::cout << "1D ->Expected gammas @360 from L2: " << N * results.maxY * 0.027 << std::endl;
+        std::cout << "1D ->Expected gammas @360 from L3: " << N * (1 - results.maxX - results.maxY) * 0.013 << std::endl;
+        std::cout << "1D ->Expected gammas @1660 from L3: " << N * (1 - results.maxX - results.maxY) * 0.0099 << std::endl;
+    }
+    if (inputs.compute2D){//2D
+        auto *likelihoodCv2D = new TCanvas("likelihoodCv2D", "likelihoodCv2D");
+        likelihoodCv2D->Divide(2, 1);
+        TVirtualPad *pad21 = likelihoodCv2D->cd(1);
 
-    //LhResults resultsPartial = gridSearch(inputsPartial);
-    //std::cout << "xmin : " << resultsPartial.maxX << std::endl;
-    //std::cout << "ymin : " << resultsPartial.maxY << std::endl;
-    //std::cout << "max : " << resultsPartial.maxVal << std::endl;
-    //resultsPartial.lhHisto->SetTitle("-Log L; L=2 / L=0; Percent of L=0+2");
-    //resultsPartial.lhHisto->SetName("partialLH");
+        results.lhHisto2D->SetName("lLH2D");
+        results.chi2Histo2D->SetName("chi22D");
+        drawSigmas(results.lhHisto2D, results.maxX2D, results.maxY2D, pad21, 2.);
+        computeChiSquared(results.dataWithErrors, results.fit2D);
 
-    //cv2->cd(2);
-    TVirtualPad* pad22 = cv2->cd(2);
-    drawSigmas(results.chi2Histo, results.maxX, results.maxY, pad22, 1.);
-
+        TVirtualPad *pad22 = likelihoodCv2D->cd(2);
+        drawSigmas(results.chi2Histo2D, results.maxX2D, results.maxY2D, pad22, 1.);
+    }
 
     results.N = inputs.N;
     return results;
@@ -200,48 +297,103 @@ LhResults MaximizeLikelyhood(TH1D* data, std::vector<TH1D*> simu, std::map<std::
 LhResults gridSearch(LhInputs& inputs) {
     std::vector<long double> factorialMem;
     LhResults results;
-    TH1D* pVals = (TH1D*)inputs.data->Clone("pVals");
-    results.lhHisto = new TH2D("logLhPlot","- Log L;C2S[L=2]/C2S[L=0]; C2S[L=3]/C2S[L=0]", inputs.nX, inputs.startX, inputs.endX, inputs.nY, inputs.startY, inputs.endY);
-    results.chi2Histo = new TH2D("chi2Plot","Chi2;C2S[L=2]/C2S[L=0]; C2S[L=3]/C2S[L=0]", inputs.nX, inputs.startX, inputs.endX, inputs.nY, inputs.startY, inputs.endY);
+    TH1D *pVals = (TH1D *) inputs.data->Clone("pVals");
+    TH2D *pVals2D = (TH2D *) inputs.data2D->Clone("pVals2D");
+    results.lhHisto = new TH2D("logLhPlot", "- Log L;C2S[L=2]/C2S[L=0]; C2S[L=3]/C2S[L=0]", inputs.nX, inputs.startX,
+                               inputs.endX, inputs.nY, inputs.startY, inputs.endY);
+    results.chi2Histo = new TH2D("chi2Plot", "Chi2;C2S[L=2]/C2S[L=0]; C2S[L=3]/C2S[L=0]", inputs.nX, inputs.startX,
+                                 inputs.endX, inputs.nY, inputs.startY, inputs.endY);
+    results.lhHisto2D = new TH2D("logLhPlot2D", "- Log L;C2S[L=2]/C2S[L=0]; C2S[L=3]/C2S[L=0]", inputs.nX,
+                                 inputs.startX, inputs.endX, inputs.nY, inputs.startY, inputs.endY);
+    results.chi2Histo2D = new TH2D("chi2Plot2D", "Chi2;C2S[L=2]/C2S[L=0]; C2S[L=3]/C2S[L=0]", inputs.nX, inputs.startX,
+                                   inputs.endX, inputs.nY, inputs.startY, inputs.endY);
 
     results.chi2ndof = 0;
-    for (int i = 1; i<inputs.data->GetNbinsX(); ++i){
-        if (inputs.data->GetBinContent(i)) results.chi2ndof ++;
+    for (int i = 1; i < inputs.data->GetNbinsX(); ++i) {
+        if (inputs.data->GetBinContent(i)) results.chi2ndof++;
     }
+
+    new TCanvas();
+    TH1D *projEx = inputs.data2D->ProjectionY();
+    projEx->Draw();
+    TF1 *exPeaks = new TF1("exPeaks", "gaus(0)+gaus(3)", -5, 5);
+    exPeaks->FixParameter(1, 0);
+    exPeaks->FixParameter(4, 2.02);
+    exPeaks->SetParameter(0, 50);
+    exPeaks->SetParameter(3, 50);
+    exPeaks->SetParameter(2, 1.2);
+    exPeaks->SetParameter(5, 1.2);
+
+    projEx->Fit(exPeaks, "RI+");
+    exPeaks->Draw("same");
+    std::vector<std::pair<double, double>> energies{{0,    abs(exPeaks->GetParameter(2))},
+                                                    {0.36, abs(exPeaks->GetParameter(2))},
+                                                    {2.02, abs(exPeaks->GetParameter(5))}};
+    std::vector<TF1 *> exFunctions;
+    std::vector<TH1D *> exHistograms;
+    for (const auto &it: energies) {
+        exFunctions.push_back(new TF1(("ex" + std::to_string(it.first)).c_str(), "gaus(0)", -100, 100));
+        exFunctions.back()->FixParameter(0, 0.387);
+        exFunctions.back()->FixParameter(1, it.first);
+        exFunctions.back()->FixParameter(2, it.second);
+        exFunctions.back()->SetNpx(1000);
+        exHistograms.push_back(new TH1D(("exhisto" + std::to_string(it.first)).c_str(),
+                                        ("exhisto" + std::to_string(it.first)).c_str(),
+                                        inputs.data2D->GetYaxis()->GetNbins(),
+                                        inputs.data2D->GetYaxis()->GetXmin(),
+                                        inputs.data2D->GetYaxis()->GetXmax()));
+        double samples{1E6};
+        for (int i{0}; i < samples; ++i) {
+            exHistograms.back()->Fill(exFunctions.back()->GetRandom(inputs.data2D->GetYaxis()->GetXmin(),
+                                                                    inputs.data2D->GetYaxis()->GetXmax(),
+                                                                    new TRandom1()));
+        }
+        exHistograms.back()->Scale(1. / samples);
+        //new TCanvas(); //Plot for debug
+        //exHistograms.back()->Draw();
+        //exFunctions.back()->Draw("same");
+    }
+
 
     std::vector<double> coeffs;
     coeffs.resize(3, 0);
     results.fitSigmas.resize(inputs.sigmas.size(), {0, nullptr});
 
     results.fitComponents.resize(3);
-    results.fitComponents[0]= nullptr;
-    results.fitComponents[1]= nullptr;
-    results.fitComponents[2]= nullptr;
+    results.fitComponents[0] = nullptr;
+    results.fitComponents[1] = nullptr;
+    results.fitComponents[2] = nullptr;
+    results.fitComponents2D.resize(3);
+    results.fitComponents2D[0] = nullptr;
+    results.fitComponents2D[1] = nullptr;
+    results.fitComponents2D[2] = nullptr;
 
     std::vector<TH1D> simuNormalized;
     //Normalize simulations
     for (unsigned long k = 0; k < coeffs.size(); ++k) {//Loop on L transfers
         std::string name = inputs.simu[k]->GetName();
         name += "normalized";
-        simuNormalized.push_back(*(static_cast<TH1D*>(inputs.simu[k]->Clone(name.c_str()))));
+        simuNormalized.push_back(*(static_cast<TH1D *>(inputs.simu[k]->Clone(name.c_str()))));
         simuNormalized.back().SetBinContent(0, 0); //Remove underflow, just in case
         double normalization{0};
-        for (int i =0; i<simuNormalized.back().GetNbinsX(); ++i){
+        for (int i = 0; i < simuNormalized.back().GetNbinsX(); ++i) {
             normalization += simuNormalized.back().GetBinContent(i);
         }
         //Normalize
-        for (int i =0; i<simuNormalized.back().GetNbinsX(); ++i){
-            simuNormalized.back().SetBinContent(i, simuNormalized.back().GetBinContent(i)/normalization);
+        for (int i = 0; i < simuNormalized.back().GetNbinsX(); ++i) {
+            simuNormalized.back().SetBinContent(i, simuNormalized.back().GetBinContent(i) / normalization);
         }
 
     }
 
-
-
-
-        for (int x = 0; x < inputs.nX; ++x) {
+    //Start of grid search
+    std::cout << "-----------------------------------------------------------------------\n";
+    std::cout << "--------------starting grid search-------------------------------------\n";
+    int cnt{0};
+    for (int x = 0; x < inputs.nX; ++x) {
         double xval = inputs.startX + (inputs.endX - inputs.startX) / (inputs.nX - 1) * x;
         for (int y = 0; y < inputs.nY; ++y) {
+            std::cout << "\riteration " << cnt++ << "/" << inputs.nX * inputs.nY << std::endl;
             double yval = inputs.startY + (inputs.endY - inputs.startY) / (inputs.nY - 1) * y;
             //std::cout << "new pt\n";
             coeffs[0] = 1;
@@ -251,13 +403,17 @@ LhResults gridSearch(LhInputs& inputs) {
             //std::cout   << "(p0 : " << coeffs[0] << " p2 " << coeffs[1] << ")->("
             //            << "x: " << xval << " y: " << yval << ")" << std::endl;
 
-            if (coeffs[0]<0 || coeffs[1] < 0 || coeffs[2] < 0) {
+            if (coeffs[0] < 0 || coeffs[1] < 0 || coeffs[2] < 0) {
                 results.lhHisto->SetBinContent(results.lhHisto->FindBin(xval, yval), 1);
                 results.chi2Histo->SetBinContent(results.chi2Histo->FindBin(xval, yval), 0);
+                results.lhHisto2D->SetBinContent(results.lhHisto->FindBin(xval, yval), 1);
+                results.chi2Histo2D->SetBinContent(results.chi2Histo->FindBin(xval, yval), 0);
                 continue;
             }
             long double logLh{0};
             long double chi2{0};
+            long double logLh2D{0};
+            long double chi22D{0};
 
 
 
@@ -265,39 +421,35 @@ LhResults gridSearch(LhInputs& inputs) {
             for (int j = 0; j < pVals->GetNbinsX(); ++j) {
                 pVals->SetBinContent(j, 0);
             }
+            pVals2D->Reset("ICE");
 
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //1 dimensional calculation
             //Sets p values
             for (int j = 0; j < pVals->GetNbinsX(); ++j) {
                 double normalization{0};
                 double probVal{0};
                 for (unsigned long k = 0; k < coeffs.size(); ++k) {//Loop on L transfers
-                    if (isinf(logLh)) {
-                        results.lhHisto->SetBinContent(results.lhHisto->FindBin(xval, yval), 1);
-                        break;
-                    }
-
                     //Sigma ration changes normalization
                     probVal += coeffs[k] * inputs.xsections[k] * simuNormalized[k].GetBinContent(j);
                     normalization += coeffs[k] * inputs.xsections[k];
                 }
-                pVals->SetBinContent(j, probVal/normalization);
+                pVals->SetBinContent(j, probVal / normalization);
             }
             double check{0};
             for (int j = 1; j < pVals->GetNbinsX(); ++j) {
                 check += pVals->GetBinContent(j);
             }
-            if (abs(check - 1) > 1E-4)
-                throw std::runtime_error("Not normalized, value is : "+std::to_string(check)+"\n");
-            //if (normalization == 0 ) throw std::runtime_error("Null normalization!!!!\n");
-            //for (int j = 0; j < pVals->GetNbinsX(); ++j) {
-            //    pVals->SetBinContent(j, 1./normalization*pVals->GetBinContent(j));
-            //}
+            if (abs(check - 1) > 1E-2)
+                throw std::runtime_error("Not normalized, value is : " + std::to_string(check) + "\n");
 
+            //Compute Likelihood based on data
             logLh += logl((long double) factorial(inputs.N, factorialMem));
             for (int j = 1; j < pVals->GetNbinsX(); ++j) {//Starts from 1 to skip overflow (bin 0)
                 //logLh += logl((long double) binomial(inputs.N, inputs.data->GetBinContent(j), pVals->GetBinContent(j)));
-                logLh += logl((long double) powl(pVals->GetBinContent(j),inputs.data->GetBinContent(j))/factorial((int)inputs.data->GetBinContent(j), factorialMem));
-                if (inputs.data->GetBinContent(j)>0) {
+                logLh += logl((long double) powl(pVals->GetBinContent(j), inputs.data->GetBinContent(j)) /
+                              factorial((int) inputs.data->GetBinContent(j), factorialMem));
+                if (inputs.data->GetBinContent(j) > 0) {
                     double error = sqrt(inputs.N * pVals->GetBinContent(j) * (1 - pVals->GetBinContent(j)));
                     chi2 += pow((inputs.data->GetBinContent(j) - inputs.N * pVals->GetBinContent(j)) / error, 2);
                 }
@@ -305,53 +457,170 @@ LhResults gridSearch(LhInputs& inputs) {
             results.lhHisto->SetBinContent(results.lhHisto->FindBin(xval, yval), -logLh);
             results.chi2Histo->SetBinContent(results.chi2Histo->FindBin(xval, yval), chi2);
 
+            //Save max vals
             if (logLh > results.maxVal) {
                 results.maxVal = logLh;
                 results.maxX = xval;
                 results.maxY = yval;
-                if (results.fit != nullptr){
+                double norm = (1*inputs.xsections[0]+xval*inputs.xsections[1]+yval*inputs.xsections[2]);
+                results.percentX = xval*inputs.xsections[1]/norm;
+                results.percentY = yval*inputs.xsections[2]/norm;
+                if (results.fit != nullptr) {
                     results.fit->Delete();
                 }
                 results.fit = (TH1D *) pVals->Clone("fitResult");
                 results.fit->Scale(inputs.N);
 
-                if (results.dataWithErrors != nullptr){
+                if (results.dataWithErrors != nullptr) {
                     results.dataWithErrors->Delete("");
                 }
-                results.dataWithErrors = (TH1D*) inputs.data->Clone("DataWithErrors");
+                results.dataWithErrors = (TH1D *) inputs.data->Clone("DataWithErrors");
                 for (int j = 0; j < pVals->GetNbinsX(); ++j) {//Sets multivariate variance as error (approximation)
-                    results.dataWithErrors->SetBinError(j, sqrt(inputs.N * pVals->GetBinContent(j) * (1 - pVals->GetBinContent(j))));
+                    results.dataWithErrors->SetBinError(j, sqrt(inputs.N * pVals->GetBinContent(j) *
+                                                                (1 - pVals->GetBinContent(j))));
                 }
 
-                for(unsigned int s=0; s<inputs.sigmas.size(); ++s){
-                    if (abs(yval - inputs.sigmas[s])<abs(yval - results.fitSigmas[s].first)){
+                for (unsigned int s = 0; s < inputs.sigmas.size(); ++s) {
+                    if (abs(yval - inputs.sigmas[s]) < abs(yval - results.fitSigmas[s].first)) {
                         results.fitSigmas[s].first = yval;
-                        results.fitSigmas[s].second = (TH1D*) pVals->Clone(Form("%i_Sigma", s));
+                        results.fitSigmas[s].second = (TH1D *) pVals->Clone(Form("%i_Sigma", s));
                         results.fitSigmas[s].second->Scale(inputs.N);
                     }
                 }
+            }//End of save max vals
 
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //2 dimensional calculation
+            //Sets p values
+            if (!inputs.compute2D) continue;
+            for (int dx = 1; dx < pVals2D->GetNbinsX(); ++dx) {
+                for (int dy = 1; dy < pVals2D->GetNbinsY(); ++dy) {
+                    double th = pVals2D->GetXaxis()->GetBinCenter(dx);
+                    double ex = pVals2D->GetYaxis()->GetBinCenter(dy);
+                    double normalization{0};
+                    double probVal{0};
+
+                    for (unsigned long k = 0; k < coeffs.size(); ++k) {//Loop on L transfers
+                        //Sigma ration changes normalization
+                        probVal += coeffs[k] * inputs.xsections[k] *
+                                   simuNormalized[k].GetBinContent(simuNormalized[k].GetXaxis()->FindBin(th)) *
+                                   exHistograms[k]->GetBinContent(exHistograms[k]->GetXaxis()->FindBin(ex));
+                        normalization += coeffs[k] * inputs.xsections[k];
+                    }
+                    pVals2D->SetBinContent(dx, dy, probVal / normalization);
+                }
             }
-        }
-    }
-    results.discrepancy = (TH1D*) results.dataWithErrors->Clone("discrepancies");
+            double check2D{0};
+            for (int dx = 1; dx < pVals2D->GetNbinsX(); ++dx) {
+                for (int dy = 1; dy < pVals2D->GetNbinsY(); ++dy) {
+                    check2D += pVals2D->GetBinContent(dx, dy);
+                }
+            }
+            if (abs(check2D - 1) > 1E-2)
+                throw std::runtime_error("Not normalized, value is : " + std::to_string(check2D) + "\n");
+
+            //Compute Likelihood based on data
+            logLh2D += logl((long double) factorial(inputs.N, factorialMem));
+            //std::cout << "start loglh2d : " << logLh2D << std::endl;
+            try {
+                for (int dx = 1; dx < pVals2D->GetNbinsX(); ++dx) {
+                    for (int dy = 1; dy < pVals2D->GetNbinsY(); ++dy) {
+                        double th = pVals2D->GetXaxis()->GetBinCenter(dx);
+                        double ex = pVals2D->GetYaxis()->GetBinCenter(dy);
+                        long double partialLogLh = logl(
+                                (long double) powl(pVals2D->GetBinContent(dx, dy),
+                                                   inputs.data2D->GetBinContent(dx, dy)) /
+                                factorial((int) inputs.data2D->GetBinContent(dx, dy), factorialMem));
+                        logLh2D += partialLogLh;
+                        //std::cout << "new loglh2d : " << logLh2D << std::endl;
+                        if (std::isnan(logLh2D) || std::isinf(logLh2D)) {
+                            if (!std::isinf(partialLogLh)) std::cout << "partial is not inf!!!!!!!!!!!!!!!!!\n";
+                            std::cout << "giving parameters pVals2d " << pVals2D->GetBinContent(dx, dy) << std::endl;
+                            std::cout << "giving parameters data2d " << inputs.data2D->GetBinContent(dx, dy)
+                                      << std::endl;
+                            std::cout << "ex value " << ex << std::endl;
+                            std::cout << "theta value " << th << std::endl;
+                            std::cout << "coeff 1 " << coeffs[1] << std::endl;
+                            std::cout << "coeff 2 " << coeffs[2] << std::endl;
+                            std::cout << "factorial "
+                                      << factorial((int) inputs.data2D->GetBinContent(dx, dy), factorialMem)
+                                      << std::endl;
+                            throw std::runtime_error("stop\n");
+                            //throw std::runtime_error("error\n");
+                        }
+                        if (inputs.data2D->GetBinContent(dx, dy) > 0) {
+                            double error2D = sqrt(
+                                    inputs.N * pVals2D->GetBinContent(dx, dy) * (1 - pVals->GetBinContent(dx, dy)));
+                            chi22D += pow(
+                                    (inputs.data2D->GetBinContent(dx, dy) - inputs.N * pVals2D->GetBinContent(dx, dy)) /
+                                    error2D, 2);
+                        }
+                    }
+                }
+            } catch (const std::runtime_error &e) {
+                auto *tmpcv = new TCanvas();
+                pVals2D->Draw("colz");
+                tmpcv->WaitPrimitive();
+                logLh2D = 0;
+            }
+            results.lhHisto2D->SetBinContent(results.lhHisto->FindBin(xval, yval), -logLh2D);
+            results.chi2Histo2D->SetBinContent(results.chi2Histo->FindBin(xval, yval), chi22D);
+
+            //Save max vals
+            if (logLh2D > results.maxVal2D) {
+                results.maxVal2D = logLh2D;
+                results.maxX2D = xval;
+                results.maxY2D = yval;
+                double norm = (1*inputs.xsections[0]+xval*inputs.xsections[1]+yval*inputs.xsections[2]);
+                results.percentX2D = xval*inputs.xsections[1]/norm;
+                results.percentY2D = yval*inputs.xsections[2]/norm;
+                if (results.fit2D != nullptr) {
+                    results.fit2D->Delete();
+                }
+                results.fit2D = (TH1D *) pVals2D->ProjectionX("fitResult2D");
+                results.fit2D->Scale(inputs.N);
+            }//End of save max vals
+        }//End of y scan
+    }//End of x scan
+
+    //Update errors based on multivariate distribution
+    results.discrepancy = (TH1D *) results.dataWithErrors->Clone("discrepancies");
+    results.discrepancy2D = (TH1D *) results.dataWithErrors->Clone("discrepancies2D");
     for (int i = 0; i < results.discrepancy->GetNbinsX(); ++i) {
-        results.discrepancy->SetBinContent(i, results.dataWithErrors->GetBinContent(i)-results.fit->GetBinContent(i));
+        results.discrepancy->SetBinContent(i, results.dataWithErrors->GetBinContent(i) - results.fit->GetBinContent(i));
         results.discrepancy->SetBinError(i, results.dataWithErrors->GetBinError(i));
+        if(inputs.compute2D){
+            results.discrepancy2D->SetBinContent(i, results.dataWithErrors->GetBinContent(i) - results.fit2D->GetBinContent(i));
+            results.discrepancy2D->SetBinError(i, results.dataWithErrors->GetBinError(i));
+        }
     }
 
     //double scale = results.fit->Integral(results.fit->FindBin(90), results.fit->FindBin(180));
     double scale = 2000;
 
-    results.fitComponents[0] = static_cast<TH1D*>( simuNormalized[0].Clone(Form("partialL%i", 0)));
-    results.fitComponents[1] = static_cast<TH1D*>( simuNormalized[1].Clone(Form("partialL%i", 2)));
-    results.fitComponents[2] = static_cast<TH1D*>( simuNormalized[2].Clone(Form("partialL%i", 3)));
-
-    double normalization = 1.* inputs.xsections[0] + results.maxX *inputs.xsections[1] + results.maxY * inputs.xsections[2];
-
-    results.fitComponents[0]->Scale(inputs.N*1.*inputs.xsections[0]/normalization);
-    results.fitComponents[1]->Scale(inputs.N*results.maxX*inputs.xsections[1]/normalization);
-    results.fitComponents[2]->Scale(inputs.N*results.maxY*inputs.xsections[2]/normalization);
+    //Save fot components
+    {//1D
+        results.fitComponents[0] = static_cast<TH1D *>( simuNormalized[0].Clone(Form("partialL%i", 0)));
+        results.fitComponents[1] = static_cast<TH1D *>( simuNormalized[1].Clone(Form("partialL%i", 2)));
+        results.fitComponents[2] = static_cast<TH1D *>( simuNormalized[2].Clone(Form("partialL%i", 3)));
+        double normalization =
+                1. * inputs.xsections[0] + results.maxX * inputs.xsections[1] + results.maxY * inputs.xsections[2];
+        //Rescale fit components
+        results.fitComponents[0]->Scale(inputs.N * 1. * inputs.xsections[0] / normalization);
+        results.fitComponents[1]->Scale(inputs.N * results.maxX * inputs.xsections[1] / normalization);
+        results.fitComponents[2]->Scale(inputs.N * results.maxY * inputs.xsections[2] / normalization);
+    }
+    if (inputs.compute2D){//2D
+        results.fitComponents2D[0] = static_cast<TH1D *>( simuNormalized[0].Clone(Form("partialL%i", 0)));
+        results.fitComponents2D[1] = static_cast<TH1D *>( simuNormalized[1].Clone(Form("partialL%i", 2)));
+        results.fitComponents2D[2] = static_cast<TH1D *>( simuNormalized[2].Clone(Form("partialL%i", 3)));
+        double normalization =
+                1. * inputs.xsections[0] + results.maxX2D * inputs.xsections[1] + results.maxY2D * inputs.xsections[2];
+        //Rescale fit components
+        results.fitComponents2D[0]->Scale(inputs.N * 1. * inputs.xsections[0] / normalization);
+        results.fitComponents2D[1]->Scale(inputs.N * results.maxX2D * inputs.xsections[1] / normalization);
+        results.fitComponents2D[2]->Scale(inputs.N * results.maxY2D * inputs.xsections[2] / normalization);
+    }
     return results;
 }
 
@@ -503,25 +772,25 @@ double binomial(int N, int k, double p){
 
 std::map<std::string, std::string> SumThicknesses(std::map<std::string, double>& xsections){
     std::map<int, int> thicknessToNDeuterons{
-            {15, 59},
+            {15, 62},
             {20, 0},
-            {25, 220},
-            {30, 76},
-            {35, 145},
-            {40, 39},
-            {45, 53},
+            {25, 207},
+            {30, 151},
+            {35, 151},
+            {40, 60},
+            {45, 41},
             {50, 0},
             {55, 0}
     };
     int maxVal = std::max_element(thicknessToNDeuterons.begin(), thicknessToNDeuterons.end(),
-            [](const std::pair<int, int>& p1, const std::pair<int, int>& p2){
-            return p1.second < p2.second;
-            }
-            )->second;
+                                  [](const std::pair<int, int>& p1, const std::pair<int, int>& p2){
+                                      return p1.second < p2.second;
+                                  }
+    )->second;
 
     //Root files sum over different thicknesses
     std::map<std::string, std::string> prefixes{
-        {"s12", "selector_46Ar3Hed47K_0keV_s12_"},
+            {"s12", "selector_46Ar3Hed47K_0keV_s12_"},
             {"d32", "selector_46Ar3Hed47K_360keV_d32_"},
             {"f72", "selector_46Ar3Hed47K_2020keV_f72_"},
             {"flat0", "selector_46Ar3Hed47K_0keV_flat_"},
@@ -563,7 +832,7 @@ std::map<std::string, std::string> SumThicknesses(std::map<std::string, double>&
             std::string fileName{distrFolder+itDistr+std::to_string(itThickness.first)+distrSuffix};
             filesToAverage[fileName] = itThickness.second;
         }
-         xsections[itDistr] = AverageDistributions(filesToAverage, itDistr+"averaged.txt");
+        xsections[itDistr] = AverageDistributions(filesToAverage, itDistr+"averaged.txt");
     }
 
 
@@ -573,9 +842,9 @@ std::map<std::string, std::string> SumThicknesses(std::map<std::string, double>&
 void SumSimulationsWithPercentages(const LhResults& results, std::map<std::string, std::string> files){
     {
         std::map<std::string, double> filesToSum;
-        filesToSum.emplace(files["s12"], results.maxX);
-        filesToSum.emplace(files["d32"], results.maxY);
-        filesToSum.emplace(files["f72"], 1 - results.maxX - results.maxY);
+        filesToSum.emplace(files["s12"], 1-results.percentX-results.percentY);
+        filesToSum.emplace(files["d32"], results.percentX);
+        filesToSum.emplace(files["f72"], results.percentY);
         //double p0 = 0.40*2.48;
         //double p2 = 0.24*2.65;
         //double p3 = 0.7*3.2;
@@ -587,9 +856,9 @@ void SumSimulationsWithPercentages(const LhResults& results, std::map<std::strin
     }
     {
         std::map<std::string, double> filesToSum;
-        filesToSum.emplace(files["flat0"], results.maxX);
-        filesToSum.emplace(files["flat2"], results.maxY);
-        filesToSum.emplace(files["flat3"], 1 - results.maxX - results.maxY);
+        filesToSum.emplace(files["flat0"], 1-results.percentX-results.percentY);
+        filesToSum.emplace(files["flat2"], results.percentX);
+        filesToSum.emplace(files["flat3"], results.percentY);
         CreateSimulationFile(filesToSum, "simulationsumflat.root");
     }
 }
@@ -680,10 +949,10 @@ void SaveTheoryDistributions(const std::string& fileName, const LhResults& resul
 
     for (int i{0}; i<gs12.GetN(); ++i){
         gsum.SetPoint(gsum.GetN(),
-                gs12.GetPointX(i),
-                gs12.GetPointY(i)* results.maxX
-                + gd32.GetPointY(i)* results.maxY
-                + gf72.GetPointY(i) *(1- results.maxX-results.maxY));
+                      gs12.GetPointX(i),
+                      gs12.GetPointY(i)* results.maxX
+                      + gd32.GetPointY(i)* results.maxY
+                      + gf72.GetPointY(i) *(1- results.maxX-results.maxY));
     }
     gsum.Write();
     //Correction factor
@@ -725,32 +994,89 @@ void MaxLikelyhood(){
     std::map<std::string, double> xsections;
     std::map<std::string, std::string> files = SumThicknesses(xsections);
     files["data"]   = "./../../DataAnalyzed/sum.root";
+    //files["data"]   = "./../../build/Out/sum.root";
 
     std::map<std::string, std::string> conditions;
-    conditions["data"] = "MugastData.M ==2 && MugastData.Z == 1 && VamosData.id_Z == 19 && VamosData.id_M == 47 && (Time<313 || Time>315) && (Time<278 || Time>283) && (Time<315 || Time>318) ";
-    //conditions["data"] = "MugastData.M ==2 && MugastData.Z == 1 && VamosData.id_Z == 19 && VamosData.id_M == 47";
+    conditions["data"] = "MugastData.M ==2 && MugastData.Z == 1 && VamosData.id_Z == 19 && VamosData.id_M == 47";
+    //conditions["data"] = "VamosData.id_Z == 19 && VamosData.id_M == 47 && MugastData.T_proton<-2 && MugastData.T_proton>-13";
     conditions["s12"] = "";
     conditions["d32"] = "";
     conditions["f72"] = "";
 
     //Ex condition on data
-    conditions["data"] += " && MugastData.Ex>-3 && MugastData.Ex<3.";
+    //conditions["data"] += " && MugastData.Ex>-2 && MugastData.Ex<5.";
 
-    //for (auto& it: conditions){
-    //    if (!it.second.empty() ) it.second += " && MugastData.Ex > -3 && MugastData.Ex<3";
-    //    else it.second += "MugastData.Ex > -3 && MugastData.Ex <3";
-    //}
+    for (auto& it: conditions){
+        std::string cond = "MugastData.Ex > -4 && MugastData.Ex <5";
+        if (!it.second.empty() ) it.second += (" && "+cond);
+        else it.second += cond;
+    }
 
     TFile* file = new TFile("./histofile.root", "read");
     if (!file->IsOpen()){
         TFile* outFile = new TFile("./histofile.root","recreate");
         for (const auto&it: files){
             TFile* file = new TFile(it.second.c_str(), "read");
-            TTree* tree = (TTree*) file->Get("AnalyzedTree");
-            //TH1D* histo = new TH1D(it.first.c_str(), it.first.c_str(), 90, 90, 180);
-            TH1D* histo = new TH1D(it.first.c_str(), it.first.c_str(), 90, 90, 180);
-            //TH1D* histo = new TH1D(it.first.c_str(), it.first.c_str(), 25, 90, 180);
-            tree->Draw(Form("MugastData.EmissionDirection.Theta()*180./TMath::Pi()>>%s", it.first.c_str()), conditions[it.first].c_str());
+            TTree* tree{nullptr};
+            if(it.first == "data")
+                tree = (TTree*) file->Get("AnalyzedTreeDeuterons");
+            else
+                tree = (TTree*) file->Get("AnalyzedTree");
+
+            TH1D* histo{nullptr};
+            TH2D* histo2D{nullptr};
+
+            if(true){//constant width bins
+                //histo parameters
+                int nbinsTheta{70};
+                double startTheta{90};
+                double stopTheta{180};
+                int nbinsEx{40};
+                double startEx{-10};
+                double stopEx{10};
+
+                //1 dimension
+                histo = new TH1D(it.first.c_str(), it.first.c_str(),
+                                 nbinsTheta, startTheta, stopTheta);
+
+                //2 dimensions
+                histo2D = new TH2D((it.first + "2D").c_str(), (it.first + "2D").c_str(),
+                                   nbinsTheta, startTheta, stopTheta,
+                                   nbinsEx, startEx, stopEx);
+            }else{//Different width bins
+                std::vector<double> binsTheta{106.5, 107.25, 108, 108.75, 109.5, 110.25, 111, 111.75, 112.5, 113.25, 114,
+                                              114.75, 115.5, 116.25, 117, 117.75, 118.5, 119.25, 120, 120.75, 121.5,
+                                              122.25, 123, 123.75, 124.5, 126, 127.5, 129,
+                                              130.5, 132, 132.75, 133.5, 134.25, 135, 135.75, 136.5,
+                                              137.25, 138, 138.75, 139.5, 140.25, 141, 141.75, 142.5, 143.25, 144,
+                                              144.75, 146.25, 147.75, 149.25, 150, 150.75, 151.5,
+                                              152.25, 153, 153.75, 154.5, 155.25, 156, 156.75, 157.5, 158.25, 159,
+                                              159.75, 160.5, 161.25, 162, 162.75, 164.25, 165.75,
+                                              167.25, 168.75, 170.25, 171.75, 173.25, 174.75};
+
+                int nbinsEx{100};
+                double startEx{-10};
+                double stopEx{10};
+                std::vector<double> binsEx;
+                for (int i{0}; i<nbinsEx; ++i){
+                    binsEx.push_back(startEx+(stopEx-startEx)/nbinsEx*i);
+                }
+
+                //1 dimension
+                histo = new TH1D(it.first.c_str(), it.first.c_str(),
+                                 binsTheta.size()-1, &binsTheta[0]);
+
+                //2 dimensions
+                histo2D = new TH2D((it.first + "2D").c_str(), (it.first + "2D").c_str(),
+                                   binsTheta.size()-1, &binsTheta[0],
+                                    binsEx.size()-1, &binsEx[0]);
+            }
+
+            tree->Draw(Form("MugastData.EmissionDirection.Theta()*180./TMath::Pi()>>%s", it.first.c_str()),
+                       conditions[it.first].c_str());
+            tree->Draw(Form("MugastData.Ex:MugastData.EmissionDirection.Theta()*180./TMath::Pi()>>%s",
+                            (it.first + "2D").c_str()), conditions[it.first].c_str());
+
 
             TH1D* histoCM = new TH1D((it.first+"CM").c_str(), (it.first+"CM").c_str(), 80, 0, 90);
             if(it.first != "data")
@@ -760,6 +1086,7 @@ void MaxLikelyhood(){
 
             outFile->cd();
             histo->Write();
+            histo2D->Write();
             histoCM->Write();
         }
         outFile->Write();
@@ -769,10 +1096,11 @@ void MaxLikelyhood(){
 
     TH1D* data = (TH1D*) file->Get("data");
     std::vector<TH1D*> simu{(TH1D*) file->Get("s12"),
-        (TH1D*) file->Get("d32"),
-        (TH1D*) file->Get("f72")};
+                            (TH1D*) file->Get("d32"),
+                            (TH1D*) file->Get("f72")};
+    TH2D* data2D = (TH2D*) file->Get("data2D");
 
-    LhResults results =  MaximizeLikelyhood(data, simu, xsections);
+    LhResults results =  MaximizeLikelyhood(data, simu, data2D, xsections);
 
     SumSimulationsWithPercentages(results, files);
     NormalizeHistograms("histofile.root", results);

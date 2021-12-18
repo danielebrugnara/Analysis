@@ -39,7 +39,7 @@ class MugastData: public TObject{
     std::vector<double> T;                      //Calibrated time
     std::vector<double> T_proton;               //Calibrated time for proton
     std::vector<double> T2;                     //
-    std::vector<double> MG;                     //
+    std::vector<double> MG;                     //TODO: change to int!!!
     std::vector<int> M;                         //Mass number
     std::vector<int> Z;                         //Z number
     std::vector<bool> Indentified;              //
