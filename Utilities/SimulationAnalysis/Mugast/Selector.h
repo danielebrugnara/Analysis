@@ -67,6 +67,9 @@ public :
 
    TVector3 targetPos;
    ReactionReconstruction2body<long double>* reaction;
+   bool isL0{false};
+   void SetL0(){isL0=true;};
+   TRandom r;
 
    struct Id{
    public:

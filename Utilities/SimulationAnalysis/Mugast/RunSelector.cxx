@@ -68,6 +68,8 @@ RunSelector::RunSelector(std::string simu_file_name, std::string data_file_name,
         outFileName.insert(outFileName.find_last_of('/')+1, "selector_");
         selectorSimu->SetOutputName(outFileName);
         std::cout << "Starting selector: " << it <<"\n";
+        if (it.find("s12") != it.npos)
+            selectorSimu->SetL0();
         treeSimu->Process(selectorSimu, "option");
     }
 

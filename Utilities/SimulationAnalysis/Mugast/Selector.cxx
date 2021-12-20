@@ -75,9 +75,9 @@ Bool_t Selector::Process(Long64_t entry)
 
     fReader.SetLocalEntry(entry);
 
-    if(     (*VamosAcceptedth == 0)
-        ||  (*VamosAcceptedph == 0)
-        ||  (*VamosAccepteddelta == 0)) return kTRUE;
+    //if(     (*VamosAcceptedth == 0)
+    //    ||  (*VamosAcceptedph == 0)
+    //    ||  (*VamosAccepteddelta == 0)) return kTRUE;
 
     for (int i=0; i<Mugast->EventMultiplicity; ++i) {
         {
@@ -119,7 +119,13 @@ Bool_t Selector::Process(Long64_t entry)
             mugastData.SI_Y[i]     = DSSD_Y[i];
             mugastData.SI_E[i]     = EDep[i];
             mugastData.E[i]        = ELab[i];
-            mugastData.Ex[i]       = Ex[i];
+            if(isL0)
+                mugastData.Ex[i]       = Ex[i]+1;
+            else
+                mugastData.Ex[i]       = Ex[i]+1;
+    
+            //mugastData.Ex[i] = r.Landau(mugastData.Ex[i], mugastData.Ex[i]*0.1);
+            
             mugastData.Theta_CM[i] = ThetaCM[i];
         }else{
             //Initialize with -1

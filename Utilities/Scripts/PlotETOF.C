@@ -6,6 +6,23 @@
 
 void PlotETOF(){
     std::vector<int> MG{1,3,4,5,7,11};
+    std::map<int, double> minLim;
+    std::map<int, double> maxLim;
+
+    minLim[1] = -2.5;
+    maxLim[1] = -9;
+    minLim[3] = -2.5;
+    maxLim[3] = -13;
+    minLim[4] = -4;
+    maxLim[4] = -14;
+    minLim[5] = -4;
+    maxLim[5] = -13;
+    minLim[7] = -5;
+    maxLim[7] = -20;
+    minLim[11] = -2;
+    maxLim[11] = -7;
+    
+
     std::vector<std::string> gates{"E_TOF_m1_z1_MG", "E_TOF_m2_z1_MG", "E_TOF_m4_z2_MG"};
     TFile* f = new TFile("../../build/Out/sum.root", "read");
     TFile* fcuts = new TFile("../../build/Configs/Cuts/MUGAST.root", "read");
@@ -25,8 +42,8 @@ void PlotETOF(){
             hkd = new TH2D((name + "kd").c_str(), (name + "kd").c_str(), 1000, 0, 30, 1000, -30, 30);
             t ->Draw(("MugastData.T_proton:MugastData.SI_E>>"+name).c_str(), Form("MugastData.MG == %i", it), "");
             t ->Draw(("MugastData.T_proton:MugastData.SI_E>>"+(name+"k")).c_str(), Form("MugastData.MG == %i && VamosData.id_Z == 19 && VamosData.id_M == 47", it), "same");
-            //td->Draw(("MugastData.T_proton:MugastData.SI_E>>"+(name+"kd")).c_str(), Form("MugastData.MG == %i", it), "same");
-            t->Draw(("MugastData.T_proton:MugastData.SI_E>>"+(name+"kd")).c_str(), Form("VamosData.id_Z == 19 && VamosData.id_M == 47 && MugastData.T_proton<-2 && MugastData.T_proton>-13 && MugastData.MG == %i", it), "same");
+            td->Draw(("MugastData.T_proton:MugastData.SI_E>>"+(name+"kd")).c_str(), Form("MugastData.MG == %i", it), "same");
+            //t->Draw(("MugastData.T_proton:MugastData.SI_E>>"+(name+"kd")).c_str(), Form("VamosData.id_Z == 19 && VamosData.id_M == 47 && MugastData.T_proton<%f && MugastData.T_proton>%f && MugastData.MG == %i",minLim[it], maxLim[it], it), "same");
 
 
             //Plot gates
@@ -42,6 +59,7 @@ void PlotETOF(){
             t ->Draw(("MugastData.T:MugastData.SI_E>>"+name).c_str(), Form("MugastData.MG == %i", it), "");
             t ->Draw(("MugastData.T:MugastData.SI_E>>"+(name+"k")).c_str(), Form("MugastData.MG == %i && VamosData.id_Z == 19 && VamosData.id_M == 47", it), "same");
             td->Draw(("MugastData.T:MugastData.SI_E>>"+(name+"kd")).c_str(), Form("MugastData.MG == %i", it), "same");
+            //t->Draw(("MugastData.T:MugastData.SI_E>>"+(name+"kd")).c_str(), Form("VamosData.id_Z == 19 && VamosData.id_M == 47 && MugastData.T_proton<%f && MugastData.T_proton>%f && MugastData.MG == %i",minLim[it], maxLim[it], it), "same");
         }
 
         h->SetTitle(";Energy [MeV]; TOF [ns]");
